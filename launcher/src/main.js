@@ -440,22 +440,7 @@ function getActualLauncherVersion() {
         }
     });
 
-    // --- Direct Drag & Drop Save Mod File ---
-    ipcMain.handle('save-mod-file', async (event, { filename, buffer }) => {
-        try {
-            if (!filename || !filename.toLowerCase().endsWith('.jar')) {
-                return { success: false, error: 'Plik musi mieć rozszerzenie .jar' };
-            }
-            modManager.ensureDir(modManager.modsDir);
-            const destPath = path.join(modManager.modsDir, filename);
-            fs.writeFileSync(destPath, Buffer.from(buffer));
-            console.log(`Saved dropped mod: ${filename}`);
-            return { success: true, filename };
-        } catch (e) {
-            console.error('Error saving dropped mod:', e);
-            return { success: false, error: e.message };
-        }
-    });
+
 }
 
 // Helper: send message to renderer
