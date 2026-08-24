@@ -1815,7 +1815,7 @@ async function performClientCoreUpdate() {
                 showToast('Aktualizacja ukończona! Uruchamianie nowej wersji...', 'success');
                 // Process is restarting via external updater, keep modal showing 100% until termination
             } else {
-                const newVer = res.version || currentClientUpdateInfo?.latestVersion || '1.6.4';
+                const newVer = res.version || currentClientUpdateInfo?.latestVersion || '1.6.5';
                 currentClientUpdateInfo = null;
                 if (pill) pill.classList.remove('has-update');
                 if (label) label.textContent = `v${newVer} (${t('update_up_to_date')})`;

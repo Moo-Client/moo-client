@@ -515,8 +515,8 @@ public class MooClientScreen extends Screen {
      * search box
      */
     private void renderModsWindow(DrawContext context, int mouseX, int mouseY, float delta) {
-        int panelW = 560;
-        int panelH = 265;
+        int panelW = 640;
+        int panelH = 310;
         int panelX = (this.width - panelW) / 2;
         int panelY = (this.height - panelH) / 2;
 
@@ -555,7 +555,7 @@ public class MooClientScreen extends Screen {
                 setBtnHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
 
         // Search Bar under "MOO CLIENT"
-        int searchW = 200;
+        int searchW = 240;
         int searchH = 18;
         int searchX = panelX + (panelW - searchW) / 2;
         int searchY = panelY + 26;
@@ -602,8 +602,8 @@ public class MooClientScreen extends Screen {
         }
 
         int cols = 3;
-        int cardW = 160;
-        int cardH = 135;
+        int cardW = 186;
+        int cardH = 145;
         int cardGap = 16;
 
         int totalGridW = cols * cardW + (cols - 1) * cardGap;
@@ -669,14 +669,14 @@ public class MooClientScreen extends Screen {
             } else {
                 icon = "⌨";
             }
-            drawCenteredText(context, icon, cardX + cardW / 2, cardY + 20, COLOR_TEXT_WHITE);
-            drawCenteredText(context, module.getName(), cardX + cardW / 2, cardY + 44, COLOR_TEXT_WHITE);
+            drawCenteredText(context, icon, cardX + cardW / 2, cardY + 22, COLOR_TEXT_WHITE);
+            drawCenteredText(context, module.getName(), cardX + cardW / 2, cardY + 48, COLOR_TEXT_WHITE);
 
             // OPTIONS Bar
             int optH = 20;
-            int optY = cardY + cardH - 52;
-            int optX = cardX + 8;
-            int optW = cardW - 16;
+            int optY = cardY + cardH - 54;
+            int optX = cardX + 10;
+            int optW = cardW - 20;
             boolean optHover = mouseX >= optX && mouseX <= optX + optW && mouseY >= optY && mouseY <= optY + optH
                     && mouseY >= panelY + headerH + 2 && mouseY <= panelY + panelH - 4;
             context.fill(optX, optY, optX + optW, optY + optH, optHover ? COLOR_OPTIONS_HOVER : COLOR_OPTIONS_BG);
@@ -686,9 +686,9 @@ public class MooClientScreen extends Screen {
 
             // ENABLED / DISABLED Button
             int btnH = 22;
-            int btnY = cardY + cardH - 28;
-            int btnX = cardX + 8;
-            int btnW = cardW - 16;
+            int btnY = cardY + cardH - 30;
+            int btnX = cardX + 10;
+            int btnW = cardW - 20;
 
             boolean btnHover = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH
                     && mouseY >= panelY + headerH + 2 && mouseY <= panelY + panelH - 4;
@@ -1943,13 +1943,13 @@ public class MooClientScreen extends Screen {
         if (currentView == View.MODS) {
             List<Module> modules = ModuleManager.getInstance().getModules();
             int cols = 3;
-            int cardH = 150;
+            int cardH = 145;
             int cardGap = 16;
-            int headerH = 42;
-            int panelH = 260;
+            int headerH = 56;
+            int panelH = 310;
             int totalRows = (modules.size() + cols - 1) / cols;
             int totalContentH = totalRows * cardH + (totalRows - 1) * cardGap;
-            int visibleAreaH = panelH - headerH - 24;
+            int visibleAreaH = panelH - headerH - 20;
             int maxScroll = Math.max(0, totalContentH - visibleAreaH + 8);
 
             if (maxScroll > 0) {
@@ -2107,8 +2107,8 @@ public class MooClientScreen extends Screen {
             }
             // 3. Mods View Clicks
             else if (currentView == View.MODS) {
-                int panelW = 560;
-                int panelH = 265;
+                int panelW = 640;
+                int panelH = 310;
                 int panelX = (this.width - panelW) / 2;
                 int panelY = (this.height - panelH) / 2;
 
@@ -2138,7 +2138,7 @@ public class MooClientScreen extends Screen {
                 }
 
                 // Search Bar Click
-                int searchW = 200;
+                int searchW = 240;
                 int searchH = 18;
                 int searchX = panelX + (panelW - searchW) / 2;
                 int searchY = panelY + 26;
@@ -2170,8 +2170,8 @@ public class MooClientScreen extends Screen {
                 }
 
                 int cols = 3;
-                int cardW = 160;
-                int cardH = 135;
+                int cardW = 186;
+                int cardH = 145;
                 int cardGap = 16;
                 int totalGridW = cols * cardW + (cols - 1) * cardGap;
                 int startX = panelX + (panelW - totalGridW) / 2;
@@ -2191,9 +2191,9 @@ public class MooClientScreen extends Screen {
 
                     // ENABLED / DISABLED Button Click
                     int btnH = 22;
-                    int btnY = cardY + cardH - 28;
-                    int btnX = cardX + 8;
-                    int btnW = cardW - 16;
+                    int btnY = cardY + cardH - 30;
+                    int btnX = cardX + 10;
+                    int btnW = cardW - 20;
                     if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
                         playClickSound();
                         module.toggle();
@@ -2202,9 +2202,9 @@ public class MooClientScreen extends Screen {
 
                     // OPTIONS Bar Click OR Card Body Click
                     int optH = 20;
-                    int optY = cardY + cardH - 52;
-                    int optX = cardX + 8;
-                    int optW = cardW - 16;
+                    int optY = cardY + cardH - 54;
+                    int optX = cardX + 10;
+                    int optW = cardW - 20;
                     boolean optClicked = mouseX >= optX && mouseX <= optX + optW && mouseY >= optY
                             && mouseY <= optY + optH;
                     boolean cardBodyClicked = mouseX >= cardX && mouseX <= cardX + cardW && mouseY >= cardY

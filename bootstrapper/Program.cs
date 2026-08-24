@@ -337,7 +337,7 @@ namespace MooClient.Bootstrapper
                 string zipUrl = null;
                 string asarUrl = null;
                 string jarUrl = null;
-                string versionTag = "1.6.4";
+                string versionTag = "1.6.5";
 
                 if (!string.IsNullOrEmpty(json))
                 {

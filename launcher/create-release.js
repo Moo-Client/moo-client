@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.6.4';
+const VERSION = '1.6.5';
 
 function getGitHubToken() {
     try {
