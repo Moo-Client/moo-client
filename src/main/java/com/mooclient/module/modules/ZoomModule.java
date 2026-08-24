@@ -65,8 +65,7 @@ public class ZoomModule extends Module {
     private static float lastZoom = 1.0f;
 
     public ZoomModule() {
-        super("Zoom", "Przybliżenie widoku z płynnym powiększeniem", Category.RENDER);
-        setEnabled(true);
+        super("Zoom", "Przybliżenie widoku z płynnym powiększeniem", Category.RENDER, true);
     }
 
     @Override

@@ -65,8 +65,7 @@ public class CpsModule extends Module {
     private static final List<Long> rightClicks = new ArrayList<>();
 
     public CpsModule() {
-        super("CPS", "Wyświetla liczbę kliknięć na sekundę (CPS) dla LPM i PPM", Category.HUD);
-        setEnabled(true);
+        super("CPS", "Wyświetla liczbę kliknięć na sekundę (CPS) dla LPM i PPM", Category.HUD, true);
     }
 
     @Override

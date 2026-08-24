@@ -46,8 +46,7 @@ public class ToggleSprintModule extends Module {
     public static int height = 12;
 
     public ToggleSprintModule() {
-        super("Sprint", "Automatyczny ciągły bieg gracza", Category.HUD);
-        setEnabled(true);
+        super("Sprint", "Automatyczny ciągły bieg gracza", Category.HUD, true);
         active = true;
     }
 

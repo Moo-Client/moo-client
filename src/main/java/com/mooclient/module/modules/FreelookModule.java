@@ -41,8 +41,7 @@ public class FreelookModule extends Module {
     private static Perspective previousPerspective = Perspective.FIRST_PERSON;
 
     public FreelookModule() {
-        super("Freelook", "Swobodny widok 360° kamery", Category.RENDER);
-        setEnabled(true);
+        super("Freelook", "Swobodny widok 360° kamery", Category.RENDER, true);
     }
 
     @Override

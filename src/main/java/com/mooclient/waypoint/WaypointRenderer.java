@@ -77,8 +77,8 @@ public class WaypointRenderer {
             float ndcX = tempPos.x / tempPos.w;
             float ndcY = tempPos.y / tempPos.w;
 
-            int sx = (int) Math.round((ndcX + 1.0f) * 0.5f * screenW);
-            int sy = (int) Math.round((1.0f - ndcY) * 0.5f * screenH);
+            int sx = Math.round((ndcX + 1.0f) * 0.5f * screenW);
+            int sy = Math.round((1.0f - ndcY) * 0.5f * screenH);
 
             // Fast rejection: Skip waypoints outside screen view bounds
             if (sx < -150 || sx > screenW + 150 || sy < -100 || sy > screenH + 100) continue;

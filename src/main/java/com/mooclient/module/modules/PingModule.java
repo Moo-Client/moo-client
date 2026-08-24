@@ -43,8 +43,7 @@ public class PingModule extends Module {
     public static int height = 12;
 
     public PingModule() {
-        super("Ping", "Wyświetla aktualny ping na ekranie", Category.HUD);
-        setEnabled(true);
+        super("Ping", "Wyświetla aktualny ping na ekranie", Category.HUD, true);
     }
 
     @Override

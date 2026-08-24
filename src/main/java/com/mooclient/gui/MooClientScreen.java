@@ -133,8 +133,8 @@ public class MooClientScreen extends Screen {
             String fpsText = FpsModule.getStyle() == FpsModule.FpsStyle.BRACKETS ? "[" + fps + " FPS]"
                     : (FpsModule.isShowPrefix() ? "FPS: " + fps : fps + " FPS");
             int textWidth = this.textRenderer.getWidth(fpsText);
-            int boxW = (int) Math.round((textWidth + 6) * hudScale);
-            int boxH = (int) Math.round(12 * hudScale);
+            int boxW = Math.round((textWidth + 6) * hudScale);
+            int boxH = Math.round(12 * hudScale);
             FpsModule.width = boxW;
             FpsModule.height = boxH;
 
@@ -159,8 +159,8 @@ public class MooClientScreen extends Screen {
                 sprintText = "Sprinting (Toggled)";
             }
             int textWidth = this.textRenderer.getWidth(sprintText);
-            int boxW = (int) Math.round((textWidth + 6) * hudScale);
-            int boxH = (int) Math.round(12 * hudScale);
+            int boxW = Math.round((textWidth + 6) * hudScale);
+            int boxH = Math.round(12 * hudScale);
             ToggleSprintModule.width = boxW;
             ToggleSprintModule.height = boxH;
 
@@ -175,8 +175,8 @@ public class MooClientScreen extends Screen {
 
         // 3. Draggable Potion Effects Widget Preview
         if (PotionEffectsModule.isModuleEnabled()) {
-            int boxW = PotionEffectsModule.width > 0 ? PotionEffectsModule.width : (int) Math.round(110 * hudScale);
-            int boxH = PotionEffectsModule.height > 0 ? PotionEffectsModule.height : (int) Math.round(50 * hudScale);
+            int boxW = PotionEffectsModule.width > 0 ? PotionEffectsModule.width : Math.round(110 * hudScale);
+            int boxH = PotionEffectsModule.height > 0 ? PotionEffectsModule.height : Math.round(50 * hudScale);
 
             int x = PotionEffectsModule.position.calculateX(boxW, this.width);
             int y = PotionEffectsModule.position.calculateY(boxH, this.height);
@@ -188,20 +188,18 @@ public class MooClientScreen extends Screen {
         }
 
         // 4. Draggable Ping Widget Preview
-        if (com.mooclient.module.modules.PingModule.isPingEnabled()) {
-            int ping = com.mooclient.module.modules.PingModule.getCurrentPing();
-            String pingText = com.mooclient.module.modules.PingModule
-                    .getStyle() == com.mooclient.module.modules.PingModule.PingStyle.BRACKETS ? "[" + ping + " ms]"
-                            : (com.mooclient.module.modules.PingModule.isShowPrefix() ? "Ping: " + ping + " ms"
-                                    : ping + " ms");
+        if (PingModule.isPingEnabled()) {
+            int ping = PingModule.getCurrentPing();
+            String pingText = PingModule.getStyle() == PingModule.PingStyle.BRACKETS ? "[" + ping + " ms]"
+                    : (PingModule.isShowPrefix() ? "Ping: " + ping + " ms" : ping + " ms");
             int textWidth = this.textRenderer.getWidth(pingText);
-            int boxW = (int) Math.round((textWidth + 6) * hudScale);
-            int boxH = (int) Math.round(12 * hudScale);
-            com.mooclient.module.modules.PingModule.width = boxW;
-            com.mooclient.module.modules.PingModule.height = boxH;
+            int boxW = Math.round((textWidth + 6) * hudScale);
+            int boxH = Math.round(12 * hudScale);
+            PingModule.width = boxW;
+            PingModule.height = boxH;
 
-            int x = com.mooclient.module.modules.PingModule.position.calculateX(boxW, this.width);
-            int y = com.mooclient.module.modules.PingModule.position.calculateY(boxH, this.height);
+            int x = PingModule.position.calculateX(boxW, this.width);
+            int y = PingModule.position.calculateY(boxH, this.height);
 
             boolean hovered = mouseX >= x - 2 && mouseX <= x - 2 + boxW && mouseY >= y - 2 && mouseY <= y - 2 + boxH;
             boolean isDragging = "PING".equals(draggingWidget);
@@ -210,18 +208,18 @@ public class MooClientScreen extends Screen {
         }
 
         // 5. Draggable CPS Widget Preview
-        if (com.mooclient.module.modules.CpsModule.isCpsEnabled()) {
-            int leftCps = com.mooclient.module.modules.CpsModule.getLeftCps();
-            int rightCps = com.mooclient.module.modules.CpsModule.getRightCps();
-            String cpsText = com.mooclient.module.modules.CpsModule.getFormattedText(leftCps, rightCps);
+        if (CpsModule.isCpsEnabled()) {
+            int leftCps = CpsModule.getLeftCps();
+            int rightCps = CpsModule.getRightCps();
+            String cpsText = CpsModule.getFormattedText(leftCps, rightCps);
             int textWidth = this.textRenderer.getWidth(cpsText);
-            int boxW = (int) Math.round((textWidth + 6) * hudScale);
-            int boxH = (int) Math.round(12 * hudScale);
-            com.mooclient.module.modules.CpsModule.width = boxW;
-            com.mooclient.module.modules.CpsModule.height = boxH;
+            int boxW = Math.round((textWidth + 6) * hudScale);
+            int boxH = Math.round(12 * hudScale);
+            CpsModule.width = boxW;
+            CpsModule.height = boxH;
 
-            int x = com.mooclient.module.modules.CpsModule.position.calculateX(boxW, this.width);
-            int y = com.mooclient.module.modules.CpsModule.position.calculateY(boxH, this.height);
+            int x = CpsModule.position.calculateX(boxW, this.width);
+            int y = CpsModule.position.calculateY(boxH, this.height);
 
             boolean hovered = mouseX >= x - 2 && mouseX <= x - 2 + boxW && mouseY >= y - 2 && mouseY <= y - 2 + boxH;
             boolean isDragging = "CPS".equals(draggingWidget);
@@ -230,7 +228,7 @@ public class MooClientScreen extends Screen {
         }
 
         // 6. Draggable Scoreboard Widget Preview
-        if (com.mooclient.module.modules.ScoreboardModule.isScoreboardEnabled()) {
+        if (ScoreboardModule.isScoreboardEnabled()) {
             net.minecraft.scoreboard.ScoreboardObjective obj = null;
             if (this.client != null && this.client.world != null && this.client.world.getScoreboard() != null) {
                 obj = this.client.world.getScoreboard()
@@ -260,7 +258,7 @@ public class MooClientScreen extends Screen {
                 int titleWidth = this.textRenderer.getWidth(titleText);
                 int maxEntryWidth = titleWidth;
                 int colonWidth = this.textRenderer.getWidth(": ");
-                boolean showScores = com.mooclient.module.modules.ScoreboardModule.isShowScores();
+                boolean showScores = ScoreboardModule.isShowScores();
 
                 for (net.minecraft.scoreboard.ScoreboardEntry entry : filtered) {
                     net.minecraft.scoreboard.Team team = scoreboard.getScoreHolderTeam(entry.owner());
@@ -284,13 +282,13 @@ public class MooClientScreen extends Screen {
                 totalHeight = 7 * lineHeight;
             }
 
-            int boxW = (int) Math.round((totalWidth + 4) * hudScale);
-            int boxH = (int) Math.round((totalHeight + 3) * hudScale);
-            com.mooclient.module.modules.ScoreboardModule.width = boxW;
-            com.mooclient.module.modules.ScoreboardModule.height = boxH;
+            int boxW = Math.round((totalWidth + 4) * hudScale);
+            int boxH = Math.round((totalHeight + 3) * hudScale);
+            ScoreboardModule.width = boxW;
+            ScoreboardModule.height = boxH;
 
-            int x = com.mooclient.module.modules.ScoreboardModule.position.calculateX(boxW, this.width);
-            int y = com.mooclient.module.modules.ScoreboardModule.position.calculateY(boxH, this.height);
+            int x = ScoreboardModule.position.calculateX(boxW, this.width);
+            int y = ScoreboardModule.position.calculateY(boxH, this.height);
 
             if (obj == null) {
                 renderScoreboardPreview(context, x, y, totalWidth, lineHeight);

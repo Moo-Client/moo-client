@@ -41,8 +41,7 @@ public class FpsModule extends Module {
     public static int height = 12;
 
     public FpsModule() {
-        super("FPS", "Wyświetla licznik FPS na ekranie", Category.HUD);
-        setEnabled(true);
+        super("FPS", "Wyświetla licznik FPS na ekranie", Category.HUD, true);
     }
 
     @Override

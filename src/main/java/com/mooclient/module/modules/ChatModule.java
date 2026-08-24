@@ -21,8 +21,7 @@ public class ChatModule extends Module {
     private static float animOffset = 0.0f;
 
     public ChatModule() {
-        super("Chat", "Ulepszenia czatu: przezroczystość, cień tekstu, nielimitowana historia, animacja", Category.RENDER);
-        setEnabled(true);
+        super("Chat", "Ulepszenia czatu: przezroczystość, cień tekstu, nielimitowana historia, animacja", Category.RENDER, true);
     }
 
     @Override

@@ -43,8 +43,7 @@ public class NametagsModule extends Module {
     private static boolean textShadow = true;
 
     public NametagsModule() {
-        super("Nametags", "Wyświetla nicki, logo i kolorowy ping nad graczami", Category.RENDER);
-        setEnabled(true);
+        super("Nametags", "Wyświetla nicki, logo i kolorowy ping nad graczami", Category.RENDER, true);
     }
 
     @Override

@@ -12,10 +12,14 @@ public abstract class Module {
     private boolean enabled;
 
     public Module(String name, String description, Category category) {
+        this(name, description, category, false);
+    }
+
+    public Module(String name, String description, Category category, boolean defaultEnabled) {
         this.name = name;
         this.description = description;
         this.category = category;
-        this.enabled = false;
+        this.enabled = defaultEnabled;
     }
 
     /**

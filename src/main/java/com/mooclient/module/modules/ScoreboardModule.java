@@ -25,8 +25,7 @@ public class ScoreboardModule extends Module {
     public static int height = 80;
 
     public ScoreboardModule() {
-        super("Scoreboard", "Dostosuj i przesuwaj tablicę wyników (Scoreboard)", Category.HUD);
-        setEnabled(true);
+        super("Scoreboard", "Dostosuj i przesuwaj tablicę wyników (Scoreboard)", Category.HUD, true);
     }
 
     @Override

@@ -68,8 +68,8 @@ public class InGameHudMixin {
             }
 
             int textWidth = client.textRenderer.getWidth(fpsText);
-            int boxW = (int) Math.round((textWidth + 6) * hudScale);
-            int boxH = (int) Math.round(12 * hudScale);
+            int boxW = Math.round((textWidth + 6) * hudScale);
+            int boxH = Math.round(12 * hudScale);
             FpsModule.width = boxW;
             FpsModule.height = boxH;
 
@@ -117,8 +117,8 @@ public class InGameHudMixin {
             }
 
             int textWidth = client.textRenderer.getWidth(sprintText);
-            int boxW = (int) Math.round((textWidth + 6) * hudScale);
-            int boxH = (int) Math.round(12 * hudScale);
+            int boxW = Math.round((textWidth + 6) * hudScale);
+            int boxH = Math.round(12 * hudScale);
             ToggleSprintModule.width = boxW;
             ToggleSprintModule.height = boxH;
 
@@ -189,8 +189,8 @@ public class InGameHudMixin {
                     }
                 }
 
-                int boxW = (int) Math.round((maxW + 4) * hudScale);
-                int boxH = (int) Math.round(Math.max(26, totalH) * hudScale);
+                int boxW = Math.round((maxW + 4) * hudScale);
+                int boxH = Math.round(Math.max(26, totalH) * hudScale);
                 PotionEffectsModule.width = boxW;
                 PotionEffectsModule.height = boxH;
 
@@ -361,8 +361,8 @@ public class InGameHudMixin {
             }
 
             int textWidth = client.textRenderer.getWidth(pingText);
-            int boxW = (int) Math.round((textWidth + 6) * hudScale);
-            int boxH = (int) Math.round(12 * hudScale);
+            int boxW = Math.round((textWidth + 6) * hudScale);
+            int boxH = Math.round(12 * hudScale);
             PingModule.width = boxW;
             PingModule.height = boxH;
 
@@ -406,8 +406,8 @@ public class InGameHudMixin {
             String cpsText = CpsModule.getFormattedText(leftCps, rightCps);
 
             int textWidth = client.textRenderer.getWidth(cpsText);
-            int boxW = (int) Math.round((textWidth + 6) * hudScale);
-            int boxH = (int) Math.round(12 * hudScale);
+            int boxW = Math.round((textWidth + 6) * hudScale);
+            int boxH = Math.round(12 * hudScale);
             CpsModule.width = boxW;
             CpsModule.height = boxH;
 
@@ -514,8 +514,8 @@ public class InGameHudMixin {
         float hudScale = com.mooclient.util.MooClientSettings.getHudScaleFactor();
         boolean customScale = (hudScale != 1.0f);
 
-        int boxW = (int) Math.round((totalWidth + 4) * hudScale);
-        int boxH = (int) Math.round((totalHeight + 3) * hudScale);
+        int boxW = Math.round((totalWidth + 4) * hudScale);
+        int boxH = Math.round((totalHeight + 3) * hudScale);
         ScoreboardModule.width = boxW;
         ScoreboardModule.height = boxH;
 

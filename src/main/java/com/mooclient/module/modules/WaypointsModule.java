@@ -23,8 +23,7 @@ public class WaypointsModule extends Module {
     private static String keyName = "B";
 
     public WaypointsModule() {
-        super("Waypoints", "Punkty nawigacyjne w świecie i radar celów", Category.RENDER);
-        setEnabled(true);
+        super("Waypoints", "Punkty nawigacyjne w świecie i radar celów", Category.RENDER, true);
     }
 
     @Override

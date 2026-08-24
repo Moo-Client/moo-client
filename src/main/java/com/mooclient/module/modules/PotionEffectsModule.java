@@ -43,8 +43,7 @@ public class PotionEffectsModule extends Module {
     private static boolean showIcon = true;
 
     public PotionEffectsModule() {
-        super("Potion Effects", "Wyświetla aktywne efekty mikstur i czas", Category.HUD);
-        setEnabled(true);
+        super("Potion Effects", "Wyświetla aktywne efekty mikstur i czas", Category.HUD, true);
     }
 
     @Override
