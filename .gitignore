@@ -22,7 +22,9 @@ launcher/node_modules/
 launcher/dist/
 launcher/release-dist/
 launcher/build-out/
+launcher/dist-win/
 dist/
+dist-win/
 build-out/
 *.log
 npm-debug.log*

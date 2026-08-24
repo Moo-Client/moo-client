@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
-    "build": "electron-builder --dir && node patch-icon.js && electron-builder --win nsis --prepackaged build-out/win-unpacked",
+    "build": "electron-builder --dir && node patch-icon.js && electron-builder --win nsis --prepackaged dist-win/win-unpacked",
     "publish": "electron-builder --win --publish always"
   },
   "author": "MooTeam",
@@ -26,8 +26,14 @@
   "build": {
     "appId": "com.mooclient.launcher",
     "productName": "Moo Client",
+    "compression": "maximum",
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
     "directories": {
-      "output": "build-out"
+      "output": "dist-win"
     },
     "win": {
       "target": [
