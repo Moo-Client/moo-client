@@ -1,8 +1,6 @@
 {
-  "version": "1.6.5",
+  "version": "1.6.4",
   "minecraft": "1.21.4",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.5/moo-client-1.6.5.jar",
-  "installer_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.5/MooClient-Setup.exe",
-  "bootstrapper_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.5/MooClient-Setup.exe",
-  "changelog": "🚀 Moo Client v1.6.5:\n✓ Powiększone, bardziej przejrzyste menu modów (640x310) z większymi kartami (186x145)\n✓ Płynne przewijanie listy kółkiem myszy (scroll)\n✓ Lekki Bootstrapper (~600 KB) z wyśrodkowaną ramką INSTALLER\n✓ Szybkie, natychmiastowe aktualizacje launchera"
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.4/moo-client-1.6.4.jar",
+  "changelog": "🚀 Moo Client v1.6.4 (CPS Module & Smart Snapping):\n✓ Dodano nowy moduł CPS (LPM / PPM / Oba przyciski) z czasem rzeczywistym\n✓ Wdrożono Smart Snapping & Alignment Guidelines (linie pomocnicze HUD)\n✓ Naprawiono responsywne pozycjonowanie modułów przy zmianie rozmiaru okna\n✓ Spolszczono style wyświetlania (Prosty, Nawiasy, Kompaktowy) i tryby aktywacji"
 }

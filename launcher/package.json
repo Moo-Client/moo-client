@@ -1,12 +1,12 @@
 {
   "name": "moo-client-launcher",
-  "version": "1.6.5",
+  "version": "1.6.4",
   "description": "Moo Client Launcher — Premium Minecraft Client inspired by Lunar Client",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
-    "build": "electron-builder --dir && node patch-icon.js && electron-builder --win nsis --prepackaged dist-win/win-unpacked",
+    "build": "electron-builder --dir && node patch-icon.js && electron-builder --win nsis --prepackaged build-out/win-unpacked",
     "publish": "electron-builder --win --publish always"
   },
   "author": "MooTeam",
@@ -26,14 +26,8 @@
   "build": {
     "appId": "com.mooclient.launcher",
     "productName": "Moo Client",
-    "compression": "maximum",
-    "files": [
-      "src/**/*",
-      "assets/**/*",
-      "package.json"
-    ],
     "directories": {
-      "output": "dist-win"
+      "output": "build-out"
     },
     "win": {
       "target": [

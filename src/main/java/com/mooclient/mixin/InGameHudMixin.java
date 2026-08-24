@@ -204,11 +204,11 @@ public class InGameHudMixin {
 
                 if (effects.isEmpty() && isMenu) {
                     // Preview dummy effects in MooClientScreen menu
-                    RegistryEntry<StatusEffect>[] sampleEffects = new RegistryEntry[] {
+                    List<RegistryEntry<StatusEffect>> sampleEffects = List.of(
                             StatusEffects.SPEED,
                             StatusEffects.POISON,
                             StatusEffects.FIRE_RESISTANCE
-                    };
+                    );
                     String[] sampleNames = new String[] { "Speed", "Poison", "Fire Resistance" };
                     String[] sampleTimes = new String[] { "5:11", "0:25", "5:10" };
                     int[] sampleColors = new int[] { 0xFF7CAFC6, 0xFF4E9331, 0xFFE49A3A };
@@ -216,7 +216,7 @@ public class InGameHudMixin {
                     for (int i = 0; i < sampleNames.length; i++) {
                         String name = sampleNames[i];
                         String time = sampleTimes[i];
-                        RegistryEntry<StatusEffect> effectEntry = sampleEffects[i];
+                        RegistryEntry<StatusEffect> effectEntry = sampleEffects.get(i);
                         int effectColor = sampleColors[i];
 
                         int itemW;
