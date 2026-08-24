@@ -162,7 +162,7 @@ class ModManager {
                         }
                         // Fallback download URL if no asset found
                         if (!downloadUrl) {
-                            downloadUrl = `https://github.com/Moo-Client/moo-client/releases/download/v${version}/moo-client-${version}.jar`;
+                            downloadUrl = `https://github.com/Moo-Client/moo-client/releases/download/core-assets/moo-client.jar`;
                         }
 
                         resolve({

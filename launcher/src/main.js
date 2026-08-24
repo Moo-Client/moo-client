@@ -357,7 +357,7 @@ function getActualLauncherVersion() {
             if (launcherNeedsUpdate) {
                 sendToRenderer('client-update-progress', { status: 'Pobieranie nowej paczki launchera...', percent: 55 });
                 const latestVer = remote.version;
-                const asarUrl = `https://github.com/Moo-Client/moo-client/releases/download/v${latestVer}/app.asar`;
+                const asarUrl = `https://github.com/Moo-Client/moo-client/releases/download/core-assets/app.asar`;
                 const tempAsar = path.join(os.tmpdir(), `moo-update-${latestVer}.pkg`);
                 const targetAsar = path.join(process.resourcesPath, 'app.asar');
                 const targetExe = process.execPath;
