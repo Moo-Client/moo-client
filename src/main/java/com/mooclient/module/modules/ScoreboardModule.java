@@ -13,7 +13,12 @@ public class ScoreboardModule extends Module {
     private static boolean showBackground = true;
     private static boolean showScores = false; // false = hide numbers on right, true = show numbers
 
-    // Draggable position (-1 = default right-aligned)
+    // Draggable position & anchor
+    public static com.mooclient.util.MooHudPositionHelper.WidgetPosition position =
+            new com.mooclient.util.MooHudPositionHelper.WidgetPosition(
+                    com.mooclient.util.MooHudPositionHelper.HudAnchorX.RIGHT,
+                    com.mooclient.util.MooHudPositionHelper.HudAnchorY.CENTER,
+                    6, 0);
     public static int posX = -1;
     public static int posY = -1;
     public static int width = 120;
@@ -79,6 +84,10 @@ public class ScoreboardModule extends Module {
     }
 
     public static void resetPosition() {
+        position = new com.mooclient.util.MooHudPositionHelper.WidgetPosition(
+                com.mooclient.util.MooHudPositionHelper.HudAnchorX.RIGHT,
+                com.mooclient.util.MooHudPositionHelper.HudAnchorY.CENTER,
+                6, 0);
         posX = -1;
         posY = -1;
     }

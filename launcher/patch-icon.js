@@ -1,7 +1,7 @@
 const { rcedit } = require('rcedit');
 const path = require('path');
 
-const exePath = path.join(__dirname, 'release-dist', 'win-unpacked', 'Moo Client.exe');
+const exePath = path.join(__dirname, 'build-out', 'win-unpacked', 'Moo Client.exe');
 const icoPath = path.join(__dirname, 'build', 'icon.ico');
 
 const pkg = require('./package.json');

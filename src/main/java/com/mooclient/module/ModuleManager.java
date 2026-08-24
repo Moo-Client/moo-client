@@ -29,18 +29,19 @@ public class ModuleManager {
     }
 
     public void init() {
-        register(new FullbrightModule());   // "Gamma"
-        register(new FpsModule());          // "FPS"
+        register(new FullbrightModule()); // "Gamma"
+        register(new FpsModule()); // "FPS"
         register(new ToggleSprintModule()); // "Sprint"
-        register(new FreelookModule());     // "Freelook"
+        register(new FreelookModule()); // "Freelook"
         register(new com.mooclient.module.modules.PotionEffectsModule()); // "Potion Effects"
-        register(new com.mooclient.module.modules.NametagsModule());      // "Nametags"
-        register(new com.mooclient.module.modules.ZoomModule());          // "Zoom"
-        register(new com.mooclient.module.modules.MacroModule());         // "Macro"
-        register(new com.mooclient.module.modules.ChatModule());          // "Chat"
-        register(new com.mooclient.module.modules.PingModule());          // "Ping"
-        register(new com.mooclient.module.modules.WaypointsModule());     // "Waypoints"
-        register(new com.mooclient.module.modules.ScoreboardModule());    // "Scoreboard"
+        register(new com.mooclient.module.modules.NametagsModule()); // "Nametags"
+        register(new com.mooclient.module.modules.ZoomModule()); // "Zoom"
+        register(new com.mooclient.module.modules.MacroModule()); // "Macro"
+        register(new com.mooclient.module.modules.ChatModule()); // "Chat"
+        register(new com.mooclient.module.modules.PingModule()); // "Ping"
+        register(new com.mooclient.module.modules.WaypointsModule()); // "Waypoints"
+        register(new com.mooclient.module.modules.ScoreboardModule()); // "Scoreboard"
+        register(new com.mooclient.module.modules.CpsModule()); // "CPS"
     }
 
     public void register(Module module) {

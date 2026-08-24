@@ -32,7 +32,8 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Mixin to render in-game HUD modules (FPS, Sprint, Potion Effects, Scoreboard) at customizable positions.
+ * Mixin to render in-game HUD modules (FPS, Sprint, Potion Effects, Scoreboard)
+ * at customizable positions.
  */
 @Mixin(InGameHud.class)
 public class InGameHudMixin {
@@ -69,8 +70,8 @@ public class InGameHudMixin {
             FpsModule.width = boxW;
             FpsModule.height = boxH;
 
-            int x = MooHudPositionHelper.calculateRenderX(FpsModule.posX, boxW, scaledWidth, MooHudPositionHelper.HudAnchorX.LEFT, 6);
-            int y = MooHudPositionHelper.calculateRenderY(FpsModule.posY, boxH, scaledHeight, MooHudPositionHelper.HudAnchorY.TOP, 6);
+            int x = FpsModule.position.calculateX(boxW, scaledWidth);
+            int y = FpsModule.position.calculateY(boxH, scaledHeight);
 
             if (customScale) {
                 context.getMatrices().push();
@@ -84,7 +85,8 @@ public class InGameHudMixin {
                     context.fill(x - 2, y - 2, x + textWidth + 4, y + 10, 0x88000000);
                     context.fill(x - 3, y - 2, x - 2, y + 10, 0xFFFFFFFF);
                 }
-                context.drawText(client.textRenderer, fpsText, x + (FpsModule.isShowBackground() ? 2 : 0), y, 0xFFFFFFFF, FpsModule.isTextShadow());
+                context.drawText(client.textRenderer, fpsText, x + (FpsModule.isShowBackground() ? 2 : 0), y,
+                        0xFFFFFFFF, FpsModule.isTextShadow());
             } else {
                 if (FpsModule.isShowBackground()) {
                     context.fill(x - 2, y - 2, x + textWidth + 2, y + 10, 0x66000000);
@@ -98,7 +100,8 @@ public class InGameHudMixin {
         }
 
         // 2. Sprint Module Rendering
-        if (ToggleSprintModule.isSprintEnabled() && (ToggleSprintModule.shouldSprint() || client.currentScreen instanceof com.mooclient.gui.MooClientScreen)) {
+        if (ToggleSprintModule.isSprintEnabled() && (ToggleSprintModule.shouldSprint()
+                || client.currentScreen instanceof com.mooclient.gui.MooClientScreen)) {
             ToggleSprintModule.SprintStyle style = ToggleSprintModule.getStyle();
 
             String sprintText;
@@ -116,8 +119,8 @@ public class InGameHudMixin {
             ToggleSprintModule.width = boxW;
             ToggleSprintModule.height = boxH;
 
-            int x = MooHudPositionHelper.calculateRenderX(ToggleSprintModule.posX, boxW, scaledWidth, MooHudPositionHelper.HudAnchorX.LEFT, 6);
-            int y = MooHudPositionHelper.calculateRenderY(ToggleSprintModule.posY, boxH, scaledHeight, MooHudPositionHelper.HudAnchorY.TOP, 20);
+            int x = ToggleSprintModule.position.calculateX(boxW, scaledWidth);
+            int y = ToggleSprintModule.position.calculateY(boxH, scaledHeight);
 
             if (customScale) {
                 context.getMatrices().push();
@@ -166,7 +169,8 @@ public class InGameHudMixin {
                     for (StatusEffectInstance effect : effects) {
                         RegistryEntry<StatusEffect> effectEntry = effect.getEffectType();
                         StatusEffect statusEffect = effectEntry.value();
-                        String name = statusEffect.getName().getString() + PotionEffectsModule.getAmplifierString(effect.getAmplifier());
+                        String name = statusEffect.getName().getString()
+                                + PotionEffectsModule.getAmplifierString(effect.getAmplifier());
                         String duration = PotionEffectsModule.formatDuration(effect);
                         int itemW;
                         if (pStyle == PotionEffectsModule.PotionStyle.COMPACT) {
@@ -175,7 +179,8 @@ public class InGameHudMixin {
                         } else {
                             int nameW = client.textRenderer.getWidth(name);
                             int timeW = client.textRenderer.getWidth(duration);
-                            itemW = (showIcon ? 22 : 0) + Math.max(nameW, timeW) + (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT ? 12 : 6);
+                            itemW = (showIcon ? 22 : 0) + Math.max(nameW, timeW)
+                                    + (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT ? 12 : 6);
                         }
                         maxW = Math.max(maxW, itemW);
                     }
@@ -186,8 +191,8 @@ public class InGameHudMixin {
                 PotionEffectsModule.width = boxW;
                 PotionEffectsModule.height = boxH;
 
-                int startX = MooHudPositionHelper.calculateRenderX(PotionEffectsModule.posX, boxW, scaledWidth, MooHudPositionHelper.HudAnchorX.LEFT, 6);
-                int startY = MooHudPositionHelper.calculateRenderY(PotionEffectsModule.posY, boxH, scaledHeight, MooHudPositionHelper.HudAnchorY.TOP, 50);
+                int startX = PotionEffectsModule.position.calculateX(boxW, scaledWidth);
+                int startY = PotionEffectsModule.position.calculateY(boxH, scaledHeight);
                 int curY = startY;
 
                 if (customScale) {
@@ -199,14 +204,14 @@ public class InGameHudMixin {
 
                 if (effects.isEmpty() && isMenu) {
                     // Preview dummy effects in MooClientScreen menu
-                    RegistryEntry<StatusEffect>[] sampleEffects = new RegistryEntry[]{
-                        StatusEffects.SPEED,
-                        StatusEffects.POISON,
-                        StatusEffects.FIRE_RESISTANCE
+                    RegistryEntry<StatusEffect>[] sampleEffects = new RegistryEntry[] {
+                            StatusEffects.SPEED,
+                            StatusEffects.POISON,
+                            StatusEffects.FIRE_RESISTANCE
                     };
-                    String[] sampleNames = new String[]{"Speed", "Poison", "Fire Resistance"};
-                    String[] sampleTimes = new String[]{"5:11", "0:25", "5:10"};
-                    int[] sampleColors = new int[]{0xFF7CAFC6, 0xFF4E9331, 0xFFE49A3A};
+                    String[] sampleNames = new String[] { "Speed", "Poison", "Fire Resistance" };
+                    String[] sampleTimes = new String[] { "5:11", "0:25", "5:10" };
+                    int[] sampleColors = new int[] { 0xFF7CAFC6, 0xFF4E9331, 0xFFE49A3A };
 
                     for (int i = 0; i < sampleNames.length; i++) {
                         String name = sampleNames[i];
@@ -221,12 +226,14 @@ public class InGameHudMixin {
                         } else {
                             int nameW = client.textRenderer.getWidth(name);
                             int timeW = client.textRenderer.getWidth(time);
-                            itemW = (showIcon ? 22 : 0) + Math.max(nameW, timeW) + (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT ? 12 : 6);
+                            itemW = (showIcon ? 22 : 0) + Math.max(nameW, timeW)
+                                    + (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT ? 12 : 6);
                         }
 
                         if (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT) {
                             context.fill(startX - 2, curY - 2, startX + itemW, curY + rowH, 0x77000000);
-                            context.fill(startX - 2, curY - 2, startX, curY + rowH, effectColor); // Colored accent bar on left
+                            context.fill(startX - 2, curY - 2, startX, curY + rowH, effectColor); // Colored accent bar
+                                                                                                  // on left
                         } else if (bg) {
                             context.fill(startX - 2, curY - 2, startX + itemW, curY + rowH, 0x66000000);
                         }
@@ -238,18 +245,22 @@ public class InGameHudMixin {
                                 Sprite sprite = client.getStatusEffectSpriteManager().getSprite(effectEntry);
                                 if (sprite != null) {
                                     if (pStyle == PotionEffectsModule.PotionStyle.COMPACT) {
-                                        context.drawSpriteStretched(RenderLayer::getGuiTextured, sprite, textX, curY + 1, 12, 12);
+                                        context.drawSpriteStretched(RenderLayer::getGuiTextured, sprite, textX,
+                                                curY + 1, 12, 12);
                                     } else {
-                                        context.drawSpriteStretched(RenderLayer::getGuiTextured, sprite, textX, curY + 1, 18, 18);
+                                        context.drawSpriteStretched(RenderLayer::getGuiTextured, sprite, textX,
+                                                curY + 1, 18, 18);
                                     }
                                 }
-                            } catch (Exception ignored) {}
+                            } catch (Exception ignored) {
+                            }
                             textX += (pStyle == PotionEffectsModule.PotionStyle.COMPACT) ? 16 : 22;
                         }
 
                         // 2. Draw Text
                         if (pStyle == PotionEffectsModule.PotionStyle.COMPACT) {
-                            context.drawText(client.textRenderer, name + " §7" + time, textX, curY + 2, 0xFFFFFFFF, shadow);
+                            context.drawText(client.textRenderer, name + " §7" + time, textX, curY + 2, 0xFFFFFFFF,
+                                    shadow);
                         } else if (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT) {
                             context.drawText(client.textRenderer, name, textX, curY + 1, 0xFFFFFFFF, shadow);
                             context.drawText(client.textRenderer, "§7" + time, textX, curY + 10, 0xFFAAAAAA, shadow);
@@ -265,7 +276,8 @@ public class InGameHudMixin {
                     for (StatusEffectInstance effect : effects) {
                         RegistryEntry<StatusEffect> effectEntry = effect.getEffectType();
                         StatusEffect statusEffect = effectEntry.value();
-                        String name = statusEffect.getName().getString() + PotionEffectsModule.getAmplifierString(effect.getAmplifier());
+                        String name = statusEffect.getName().getString()
+                                + PotionEffectsModule.getAmplifierString(effect.getAmplifier());
                         String duration = PotionEffectsModule.formatDuration(effect);
                         int color = 0xFF000000 | statusEffect.getColor();
 
@@ -276,12 +288,14 @@ public class InGameHudMixin {
                         } else {
                             int nameW = client.textRenderer.getWidth(name);
                             int timeW = client.textRenderer.getWidth(duration);
-                            itemW = (showIcon ? 22 : 0) + Math.max(nameW, timeW) + (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT ? 12 : 6);
+                            itemW = (showIcon ? 22 : 0) + Math.max(nameW, timeW)
+                                    + (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT ? 12 : 6);
                         }
 
                         if (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT) {
                             context.fill(startX - 2, curY - 2, startX + itemW, curY + rowH, 0x77000000);
-                            context.fill(startX - 2, curY - 2, startX, curY + rowH, color); // Colored accent bar on left
+                            context.fill(startX - 2, curY - 2, startX, curY + rowH, color); // Colored accent bar on
+                                                                                            // left
                         } else if (bg) {
                             context.fill(startX - 2, curY - 2, startX + itemW, curY + rowH, 0x66000000);
                         }
@@ -293,21 +307,26 @@ public class InGameHudMixin {
                                 Sprite sprite = client.getStatusEffectSpriteManager().getSprite(effectEntry);
                                 if (sprite != null) {
                                     if (pStyle == PotionEffectsModule.PotionStyle.COMPACT) {
-                                        context.drawSpriteStretched(RenderLayer::getGuiTextured, sprite, textX, curY + 1, 12, 12);
+                                        context.drawSpriteStretched(RenderLayer::getGuiTextured, sprite, textX,
+                                                curY + 1, 12, 12);
                                     } else {
-                                        context.drawSpriteStretched(RenderLayer::getGuiTextured, sprite, textX, curY + 1, 18, 18);
+                                        context.drawSpriteStretched(RenderLayer::getGuiTextured, sprite, textX,
+                                                curY + 1, 18, 18);
                                     }
                                 }
-                            } catch (Exception ignored) {}
+                            } catch (Exception ignored) {
+                            }
                             textX += (pStyle == PotionEffectsModule.PotionStyle.COMPACT) ? 16 : 22;
                         }
 
                         // 2. Draw Text
                         if (pStyle == PotionEffectsModule.PotionStyle.COMPACT) {
-                            context.drawText(client.textRenderer, name + " §7" + duration, textX, curY + 2, 0xFFFFFFFF, shadow);
+                            context.drawText(client.textRenderer, name + " §7" + duration, textX, curY + 2, 0xFFFFFFFF,
+                                    shadow);
                         } else if (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT) {
                             context.drawText(client.textRenderer, name, textX, curY + 1, 0xFFFFFFFF, shadow);
-                            context.drawText(client.textRenderer, "§7" + duration, textX, curY + 10, 0xFFAAAAAA, shadow);
+                            context.drawText(client.textRenderer, "§7" + duration, textX, curY + 10, 0xFFAAAAAA,
+                                    shadow);
                         } else {
                             // SIMPLE
                             context.drawText(client.textRenderer, name, textX, curY + 1, 0xFFFFFFFF, shadow);
@@ -327,7 +346,8 @@ public class InGameHudMixin {
         // 4. Ping Module Rendering
         if (com.mooclient.module.modules.PingModule.isPingEnabled()) {
             int ping = com.mooclient.module.modules.PingModule.getCurrentPing();
-            com.mooclient.module.modules.PingModule.PingStyle style = com.mooclient.module.modules.PingModule.getStyle();
+            com.mooclient.module.modules.PingModule.PingStyle style = com.mooclient.module.modules.PingModule
+                    .getStyle();
 
             String pingText;
             if (style == com.mooclient.module.modules.PingModule.PingStyle.BRACKETS) {
@@ -344,8 +364,8 @@ public class InGameHudMixin {
             com.mooclient.module.modules.PingModule.width = boxW;
             com.mooclient.module.modules.PingModule.height = boxH;
 
-            int x = MooHudPositionHelper.calculateRenderX(com.mooclient.module.modules.PingModule.posX, boxW, scaledWidth, MooHudPositionHelper.HudAnchorX.LEFT, 6);
-            int y = MooHudPositionHelper.calculateRenderY(com.mooclient.module.modules.PingModule.posY, boxH, scaledHeight, MooHudPositionHelper.HudAnchorY.TOP, 34);
+            int x = com.mooclient.module.modules.PingModule.position.calculateX(boxW, scaledWidth);
+            int y = com.mooclient.module.modules.PingModule.position.calculateY(boxH, scaledHeight);
 
             if (customScale) {
                 context.getMatrices().push();
@@ -359,12 +379,60 @@ public class InGameHudMixin {
                     context.fill(x - 2, y - 2, x + textWidth + 4, y + 10, 0x88000000);
                     context.fill(x - 3, y - 2, x - 2, y + 10, 0xFFFFFFFF);
                 }
-                context.drawText(client.textRenderer, pingText, x + (com.mooclient.module.modules.PingModule.isShowBackground() ? 2 : 0), y, 0xFFFFFFFF, com.mooclient.module.modules.PingModule.isTextShadow());
+                context.drawText(client.textRenderer, pingText,
+                        x + (com.mooclient.module.modules.PingModule.isShowBackground() ? 2 : 0), y, 0xFFFFFFFF,
+                        com.mooclient.module.modules.PingModule.isTextShadow());
             } else {
                 if (com.mooclient.module.modules.PingModule.isShowBackground()) {
                     context.fill(x - 2, y - 2, x + textWidth + 2, y + 10, 0x66000000);
                 }
-                context.drawText(client.textRenderer, pingText, x, y, 0xFFFFFFFF, com.mooclient.module.modules.PingModule.isTextShadow());
+                context.drawText(client.textRenderer, pingText, x, y, 0xFFFFFFFF,
+                        com.mooclient.module.modules.PingModule.isTextShadow());
+            }
+
+            if (customScale) {
+                context.getMatrices().pop();
+            }
+        }
+
+        // 5. CPS Module Rendering
+        if (com.mooclient.module.modules.CpsModule.isCpsEnabled()) {
+            int leftCps = com.mooclient.module.modules.CpsModule.getLeftCps();
+            int rightCps = com.mooclient.module.modules.CpsModule.getRightCps();
+            com.mooclient.module.modules.CpsModule.CpsStyle style = com.mooclient.module.modules.CpsModule.getStyle();
+
+            String cpsText = com.mooclient.module.modules.CpsModule.getFormattedText(leftCps, rightCps);
+
+            int textWidth = client.textRenderer.getWidth(cpsText);
+            int boxW = (int) Math.round((textWidth + 6) * hudScale);
+            int boxH = (int) Math.round(12 * hudScale);
+            com.mooclient.module.modules.CpsModule.width = boxW;
+            com.mooclient.module.modules.CpsModule.height = boxH;
+
+            int x = com.mooclient.module.modules.CpsModule.position.calculateX(boxW, scaledWidth);
+            int y = com.mooclient.module.modules.CpsModule.position.calculateY(boxH, scaledHeight);
+
+            if (customScale) {
+                context.getMatrices().push();
+                context.getMatrices().translate(x, y, 0);
+                context.getMatrices().scale(hudScale, hudScale, 1.0f);
+                context.getMatrices().translate(-x, -y, 0);
+            }
+
+            if (style == com.mooclient.module.modules.CpsModule.CpsStyle.MOO_CLIENT) {
+                if (com.mooclient.module.modules.CpsModule.isShowBackground()) {
+                    context.fill(x - 2, y - 2, x + textWidth + 4, y + 10, 0x88000000);
+                    context.fill(x - 3, y - 2, x - 2, y + 10, 0xFFFFFFFF);
+                }
+                context.drawText(client.textRenderer, cpsText,
+                        x + (com.mooclient.module.modules.CpsModule.isShowBackground() ? 2 : 0), y, 0xFFFFFFFF,
+                        com.mooclient.module.modules.CpsModule.isTextShadow());
+            } else {
+                if (com.mooclient.module.modules.CpsModule.isShowBackground()) {
+                    context.fill(x - 2, y - 2, x + textWidth + 2, y + 10, 0x66000000);
+                }
+                context.drawText(client.textRenderer, cpsText, x, y, 0xFFFFFFFF,
+                        com.mooclient.module.modules.CpsModule.isTextShadow());
             }
 
             if (customScale) {
@@ -379,12 +447,14 @@ public class InGameHudMixin {
         if (client == null || client.options.hudHidden || client.getDebugHud().shouldShowDebugHud()) {
             return;
         }
-        // Render waypoints BEFORE crosshair and main HUD so crosshair is always visible in front
+        // Render waypoints BEFORE crosshair and main HUD so crosshair is always visible
+        // in front
         com.mooclient.waypoint.WaypointRenderer.renderHudWaypoints(context, client, tickCounter.getTickDelta(true));
     }
 
     @Inject(method = "renderScoreboardSidebar(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/scoreboard/ScoreboardObjective;)V", at = @At("HEAD"), cancellable = true)
-    private void mooClient$renderScoreboardSidebar(DrawContext context, ScoreboardObjective objective, CallbackInfo ci) {
+    private void mooClient$renderScoreboardSidebar(DrawContext context, ScoreboardObjective objective,
+            CallbackInfo ci) {
         ci.cancel();
         if (!ScoreboardModule.isScoreboardEnabled()) {
             return;
@@ -405,7 +475,8 @@ public class InGameHudMixin {
         Collection<ScoreboardEntry> rawEntries = scoreboard.getScoreboardEntries(objective);
         List<ScoreboardEntry> filtered = rawEntries.stream()
                 .filter(e -> !e.hidden())
-                .sorted(Comparator.comparing(ScoreboardEntry::value).reversed().thenComparing(ScoreboardEntry::owner, String.CASE_INSENSITIVE_ORDER))
+                .sorted(Comparator.comparing(ScoreboardEntry::value).reversed().thenComparing(ScoreboardEntry::owner,
+                        String.CASE_INSENSITIVE_ORDER))
                 .limit(15)
                 .toList();
 
@@ -446,8 +517,8 @@ public class InGameHudMixin {
         ScoreboardModule.width = boxW;
         ScoreboardModule.height = boxH;
 
-        int startX = MooHudPositionHelper.calculateRenderX(ScoreboardModule.posX, boxW, scaledWidth, MooHudPositionHelper.HudAnchorX.RIGHT, 6);
-        int startY = MooHudPositionHelper.calculateRenderY(ScoreboardModule.posY, boxH, scaledHeight, MooHudPositionHelper.HudAnchorY.CENTER, 0);
+        int startX = ScoreboardModule.position.calculateX(boxW, scaledWidth);
+        int startY = ScoreboardModule.position.calculateY(boxH, scaledHeight);
 
         if (customScale) {
             context.getMatrices().push();
@@ -465,7 +536,8 @@ public class InGameHudMixin {
             context.fill(startX - 2, startY - 2, startX + totalWidth + 2, startY + lineHeight - 1, titleBg);
             // Body background
             if (entryCount > 0) {
-                context.fill(startX - 2, startY + lineHeight - 1, startX + totalWidth + 2, startY + totalHeight + 1, bodyBg);
+                context.fill(startX - 2, startY + lineHeight - 1, startX + totalWidth + 2, startY + totalHeight + 1,
+                        bodyBg);
             }
         }
 

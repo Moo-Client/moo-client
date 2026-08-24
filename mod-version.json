@@ -1,6 +1,6 @@
 {
-  "version": "1.6.3",
+  "version": "1.6.4",
   "minecraft": "1.21.4",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.3/moo-client-1.6.3.jar",
-  "changelog": "🚀 Moo Client v1.6.3 (HUD Scaling & Responsive Scoreboard Patch):\n✓ Naprawiono znikanie Scoreboarda w pomniejszonym oknie i przy zmianie skali GUI\n✓ Poprawiono pozycjonowanie i skalowanie efektów mikstur (Potion Effects)\n✓ Dodano responsywny system kotwiczenia (MooHudPositionHelper) dla wszystkich widgetów HUD"
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.4/moo-client-1.6.4.jar",
+  "changelog": "🚀 Moo Client v1.6.4 (CPS Module & Smart Snapping):\n✓ Dodano nowy moduł CPS (LPM / PPM / Oba przyciski) z czasem rzeczywistym\n✓ Wdrożono Smart Snapping & Alignment Guidelines (linie pomocnicze HUD)\n✓ Naprawiono responsywne pozycjonowanie modułów przy zmianie rozmiaru okna\n✓ Spolszczono style wyświetlania (Prosty, Nawiasy, Kompaktowy) i tryby aktywacji"
 }

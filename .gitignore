@@ -21,8 +21,9 @@ node_modules/
 launcher/node_modules/
 launcher/dist/
 launcher/release-dist/
+launcher/build-out/
 dist/
-release-dist/
+build-out/
 *.log
 npm-debug.log*
 yarn-debug.log*

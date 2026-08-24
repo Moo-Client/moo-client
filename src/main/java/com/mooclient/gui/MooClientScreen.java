@@ -19,7 +19,8 @@ import org.lwjgl.glfw.GLFW;
 import java.util.List;
 
 /**
- * Lunar Client inspired in-game HUD, Draggable Widgets, Mods Grid & Options Screen for Moo Client.
+ * Lunar Client inspired in-game HUD, Draggable Widgets, Mods Grid & Options
+ * Screen for Moo Client.
  */
 public class MooClientScreen extends Screen {
 
@@ -52,6 +53,7 @@ public class MooClientScreen extends Screen {
     private String draggingWidget = null;
     private int dragOffsetX = 0;
     private int dragOffsetY = 0;
+    private java.util.List<com.mooclient.util.MooHudPositionHelper.GuideLine> activeGuideLines = new java.util.ArrayList<>();
 
     // Palette
     private static final int COLOR_HUB_OVERLAY = 0x55000000;
@@ -114,21 +116,23 @@ public class MooClientScreen extends Screen {
      * Draggable HUD widgets with clean, minimalist preview
      */
     private void renderDraggableHudWidgets(DrawContext context, int mouseX, int mouseY) {
-        if (this.client == null) return;
+        if (this.client == null)
+            return;
         float hudScale = com.mooclient.util.MooClientSettings.getHudScaleFactor();
 
         // 1. Draggable FPS Widget
         if (FpsModule.isFpsEnabled()) {
             int fps = this.client.getCurrentFps();
-            String fpsText = FpsModule.getStyle() == FpsModule.FpsStyle.BRACKETS ? "[" + fps + " FPS]" : (FpsModule.isShowPrefix() ? "FPS: " + fps : fps + " FPS");
+            String fpsText = FpsModule.getStyle() == FpsModule.FpsStyle.BRACKETS ? "[" + fps + " FPS]"
+                    : (FpsModule.isShowPrefix() ? "FPS: " + fps : fps + " FPS");
             int textWidth = this.textRenderer.getWidth(fpsText);
             int boxW = (int) Math.round((textWidth + 6) * hudScale);
             int boxH = (int) Math.round(12 * hudScale);
             FpsModule.width = boxW;
             FpsModule.height = boxH;
 
-            int x = MooHudPositionHelper.calculateRenderX(FpsModule.posX, boxW, this.width, MooHudPositionHelper.HudAnchorX.LEFT, 6);
-            int y = MooHudPositionHelper.calculateRenderY(FpsModule.posY, boxH, this.height, MooHudPositionHelper.HudAnchorY.TOP, 6);
+            int x = FpsModule.position.calculateX(boxW, this.width);
+            int y = FpsModule.position.calculateY(boxH, this.height);
 
             boolean hovered = mouseX >= x - 2 && mouseX <= x - 2 + boxW && mouseY >= y - 2 && mouseY <= y - 2 + boxH;
             boolean isDragging = "FPS".equals(draggingWidget);
@@ -153,8 +157,8 @@ public class MooClientScreen extends Screen {
             ToggleSprintModule.width = boxW;
             ToggleSprintModule.height = boxH;
 
-            int x = MooHudPositionHelper.calculateRenderX(ToggleSprintModule.posX, boxW, this.width, MooHudPositionHelper.HudAnchorX.LEFT, 6);
-            int y = MooHudPositionHelper.calculateRenderY(ToggleSprintModule.posY, boxH, this.height, MooHudPositionHelper.HudAnchorY.TOP, 20);
+            int x = ToggleSprintModule.position.calculateX(boxW, this.width);
+            int y = ToggleSprintModule.position.calculateY(boxH, this.height);
 
             boolean hovered = mouseX >= x - 2 && mouseX <= x - 2 + boxW && mouseY >= y - 2 && mouseY <= y - 2 + boxH;
             boolean isDragging = "SPRINT".equals(draggingWidget);
@@ -167,8 +171,8 @@ public class MooClientScreen extends Screen {
             int boxW = PotionEffectsModule.width > 0 ? PotionEffectsModule.width : (int) Math.round(110 * hudScale);
             int boxH = PotionEffectsModule.height > 0 ? PotionEffectsModule.height : (int) Math.round(50 * hudScale);
 
-            int x = MooHudPositionHelper.calculateRenderX(PotionEffectsModule.posX, boxW, this.width, MooHudPositionHelper.HudAnchorX.LEFT, 6);
-            int y = MooHudPositionHelper.calculateRenderY(PotionEffectsModule.posY, boxH, this.height, MooHudPositionHelper.HudAnchorY.TOP, 50);
+            int x = PotionEffectsModule.position.calculateX(boxW, this.width);
+            int y = PotionEffectsModule.position.calculateY(boxH, this.height);
 
             boolean hovered = mouseX >= x - 2 && mouseX <= x - 2 + boxW && mouseY >= y - 2 && mouseY <= y - 2 + boxH;
             boolean isDragging = "POTIONS".equals(draggingWidget);
@@ -179,15 +183,18 @@ public class MooClientScreen extends Screen {
         // 4. Draggable Ping Widget Preview
         if (com.mooclient.module.modules.PingModule.isPingEnabled()) {
             int ping = com.mooclient.module.modules.PingModule.getCurrentPing();
-            String pingText = com.mooclient.module.modules.PingModule.getStyle() == com.mooclient.module.modules.PingModule.PingStyle.BRACKETS ? "[" + ping + " ms]" : (com.mooclient.module.modules.PingModule.isShowPrefix() ? "Ping: " + ping + " ms" : ping + " ms");
+            String pingText = com.mooclient.module.modules.PingModule
+                    .getStyle() == com.mooclient.module.modules.PingModule.PingStyle.BRACKETS ? "[" + ping + " ms]"
+                            : (com.mooclient.module.modules.PingModule.isShowPrefix() ? "Ping: " + ping + " ms"
+                                    : ping + " ms");
             int textWidth = this.textRenderer.getWidth(pingText);
             int boxW = (int) Math.round((textWidth + 6) * hudScale);
             int boxH = (int) Math.round(12 * hudScale);
             com.mooclient.module.modules.PingModule.width = boxW;
             com.mooclient.module.modules.PingModule.height = boxH;
 
-            int x = MooHudPositionHelper.calculateRenderX(com.mooclient.module.modules.PingModule.posX, boxW, this.width, MooHudPositionHelper.HudAnchorX.LEFT, 6);
-            int y = MooHudPositionHelper.calculateRenderY(com.mooclient.module.modules.PingModule.posY, boxH, this.height, MooHudPositionHelper.HudAnchorY.TOP, 34);
+            int x = com.mooclient.module.modules.PingModule.position.calculateX(boxW, this.width);
+            int y = com.mooclient.module.modules.PingModule.position.calculateY(boxH, this.height);
 
             boolean hovered = mouseX >= x - 2 && mouseX <= x - 2 + boxW && mouseY >= y - 2 && mouseY <= y - 2 + boxH;
             boolean isDragging = "PING".equals(draggingWidget);
@@ -195,11 +202,32 @@ public class MooClientScreen extends Screen {
             renderWidgetBoundingBox(context, x - 2, y - 2, boxW, boxH, hovered, isDragging);
         }
 
-        // 5. Draggable Scoreboard Widget Preview
+        // 5. Draggable CPS Widget Preview
+        if (com.mooclient.module.modules.CpsModule.isCpsEnabled()) {
+            int leftCps = com.mooclient.module.modules.CpsModule.getLeftCps();
+            int rightCps = com.mooclient.module.modules.CpsModule.getRightCps();
+            String cpsText = com.mooclient.module.modules.CpsModule.getFormattedText(leftCps, rightCps);
+            int textWidth = this.textRenderer.getWidth(cpsText);
+            int boxW = (int) Math.round((textWidth + 6) * hudScale);
+            int boxH = (int) Math.round(12 * hudScale);
+            com.mooclient.module.modules.CpsModule.width = boxW;
+            com.mooclient.module.modules.CpsModule.height = boxH;
+
+            int x = com.mooclient.module.modules.CpsModule.position.calculateX(boxW, this.width);
+            int y = com.mooclient.module.modules.CpsModule.position.calculateY(boxH, this.height);
+
+            boolean hovered = mouseX >= x - 2 && mouseX <= x - 2 + boxW && mouseY >= y - 2 && mouseY <= y - 2 + boxH;
+            boolean isDragging = "CPS".equals(draggingWidget);
+
+            renderWidgetBoundingBox(context, x - 2, y - 2, boxW, boxH, hovered, isDragging);
+        }
+
+        // 6. Draggable Scoreboard Widget Preview
         if (com.mooclient.module.modules.ScoreboardModule.isScoreboardEnabled()) {
             net.minecraft.scoreboard.ScoreboardObjective obj = null;
             if (this.client != null && this.client.world != null && this.client.world.getScoreboard() != null) {
-                obj = this.client.world.getScoreboard().getObjectiveForSlot(net.minecraft.scoreboard.ScoreboardDisplaySlot.SIDEBAR);
+                obj = this.client.world.getScoreboard()
+                        .getObjectiveForSlot(net.minecraft.scoreboard.ScoreboardDisplaySlot.SIDEBAR);
             }
 
             int totalWidth;
@@ -208,12 +236,16 @@ public class MooClientScreen extends Screen {
 
             if (obj != null) {
                 net.minecraft.scoreboard.Scoreboard scoreboard = obj.getScoreboard();
-                net.minecraft.scoreboard.number.NumberFormat numberFormat = obj.getNumberFormatOr(net.minecraft.scoreboard.number.StyledNumberFormat.RED);
+                net.minecraft.scoreboard.number.NumberFormat numberFormat = obj
+                        .getNumberFormatOr(net.minecraft.scoreboard.number.StyledNumberFormat.RED);
 
-                java.util.Collection<net.minecraft.scoreboard.ScoreboardEntry> rawEntries = scoreboard.getScoreboardEntries(obj);
+                java.util.Collection<net.minecraft.scoreboard.ScoreboardEntry> rawEntries = scoreboard
+                        .getScoreboardEntries(obj);
                 java.util.List<net.minecraft.scoreboard.ScoreboardEntry> filtered = rawEntries.stream()
                         .filter(e -> !e.hidden())
-                        .sorted(java.util.Comparator.comparing(net.minecraft.scoreboard.ScoreboardEntry::value).reversed().thenComparing(net.minecraft.scoreboard.ScoreboardEntry::owner, String.CASE_INSENSITIVE_ORDER))
+                        .sorted(java.util.Comparator.comparing(net.minecraft.scoreboard.ScoreboardEntry::value)
+                                .reversed().thenComparing(net.minecraft.scoreboard.ScoreboardEntry::owner,
+                                        String.CASE_INSENSITIVE_ORDER))
                         .limit(15)
                         .toList();
 
@@ -250,8 +282,8 @@ public class MooClientScreen extends Screen {
             com.mooclient.module.modules.ScoreboardModule.width = boxW;
             com.mooclient.module.modules.ScoreboardModule.height = boxH;
 
-            int x = MooHudPositionHelper.calculateRenderX(com.mooclient.module.modules.ScoreboardModule.posX, boxW, this.width, MooHudPositionHelper.HudAnchorX.RIGHT, 6);
-            int y = MooHudPositionHelper.calculateRenderY(com.mooclient.module.modules.ScoreboardModule.posY, boxH, this.height, MooHudPositionHelper.HudAnchorY.CENTER, 0);
+            int x = com.mooclient.module.modules.ScoreboardModule.position.calculateX(boxW, this.width);
+            int y = com.mooclient.module.modules.ScoreboardModule.position.calculateY(boxH, this.height);
 
             if (obj == null) {
                 renderScoreboardPreview(context, x, y, totalWidth, lineHeight);
@@ -262,9 +294,76 @@ public class MooClientScreen extends Screen {
 
             renderWidgetBoundingBox(context, x - 2, y - 2, boxW, boxH, hovered, isDragging);
         }
+
+        // 7. Render Active Alignment Guidelines (Smart Magnetic Snapping)
+        if (draggingWidget != null && activeGuideLines != null
+                && com.mooclient.util.MooClientSettings.isHudSnapping()) {
+            for (com.mooclient.util.MooHudPositionHelper.GuideLine line : activeGuideLines) {
+                if (line.x1 == line.x2) {
+                    int top = Math.min(line.y1, line.y2);
+                    int bot = Math.max(line.y1, line.y2);
+                    context.fill(line.x1, top, line.x1 + 1, bot, line.color);
+                } else if (line.y1 == line.y2) {
+                    int left = Math.min(line.x1, line.x2);
+                    int right = Math.max(line.x1, line.x2);
+                    context.fill(left, line.y1, right, line.y1 + 1, line.color);
+                }
+            }
+        }
     }
 
-    private void renderWidgetBoundingBox(DrawContext context, int x, int y, int w, int h, boolean hovered, boolean isDragging) {
+    private java.util.List<com.mooclient.util.MooHudPositionHelper.WidgetRect> getOtherActiveWidgetRects(
+            String currentWidgetId) {
+        java.util.List<com.mooclient.util.MooHudPositionHelper.WidgetRect> list = new java.util.ArrayList<>();
+        if (!"FPS".equals(currentWidgetId) && FpsModule.isFpsEnabled()) {
+            list.add(new com.mooclient.util.MooHudPositionHelper.WidgetRect("FPS",
+                    FpsModule.position.calculateX(FpsModule.width, this.width),
+                    FpsModule.position.calculateY(FpsModule.height, this.height),
+                    FpsModule.width, FpsModule.height));
+        }
+        if (!"SPRINT".equals(currentWidgetId) && ToggleSprintModule.isSprintEnabled()) {
+            list.add(new com.mooclient.util.MooHudPositionHelper.WidgetRect("SPRINT",
+                    ToggleSprintModule.position.calculateX(ToggleSprintModule.width, this.width),
+                    ToggleSprintModule.position.calculateY(ToggleSprintModule.height, this.height),
+                    ToggleSprintModule.width, ToggleSprintModule.height));
+        }
+        if (!"POTIONS".equals(currentWidgetId) && PotionEffectsModule.isModuleEnabled()) {
+            list.add(new com.mooclient.util.MooHudPositionHelper.WidgetRect("POTIONS",
+                    PotionEffectsModule.position.calculateX(PotionEffectsModule.width, this.width),
+                    PotionEffectsModule.position.calculateY(PotionEffectsModule.height, this.height),
+                    PotionEffectsModule.width, PotionEffectsModule.height));
+        }
+        if (!"PING".equals(currentWidgetId) && com.mooclient.module.modules.PingModule.isPingEnabled()) {
+            list.add(new com.mooclient.util.MooHudPositionHelper.WidgetRect("PING",
+                    com.mooclient.module.modules.PingModule.position
+                            .calculateX(com.mooclient.module.modules.PingModule.width, this.width),
+                    com.mooclient.module.modules.PingModule.position
+                            .calculateY(com.mooclient.module.modules.PingModule.height, this.height),
+                    com.mooclient.module.modules.PingModule.width, com.mooclient.module.modules.PingModule.height));
+        }
+        if (!"CPS".equals(currentWidgetId) && com.mooclient.module.modules.CpsModule.isCpsEnabled()) {
+            list.add(new com.mooclient.util.MooHudPositionHelper.WidgetRect("CPS",
+                    com.mooclient.module.modules.CpsModule.position
+                            .calculateX(com.mooclient.module.modules.CpsModule.width, this.width),
+                    com.mooclient.module.modules.CpsModule.position
+                            .calculateY(com.mooclient.module.modules.CpsModule.height, this.height),
+                    com.mooclient.module.modules.CpsModule.width, com.mooclient.module.modules.CpsModule.height));
+        }
+        if (!"SCOREBOARD".equals(currentWidgetId)
+                && com.mooclient.module.modules.ScoreboardModule.isScoreboardEnabled()) {
+            list.add(new com.mooclient.util.MooHudPositionHelper.WidgetRect("SCOREBOARD",
+                    com.mooclient.module.modules.ScoreboardModule.position
+                            .calculateX(com.mooclient.module.modules.ScoreboardModule.width, this.width),
+                    com.mooclient.module.modules.ScoreboardModule.position
+                            .calculateY(com.mooclient.module.modules.ScoreboardModule.height, this.height),
+                    com.mooclient.module.modules.ScoreboardModule.width,
+                    com.mooclient.module.modules.ScoreboardModule.height));
+        }
+        return list;
+    }
+
+    private void renderWidgetBoundingBox(DrawContext context, int x, int y, int w, int h, boolean hovered,
+            boolean isDragging) {
         int accent = com.mooclient.util.MooClientSettings.getAccentColor();
         int accentHover = com.mooclient.util.MooClientSettings.getAccentHoverColor();
 
@@ -289,7 +388,8 @@ public class MooClientScreen extends Screen {
 
     private void renderScoreboardPreview(DrawContext context, int x, int y, int totalWidth, int lineHeight) {
         if (this.client != null && this.client.world != null && this.client.world.getScoreboard() != null) {
-            net.minecraft.scoreboard.ScoreboardObjective obj = this.client.world.getScoreboard().getObjectiveForSlot(net.minecraft.scoreboard.ScoreboardDisplaySlot.SIDEBAR);
+            net.minecraft.scoreboard.ScoreboardObjective obj = this.client.world.getScoreboard()
+                    .getObjectiveForSlot(net.minecraft.scoreboard.ScoreboardDisplaySlot.SIDEBAR);
             if (obj != null) {
                 return;
             }
@@ -311,7 +411,7 @@ public class MooClientScreen extends Screen {
 
         String title = "§e§lMOO CLIENT";
         int titleW = this.textRenderer.getWidth(title);
-        String[] dummyLines = new String[]{
+        String[] dummyLines = new String[] {
                 "§720/08/26  m144",
                 "§fOnline: §a1,337",
                 "§fKills: §a42",
@@ -319,7 +419,7 @@ public class MooClientScreen extends Screen {
                 "§fPing: §a12ms",
                 "§ewww.mooclient.com"
         };
-        int[] dummyScores = new int[]{6, 5, 4, 3, 2, 1};
+        int[] dummyScores = new int[] { 6, 5, 4, 3, 2, 1 };
 
         int totalH = (dummyLines.length + 1) * lineHeight;
 
@@ -367,13 +467,15 @@ public class MooClientScreen extends Screen {
 
         int plBg = isPl ? 0x44FFFFFF : (plHover ? 0x22FFFFFF : 0x00000000);
         context.fill(plX, y, plX + pillW, y + pillH, plBg);
-        if (isPl) drawBorder(context, plX, y, pillW, pillH, 0x66FFFFFF);
+        if (isPl)
+            drawBorder(context, plX, y, pillW, pillH, 0x66FFFFFF);
         int plTextColor = isPl ? COLOR_TEXT_WHITE : (plHover ? COLOR_TEXT_WHITE : 0x88AAAAAA);
         drawCenteredText(context, "PL", plX + pillW / 2, y + 5, plTextColor);
 
         int enBg = !isPl ? 0x44FFFFFF : (enHover ? 0x22FFFFFF : 0x00000000);
         context.fill(enX, y, enX + pillW, y + pillH, enBg);
-        if (!isPl) drawBorder(context, enX, y, pillW, pillH, 0x66FFFFFF);
+        if (!isPl)
+            drawBorder(context, enX, y, pillW, pillH, 0x66FFFFFF);
         int enTextColor = !isPl ? COLOR_TEXT_WHITE : (enHover ? COLOR_TEXT_WHITE : 0x88AAAAAA);
         drawCenteredText(context, "EN", enX + pillW / 2, y + 5, enTextColor);
     }
@@ -396,7 +498,8 @@ public class MooClientScreen extends Screen {
 
         int logoSize = 64;
         int logoY = titleY - logoSize - 8;
-        context.drawTexture(RenderLayer::getGuiTextured, COW_LOGO, centerX - logoSize / 2, logoY, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
+        context.drawTexture(RenderLayer::getGuiTextured, COW_LOGO, centerX - logoSize / 2, logoY, 0.0f, 0.0f, logoSize,
+                logoSize, logoSize, logoSize);
         context.drawTextWithShadow(this.textRenderer, title, centerX - titleWidth / 2, titleY, COLOR_TEXT_WHITE);
 
         boolean hovered = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH;
@@ -408,7 +511,8 @@ public class MooClientScreen extends Screen {
     }
 
     /**
-     * MODS WINDOW: 3-column scrollable grid of mod cards with OPTIONS bar and search box
+     * MODS WINDOW: 3-column scrollable grid of mod cards with OPTIONS bar and
+     * search box
      */
     private void renderModsWindow(DrawContext context, int mouseX, int mouseY, float delta) {
         int panelW = 560;
@@ -431,42 +535,55 @@ public class MooClientScreen extends Screen {
         // Header Title
         String headerTitle = "MOO CLIENT";
         int titleW = this.textRenderer.getWidth(headerTitle);
-        context.drawTextWithShadow(this.textRenderer, headerTitle, panelX + (panelW - titleW) / 2, panelY + 10, COLOR_TEXT_WHITE);
+        context.drawTextWithShadow(this.textRenderer, headerTitle, panelX + (panelW - titleW) / 2, panelY + 10,
+                COLOR_TEXT_WHITE);
 
         // Settings Button on right side of header
         int setBtnW = 96;
         int setBtnH = 20;
         int setBtnX = panelX + panelW - setBtnW - 14;
         int setBtnY = panelY + 12;
-        boolean setBtnHover = mouseX >= setBtnX && mouseX <= setBtnX + setBtnW && mouseY >= setBtnY && mouseY <= setBtnY + setBtnH;
+        boolean setBtnHover = mouseX >= setBtnX && mouseX <= setBtnX + setBtnW && mouseY >= setBtnY
+                && mouseY <= setBtnY + setBtnH;
         int setBg = setBtnHover ? com.mooclient.util.MooClientSettings.getAccentGlowColor(0x35) : 0x44141420;
         int setBorder = setBtnHover ? com.mooclient.util.MooClientSettings.getAccentColor() : 0x33FFFFFF;
         context.fill(setBtnX, setBtnY, setBtnX + setBtnW, setBtnY + setBtnH, setBg);
         drawBorder(context, setBtnX, setBtnY, setBtnW, setBtnH, setBorder);
         String setLabel = "⚙ " + MooLanguage.get("settings");
         int setLabelW = this.textRenderer.getWidth(setLabel);
-        context.drawTextWithShadow(this.textRenderer, setLabel, setBtnX + (setBtnW - setLabelW) / 2, setBtnY + 6, setBtnHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
+        context.drawTextWithShadow(this.textRenderer, setLabel, setBtnX + (setBtnW - setLabelW) / 2, setBtnY + 6,
+                setBtnHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
 
         // Search Bar under "MOO CLIENT"
         int searchW = 200;
         int searchH = 18;
         int searchX = panelX + (panelW - searchW) / 2;
         int searchY = panelY + 26;
-        boolean searchHover = mouseX >= searchX && mouseX <= searchX + searchW && mouseY >= searchY && mouseY <= searchY + searchH;
+        boolean searchHover = mouseX >= searchX && mouseX <= searchX + searchW && mouseY >= searchY
+                && mouseY <= searchY + searchH;
 
-        context.fill(searchX, searchY, searchX + searchW, searchY + searchH, searching ? 0x99101018 : (searchHover ? 0x88181824 : 0x550A0A10));
-        drawBorder(context, searchX, searchY, searchW, searchH, searching ? com.mooclient.util.MooClientSettings.getAccentColor() : (searchHover ? 0x88FFFFFF : 0x33FFFFFF));
+        context.fill(searchX, searchY, searchX + searchW, searchY + searchH,
+                searching ? 0x99101018 : (searchHover ? 0x88181824 : 0x550A0A10));
+        drawBorder(context, searchX, searchY, searchW, searchH,
+                searching ? com.mooclient.util.MooClientSettings.getAccentColor()
+                        : (searchHover ? 0x88FFFFFF : 0x33FFFFFF));
 
-        context.drawTextWithShadow(this.textRenderer, "🔍", searchX + 5, searchY + 4, searching ? com.mooclient.util.MooClientSettings.getAccentColor() : 0xFFA0A0AB);
+        context.drawTextWithShadow(this.textRenderer, "🔍", searchX + 5, searchY + 4,
+                searching ? com.mooclient.util.MooClientSettings.getAccentColor() : 0xFFA0A0AB);
 
         if (searchFilter.isEmpty()) {
-            context.drawTextWithShadow(this.textRenderer, MooLanguage.current == MooLanguage.PL ? "Szukaj modów..." : "Search mods...", searchX + 20, searchY + 5, 0x66FFFFFF);
+            context.drawTextWithShadow(this.textRenderer,
+                    MooLanguage.current == MooLanguage.PL ? "Szukaj modów..." : "Search mods...", searchX + 20,
+                    searchY + 5, 0x66FFFFFF);
         } else {
             String cursor = searching && (System.currentTimeMillis() % 1000 < 500) ? "_" : "";
-            context.drawTextWithShadow(this.textRenderer, searchFilter + cursor, searchX + 20, searchY + 5, COLOR_TEXT_WHITE);
+            context.drawTextWithShadow(this.textRenderer, searchFilter + cursor, searchX + 20, searchY + 5,
+                    COLOR_TEXT_WHITE);
             // Clear icon '✕'
-            boolean clearHover = mouseX >= searchX + searchW - 16 && mouseX <= searchX + searchW - 2 && mouseY >= searchY && mouseY <= searchY + searchH;
-            context.drawTextWithShadow(this.textRenderer, "✕", searchX + searchW - 13, searchY + 5, clearHover ? 0xFFFF5555 : 0x88FFFFFF);
+            boolean clearHover = mouseX >= searchX + searchW - 16 && mouseX <= searchX + searchW - 2
+                    && mouseY >= searchY && mouseY <= searchY + searchH;
+            context.drawTextWithShadow(this.textRenderer, "✕", searchX + searchW - 13, searchY + 5,
+                    clearHover ? 0xFFFF5555 : 0x88FFFFFF);
         }
 
         context.fill(panelX + 14, panelY + headerH, panelX + panelW - 14, panelY + headerH + 1, 0x22FFFFFF);
@@ -503,7 +620,8 @@ public class MooClientScreen extends Screen {
         context.enableScissor(panelX + 4, panelY + headerH + 2, panelX + panelW - 4, panelY + panelH - 4);
 
         if (modules.isEmpty()) {
-            String noResults = (MooLanguage.current == MooLanguage.PL ? "Brak wyników dla: " : "No mods found for: ") + "\"" + searchFilter + "\"";
+            String noResults = (MooLanguage.current == MooLanguage.PL ? "Brak wyników dla: " : "No mods found for: ")
+                    + "\"" + searchFilter + "\"";
             drawCenteredText(context, noResults, panelX + panelW / 2, startY + 40, 0x88FFFFFF);
         }
 
@@ -546,6 +664,8 @@ public class MooClientScreen extends Screen {
                 icon = "📍";
             } else if (module.getName().equalsIgnoreCase("Scoreboard")) {
                 icon = "📋";
+            } else if (module.getName().equalsIgnoreCase("CPS")) {
+                icon = "🖱";
             } else {
                 icon = "⌨";
             }
@@ -561,7 +681,7 @@ public class MooClientScreen extends Screen {
                     && mouseY >= panelY + headerH + 2 && mouseY <= panelY + panelH - 4;
             context.fill(optX, optY, optX + optW, optY + optH, optHover ? COLOR_OPTIONS_HOVER : COLOR_OPTIONS_BG);
             drawBorder(context, optX, optY, optW, optH, optHover ? 0x88FFFFFF : 0x22FFFFFF);
-            context.drawTextWithShadow(this.textRenderer, "OPTIONS", optX + 6, optY + 6, COLOR_TEXT_WHITE);
+            context.drawTextWithShadow(this.textRenderer, MooLanguage.get("options"), optX + 6, optY + 6, COLOR_TEXT_WHITE);
             context.drawTextWithShadow(this.textRenderer, "⚙", optX + optW - 14, optY + 6, COLOR_TEXT_WHITE);
 
             // ENABLED / DISABLED Button
@@ -574,12 +694,13 @@ public class MooClientScreen extends Screen {
                     && mouseY >= panelY + headerH + 2 && mouseY <= panelY + panelH - 4;
             int accentCol = com.mooclient.util.MooClientSettings.getAccentColor();
             int accentHover = com.mooclient.util.MooClientSettings.getAccentHoverColor();
-            int statusBg = module.isEnabled() ? (btnHover ? accentHover : accentCol) : (btnHover ? COLOR_DISABLED_HOVER : COLOR_DISABLED);
+            int statusBg = module.isEnabled() ? (btnHover ? accentHover : accentCol)
+                    : (btnHover ? COLOR_DISABLED_HOVER : COLOR_DISABLED);
 
             context.fill(btnX, btnY, btnX + btnW, btnY + btnH, statusBg);
             drawBorder(context, btnX, btnY, btnW, btnH, 0x44FFFFFF);
 
-            String statusText = module.isEnabled() ? "ENABLED" : "DISABLED";
+            String statusText = module.isEnabled() ? MooLanguage.get("enabled") : MooLanguage.get("disabled");
             int statusTextColor = module.isEnabled() ? 0xFF082212 : 0xFFA0A0AB;
             drawCenteredText(context, statusText, cardX + cardW / 2, btnY + 7, statusTextColor);
         }
@@ -598,16 +719,30 @@ public class MooClientScreen extends Screen {
     }
 
     private String getModuleDescText(String name) {
-        if (name.equalsIgnoreCase("Gamma")) return MooLanguage.get("gamma_desc");
-        if (name.equalsIgnoreCase("FPS")) return MooLanguage.get("fps_desc");
-        if (name.equalsIgnoreCase("Sprint")) return MooLanguage.get("sprint_desc");
-        if (name.equalsIgnoreCase("Freelook")) return MooLanguage.get("freelook_desc");
-        if (name.equalsIgnoreCase("Potion Effects")) return MooLanguage.get("potions_desc");
-        if (name.equalsIgnoreCase("Nametags")) return MooLanguage.get("nametags_desc");
-        if (name.equalsIgnoreCase("Zoom")) return MooLanguage.get("zoom_desc");
-        if (name.equalsIgnoreCase("Chat")) return MooLanguage.get("chat_desc");
-        if (name.equalsIgnoreCase("Ping")) return MooLanguage.get("ping_desc");
-        if (name.equalsIgnoreCase("Waypoints")) return MooLanguage.get("waypoints_desc");
+        if (name.equalsIgnoreCase("Gamma"))
+            return MooLanguage.get("gamma_desc");
+        if (name.equalsIgnoreCase("FPS"))
+            return MooLanguage.get("fps_desc");
+        if (name.equalsIgnoreCase("Sprint"))
+            return MooLanguage.get("sprint_desc");
+        if (name.equalsIgnoreCase("Freelook"))
+            return MooLanguage.get("freelook_desc");
+        if (name.equalsIgnoreCase("Potion Effects"))
+            return MooLanguage.get("potions_desc");
+        if (name.equalsIgnoreCase("Nametags"))
+            return MooLanguage.get("nametags_desc");
+        if (name.equalsIgnoreCase("Zoom"))
+            return MooLanguage.get("zoom_desc");
+        if (name.equalsIgnoreCase("Chat"))
+            return MooLanguage.get("chat_desc");
+        if (name.equalsIgnoreCase("Ping"))
+            return MooLanguage.get("ping_desc");
+        if (name.equalsIgnoreCase("CPS"))
+            return MooLanguage.get("cps_desc");
+        if (name.equalsIgnoreCase("Waypoints"))
+            return MooLanguage.get("waypoints_desc");
+        if (name.equalsIgnoreCase("Scoreboard"))
+            return MooLanguage.get("scoreboard_desc");
         return MooLanguage.get("macro_desc");
     }
 
@@ -665,6 +800,12 @@ public class MooClientScreen extends Screen {
         } else if (modName.equalsIgnoreCase("Waypoints")) {
             optTitle = MooLanguage.get("waypoints_opt_title");
             optSubtitle = MooLanguage.get("waypoints_opt_subtitle");
+        } else if (modName.equalsIgnoreCase("CPS")) {
+            optTitle = MooLanguage.get("cps_opt_title");
+            optSubtitle = MooLanguage.get("cps_opt_subtitle");
+        } else if (modName.equalsIgnoreCase("Scoreboard")) {
+            optTitle = MooLanguage.get("scoreboard_opt_title");
+            optSubtitle = MooLanguage.get("scoreboard_opt_subtitle");
         } else {
             optTitle = MooLanguage.get("gamma_opt_title");
             optSubtitle = MooLanguage.get("gamma_opt_subtitle");
@@ -697,33 +838,68 @@ public class MooClientScreen extends Screen {
 
             // Row 4: Show Prefix 'FPS:'
             rowY += rowH + 6;
-            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("prefix_label"));
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("fps_prefix_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, FpsModule.isShowPrefix());
 
         } else if (modName.equalsIgnoreCase("Ping")) {
             // Row 1: Appearance Style Tabs
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("style_label"));
-            renderStyleSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY, com.mooclient.module.modules.PingModule.getStyle().ordinal());
+            renderStyleSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY,
+                    com.mooclient.module.modules.PingModule.getStyle().ordinal());
 
             // Row 2: Show Background
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("bg_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.PingModule.isShowBackground());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.PingModule.isShowBackground());
 
             // Row 3: Text Shadow
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shadow_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.PingModule.isTextShadow());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.PingModule.isTextShadow());
 
             // Row 4: Show Prefix 'Ping:'
             rowY += rowH + 6;
-            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("prefix_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.PingModule.isShowPrefix());
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("ping_prefix_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.PingModule.isShowPrefix());
+
+        } else if (modName.equalsIgnoreCase("CPS")) {
+            // Row 1: Display Mode Selector (LPM | PPM / Tylko LPM / Tylko PPM)
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("cps_buttons_label"));
+            renderCpsDisplayModeSelector(context, rowX + rowW - 230, rowY + 6, mouseX, mouseY,
+                    com.mooclient.module.modules.CpsModule.getDisplayMode().ordinal());
+
+            // Row 2: Appearance Style Tabs
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("style_label"));
+            renderStyleSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY,
+                    com.mooclient.module.modules.CpsModule.getStyle().ordinal());
+
+            // Row 3: Show Background
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("bg_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.CpsModule.isShowBackground());
+
+            // Row 4: Text Shadow
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shadow_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.CpsModule.isTextShadow());
+
+            // Row 5: Show Prefix 'CPS:'
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("cps_prefix_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.CpsModule.isShowPrefix());
 
         } else if (modName.equalsIgnoreCase("Sprint")) {
             // Row 1: Interactive Keybind Selector (Click to change keybind!)
             drawOptionRow(context, rowX, rowY, rowW, rowH, "Klawisz (Keybind)");
-            String keyText = listeningForKeybind ? "> WCIŚNIJ KLAWISZ <" : "[ " + ToggleSprintModule.getKeyName() + " ]";
+            String keyText = listeningForKeybind ? "> WCIŚNIJ KLAWISZ <"
+                    : "[ " + ToggleSprintModule.getKeyName() + " ]";
             int btnW = 140;
             int btnH = 22;
             int btnX = rowX + rowW - btnW - 10;
@@ -740,12 +916,14 @@ public class MooClientScreen extends Screen {
             // Row 2: Sprint Style Tabs
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("style_label"));
-            renderStyleSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY, ToggleSprintModule.getStyle().ordinal());
+            renderStyleSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY,
+                    ToggleSprintModule.getStyle().ordinal());
 
             // Row 3: Show Background
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("bg_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, ToggleSprintModule.isShowBackground());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    ToggleSprintModule.isShowBackground());
 
             // Row 4: Text Shadow
             rowY += rowH + 6;
@@ -772,7 +950,8 @@ public class MooClientScreen extends Screen {
             // Row 2: Activation Mode (Hold vs Toggle)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("mode_label"));
-            renderModeSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY, FreelookModule.getMode().ordinal());
+            renderModeSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY,
+                    FreelookModule.getMode().ordinal());
 
             // Row 3: Invert Pitch
             rowY += rowH + 6;
@@ -782,12 +961,14 @@ public class MooClientScreen extends Screen {
         } else if (modName.equalsIgnoreCase("Potion Effects")) {
             // Row 1: Style Selector (Moo Client / Simple / Compact)
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("style_label"));
-            renderPotionStyleSelector(context, rowX + rowW - 248, rowY + 6, mouseX, mouseY, PotionEffectsModule.getStyle().ordinal());
+            renderPotionStyleSelector(context, rowX + rowW - 248, rowY + 6, mouseX, mouseY,
+                    PotionEffectsModule.getStyle().ordinal());
 
             // Row 2: Show Background
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("bg_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, PotionEffectsModule.isShowBackground());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    PotionEffectsModule.isShowBackground());
 
             // Row 3: Text Shadow
             rowY += rowH + 6;
@@ -797,78 +978,96 @@ public class MooClientScreen extends Screen {
         } else if (modName.equalsIgnoreCase("Nametags")) {
             // Row 1: Show Ping
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("show_ping_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.NametagsModule.isShowPing());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.NametagsModule.isShowPing());
 
             // Row 2: Show Self Ping
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("show_self_ping_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.NametagsModule.isShowSelfPing());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.NametagsModule.isShowSelfPing());
 
             // Row 3: Ping Position (Beside vs Above)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("ping_pos_label"));
-            renderPingPositionSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY, com.mooclient.module.modules.NametagsModule.getPingPosition().ordinal());
+            renderPingPositionSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY,
+                    com.mooclient.module.modules.NametagsModule.getPingPosition().ordinal());
 
             // Row 4: Remove Background
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("remove_bg_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.NametagsModule.isRemoveBackground());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.NametagsModule.isRemoveBackground());
 
             // Row 5: Text Shadow
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shadow_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.NametagsModule.isTextShadow());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.NametagsModule.isTextShadow());
 
         } else if (modName.equalsIgnoreCase("Zoom")) {
             // Row 1: Keybind
             drawOptionRow(context, rowX, rowY, rowW, rowH, "Klawisz przybliżenia (Key)");
-            String btnText = (this.listeningForKeybind && selectedModule.getName().equalsIgnoreCase("Zoom")) ? "Naciśnij klawisz..." : "[" + com.mooclient.module.modules.ZoomModule.getKeyName() + "]";
+            String btnText = (this.listeningForKeybind && selectedModule.getName().equalsIgnoreCase("Zoom"))
+                    ? "Naciśnij klawisz..."
+                    : "[" + com.mooclient.module.modules.ZoomModule.getKeyName() + "]";
             int btnW = 140;
             int btnH = 22;
             int btnX = rowX + rowW - btnW - 10;
             int btnY = rowY + 6;
             boolean btnHover = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH;
-            context.fill(btnX, btnY, btnX + btnW, btnY + btnH, this.listeningForKeybind ? 0xDD22C55E : (btnHover ? 0xCC252535 : 0x66141420));
-            drawBorder(context, btnX, btnY, btnW, btnH, this.listeningForKeybind ? 0xFF4ADE80 : (btnHover ? 0xAAFFFFFF : 0x33FFFFFF));
-            drawCenteredText(context, btnText, btnX + btnW / 2, btnY + 7, this.listeningForKeybind ? 0xFF0A2514 : (btnHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB));
+            context.fill(btnX, btnY, btnX + btnW, btnY + btnH,
+                    this.listeningForKeybind ? 0xDD22C55E : (btnHover ? 0xCC252535 : 0x66141420));
+            drawBorder(context, btnX, btnY, btnW, btnH,
+                    this.listeningForKeybind ? 0xFF4ADE80 : (btnHover ? 0xAAFFFFFF : 0x33FFFFFF));
+            drawCenteredText(context, btnText, btnX + btnW / 2, btnY + 7,
+                    this.listeningForKeybind ? 0xFF0A2514 : (btnHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB));
 
             // Row 2: Zoom Factor (2x, 3x, 4x, 5x, 6x)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("factor_label"));
-            renderFactorSelector(context, rowX + rowW - 248, rowY + 6, mouseX, mouseY, com.mooclient.module.modules.ZoomModule.getFactor().ordinal());
+            renderFactorSelector(context, rowX + rowW - 248, rowY + 6, mouseX, mouseY,
+                    com.mooclient.module.modules.ZoomModule.getFactor().ordinal());
 
             // Row 3: Activation Mode (Hold vs Toggle)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("mode_label"));
-            renderModeSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY, com.mooclient.module.modules.ZoomModule.getMode().ordinal());
+            renderModeSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY,
+                    com.mooclient.module.modules.ZoomModule.getMode().ordinal());
 
             // Row 4: Smooth Zoom
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("smooth_zoom_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.ZoomModule.isSmoothZoom());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.ZoomModule.isSmoothZoom());
 
         } else if (modName.equalsIgnoreCase("Chat")) {
             // Row 1: Transparent Background
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("chat_transparent_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.ChatModule.isTransparentBackground());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.ChatModule.isTransparentBackground());
 
             // Row 2: Unlimited Chat
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("chat_unlimited_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.ChatModule.isUnlimitedChat());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.ChatModule.isUnlimitedChat());
 
             // Row 3: Smooth Chat Animation
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("chat_smooth_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.ChatModule.isSmoothChat());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.ChatModule.isSmoothChat());
 
             // Row 4: Text Shadow
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shadow_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.ChatModule.isTextShadow());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.ChatModule.isTextShadow());
 
         } else if (modName.equalsIgnoreCase("Macro")) {
-            java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> macroList = com.mooclient.module.modules.MacroModule.getMacros();
+            java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> macroList = com.mooclient.module.modules.MacroModule
+                    .getMacros();
             int mRowH = 28;
             int curY = panelY + headerH + 10;
 
@@ -879,7 +1078,8 @@ public class MooClientScreen extends Screen {
 
                 // Slot title
                 String slotName = "Slot " + (i + 1);
-                context.drawTextWithShadow(this.textRenderer, slotName, rowX + 8, curY + (mRowH - 8) / 2, m.isEnabled() ? COLOR_TEXT_WHITE : COLOR_TEXT_MUTED);
+                context.drawTextWithShadow(this.textRenderer, slotName, rowX + 8, curY + (mRowH - 8) / 2,
+                        m.isEnabled() ? COLOR_TEXT_WHITE : COLOR_TEXT_MUTED);
 
                 // Command Box (Editable)
                 int cmdBoxX = rowX + 54;
@@ -887,10 +1087,13 @@ public class MooClientScreen extends Screen {
                 int cmdBoxY = curY + 4;
                 int cmdBoxH = mRowH - 8;
                 boolean isEditingCmd = (this.editingMacroIndex == i);
-                boolean cmdHover = mouseX >= cmdBoxX && mouseX <= cmdBoxX + cmdBoxW && mouseY >= cmdBoxY && mouseY <= cmdBoxY + cmdBoxH;
+                boolean cmdHover = mouseX >= cmdBoxX && mouseX <= cmdBoxX + cmdBoxW && mouseY >= cmdBoxY
+                        && mouseY <= cmdBoxY + cmdBoxH;
 
-                context.fill(cmdBoxX, cmdBoxY, cmdBoxX + cmdBoxW, cmdBoxY + cmdBoxH, isEditingCmd ? 0xEE1E293B : (cmdHover ? 0xCC252535 : 0x88181824));
-                drawBorder(context, cmdBoxX, cmdBoxY, cmdBoxW, cmdBoxH, isEditingCmd ? 0xFF38BDF8 : (cmdHover ? 0xAAFFFFFF : 0x33FFFFFF));
+                context.fill(cmdBoxX, cmdBoxY, cmdBoxX + cmdBoxW, cmdBoxY + cmdBoxH,
+                        isEditingCmd ? 0xEE1E293B : (cmdHover ? 0xCC252535 : 0x88181824));
+                drawBorder(context, cmdBoxX, cmdBoxY, cmdBoxW, cmdBoxH,
+                        isEditingCmd ? 0xFF38BDF8 : (cmdHover ? 0xAAFFFFFF : 0x33FFFFFF));
 
                 String cmdDisplay = m.getCommand().isEmpty() ? "(kliknij by wpisać)" : m.getCommand();
                 if (isEditingCmd) {
@@ -899,7 +1102,8 @@ public class MooClientScreen extends Screen {
                 if (this.textRenderer.getWidth(cmdDisplay) > cmdBoxW - 8) {
                     cmdDisplay = this.textRenderer.trimToWidth(cmdDisplay, cmdBoxW - 14) + "..";
                 }
-                context.drawTextWithShadow(this.textRenderer, cmdDisplay, cmdBoxX + 6, cmdBoxY + (cmdBoxH - 8) / 2, isEditingCmd ? 0xFF38BDF8 : (m.isEnabled() ? 0xFF55FFFF : COLOR_TEXT_MUTED));
+                context.drawTextWithShadow(this.textRenderer, cmdDisplay, cmdBoxX + 6, cmdBoxY + (cmdBoxH - 8) / 2,
+                        isEditingCmd ? 0xFF38BDF8 : (m.isEnabled() ? 0xFF55FFFF : COLOR_TEXT_MUTED));
 
                 // Keybind Button
                 int kBtnX = cmdBoxX + cmdBoxW + 6;
@@ -907,13 +1111,17 @@ public class MooClientScreen extends Screen {
                 int kBtnY = curY + 4;
                 int kBtnH = mRowH - 8;
                 boolean isListeningKey = (this.listeningMacroIndex == i);
-                boolean kBtnHover = mouseX >= kBtnX && mouseX <= kBtnX + kBtnW && mouseY >= kBtnY && mouseY <= kBtnY + kBtnH;
+                boolean kBtnHover = mouseX >= kBtnX && mouseX <= kBtnX + kBtnW && mouseY >= kBtnY
+                        && mouseY <= kBtnY + kBtnH;
 
-                context.fill(kBtnX, kBtnY, kBtnX + kBtnW, kBtnY + kBtnH, isListeningKey ? 0xEE334466 : (kBtnHover ? 0xCC252535 : 0x88181824));
-                drawBorder(context, kBtnX, kBtnY, kBtnW, kBtnH, isListeningKey ? 0xFF55FFFF : (kBtnHover ? 0xAAFFFFFF : 0x33FFFFFF));
+                context.fill(kBtnX, kBtnY, kBtnX + kBtnW, kBtnY + kBtnH,
+                        isListeningKey ? 0xEE334466 : (kBtnHover ? 0xCC252535 : 0x88181824));
+                drawBorder(context, kBtnX, kBtnY, kBtnW, kBtnH,
+                        isListeningKey ? 0xFF55FFFF : (kBtnHover ? 0xAAFFFFFF : 0x33FFFFFF));
 
                 String kText = isListeningKey ? "> KLAWISZ <" : "[ " + m.getKeyName() + " ]";
-                drawCenteredText(context, kText, kBtnX + kBtnW / 2, kBtnY + (kBtnH - 8) / 2, isListeningKey ? 0xFFFFFF55 : (m.isEnabled() ? 0xFF55FFFF : COLOR_TEXT_MUTED));
+                drawCenteredText(context, kText, kBtnX + kBtnW / 2, kBtnY + (kBtnH - 8) / 2,
+                        isListeningKey ? 0xFFFFFF55 : (m.isEnabled() ? 0xFF55FFFF : COLOR_TEXT_MUTED));
 
                 // Enable / Disable toggle
                 int tX = rowX + rowW - 40;
@@ -926,7 +1134,8 @@ public class MooClientScreen extends Screen {
         } else if (modName.equalsIgnoreCase("Waypoints")) {
             // Row 1: Keybind (Interactive Keybind Selector)
             drawOptionRow(context, rowX, rowY, rowW, rowH, "Klawisz (Keybind)");
-            String keyText = listeningForKeybind ? "> WCIŚNIJ KLAWISZ <" : "[ " + com.mooclient.module.modules.WaypointsModule.getKeyName() + " ]";
+            String keyText = listeningForKeybind ? "> WCIŚNIJ KLAWISZ <"
+                    : "[ " + com.mooclient.module.modules.WaypointsModule.getKeyName() + " ]";
             int btnW = 140;
             int btnH = 22;
             int btnX = rowX + rowW - btnW - 10;
@@ -946,13 +1155,16 @@ public class MooClientScreen extends Screen {
             int openBtnH = 22;
             int openBtnX = rowX + rowW - openBtnW - 10;
             int openBtnY = rowY + 6;
-            boolean openHover = mouseX >= openBtnX && mouseX <= openBtnX + openBtnW && mouseY >= openBtnY && mouseY <= openBtnY + openBtnH;
-            int openBg = openHover ? com.mooclient.util.MooClientSettings.getAccentHoverColor() : com.mooclient.util.MooClientSettings.getAccentColor();
+            boolean openHover = mouseX >= openBtnX && mouseX <= openBtnX + openBtnW && mouseY >= openBtnY
+                    && mouseY <= openBtnY + openBtnH;
+            int openBg = openHover ? com.mooclient.util.MooClientSettings.getAccentHoverColor()
+                    : com.mooclient.util.MooClientSettings.getAccentColor();
 
             drawOptionRow(context, rowX, rowY, rowW, rowH, "Zarządzanie punktami");
             context.fill(openBtnX, openBtnY, openBtnX + openBtnW, openBtnY + openBtnH, openBg);
             drawBorder(context, openBtnX, openBtnY, openBtnW, openBtnH, 0xFFFFFFFF);
-            drawCenteredText(context, MooLanguage.get("waypoints_open_gui"), openBtnX + openBtnW / 2, openBtnY + 7, 0xFF0A2514);
+            drawCenteredText(context, MooLanguage.get("waypoints_open_gui"), openBtnX + openBtnW / 2, openBtnY + 7,
+                    0xFF0A2514);
 
             // Row 3: Waypoint Scale Slider (0-100%)
             rowY += rowH + 6;
@@ -965,42 +1177,50 @@ public class MooClientScreen extends Screen {
             // Row 4: Auto Death Waypoint
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("death_waypoint_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.WaypointsModule.isDeathWaypoint());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.WaypointsModule.isDeathWaypoint());
 
             // Row 5: Show Distance
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("show_distance_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.WaypointsModule.isShowDistance());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.WaypointsModule.isShowDistance());
 
             // Row 6: Background (Tło)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("bg_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.WaypointsModule.isShowBackground());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.WaypointsModule.isShowBackground());
 
             // Row 7: Text Shadow (Cień tekstu)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shadow_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.WaypointsModule.isTextShadow());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.WaypointsModule.isTextShadow());
 
         } else if (modName.equalsIgnoreCase("Scoreboard")) {
             // Row 1: Enable / Disable Toggle
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("enabled"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.ScoreboardModule.isScoreboardEnabled());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.ScoreboardModule.isScoreboardEnabled());
 
             // Row 2: Text Shadow (Cień tekstu)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shadow_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.ScoreboardModule.isTextShadow());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.ScoreboardModule.isTextShadow());
 
             // Row 3: Background (Tło)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("bg_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.ScoreboardModule.isShowBackground());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.ScoreboardModule.isShowBackground());
 
             // Row 4: Show Scores / Numbers (Cyfry po prawej)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("scoreboard_scores_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, com.mooclient.module.modules.ScoreboardModule.isShowScores());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.ScoreboardModule.isShowScores());
 
             // Row 5: Reset Position
             rowY += rowH + 6;
@@ -1013,12 +1233,14 @@ public class MooClientScreen extends Screen {
             drawOptionRow(context, rowX, rowY, rowW, rowH, "Pozycja na ekranie");
             context.fill(rBtnX, rBtnY, rBtnX + rBtnW, rBtnY + rBtnH, rBg);
             drawBorder(context, rBtnX, rBtnY, rBtnW, rBtnH, rHover ? 0xAAFFFFFF : 0x33FFFFFF);
-            drawCenteredText(context, MooLanguage.get("reset_pos_btn"), rBtnX + rBtnW / 2, rBtnY + 7, rHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
+            drawCenteredText(context, MooLanguage.get("reset_pos_btn"), rBtnX + rBtnW / 2, rBtnY + 7,
+                    rHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
 
         } else {
             // Gamma Options
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("fullbright_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, selectedModule != null && selectedModule.isEnabled());
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    selectedModule != null && selectedModule.isEnabled());
         }
 
         String hint = MooLanguage.get("esc_hint");
@@ -1026,7 +1248,8 @@ public class MooClientScreen extends Screen {
     }
 
     /**
-     * CLIENT SETTINGS SCREEN: Accent color picker (presets + RGB sliders), HUD options & Snapping, GUI theme, Profiles.
+     * CLIENT SETTINGS SCREEN: Accent color picker (presets + RGB sliders), HUD
+     * options & Snapping, GUI theme, Profiles.
      */
     private void renderSettingsWindow(DrawContext context, int mouseX, int mouseY, float delta) {
         int panelW = 560;
@@ -1048,12 +1271,13 @@ public class MooClientScreen extends Screen {
 
         String title = MooLanguage.get("client_settings_title");
         int titleW = this.textRenderer.getWidth(title);
-        context.drawTextWithShadow(this.textRenderer, title, panelX + (panelW - titleW) / 2, panelY + 9, COLOR_TEXT_WHITE);
+        context.drawTextWithShadow(this.textRenderer, title, panelX + (panelW - titleW) / 2, panelY + 9,
+                COLOR_TEXT_WHITE);
 
         // --- Tabs Bar ---
         int tabY = panelY + headerH;
         int tabH = 22;
-        String[] tabs = new String[]{
+        String[] tabs = new String[] {
                 MooLanguage.get("tab_accent"),
                 MooLanguage.get("tab_hud"),
                 MooLanguage.get("tab_gui")
@@ -1065,14 +1289,16 @@ public class MooClientScreen extends Screen {
             boolean active = (settingsTab == i);
             boolean hover = mouseX >= tX && mouseX <= tX + tabW && mouseY >= tabY && mouseY <= tabY + tabH;
 
-            int bg = active ? com.mooclient.util.MooClientSettings.getAccentGlowColor(0x35) : (hover ? 0x33252535 : 0x22111118);
+            int bg = active ? com.mooclient.util.MooClientSettings.getAccentGlowColor(0x35)
+                    : (hover ? 0x33252535 : 0x22111118);
             int border = active ? com.mooclient.util.MooClientSettings.getAccentColor() : 0x22FFFFFF;
             int textCol = active ? COLOR_TEXT_WHITE : (hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
 
             context.fill(tX, tabY, tX + tabW, tabY + tabH, bg);
             drawBorder(context, tX, tabY, tabW, tabH, border);
             if (active) {
-                context.fill(tX + 1, tabY + tabH - 2, tX + tabW - 1, tabY + tabH, com.mooclient.util.MooClientSettings.getAccentColor());
+                context.fill(tX + 1, tabY + tabH - 2, tX + tabW - 1, tabY + tabH,
+                        com.mooclient.util.MooClientSettings.getAccentColor());
             }
 
             int labelW = this.textRenderer.getWidth(tabs[i]);
@@ -1100,11 +1326,17 @@ public class MooClientScreen extends Screen {
         drawCenteredText(context, hint, this.width / 2, this.height - 14, 0x66FFFFFF);
     }
 
-    private void renderAccentColorTab(DrawContext context, int panelX, int contentY, int panelW, int mouseX, int mouseY) {
-        context.drawTextWithShadow(this.textRenderer, MooLanguage.current == MooLanguage.PL ? "Wybierz gotowy motyw kolorystyczny:" : "Choose accent color preset:", panelX + 18, contentY + 2, 0xFFA0A0AB);
+    private void renderAccentColorTab(DrawContext context, int panelX, int contentY, int panelW, int mouseX,
+            int mouseY) {
+        context.drawTextWithShadow(this.textRenderer,
+                MooLanguage.current == MooLanguage.PL ? "Wybierz gotowy motyw kolorystyczny:"
+                        : "Choose accent color preset:",
+                panelX + 18, contentY + 2, 0xFFA0A0AB);
 
-        com.mooclient.util.MooClientSettings.AccentColorPreset[] presets = com.mooclient.util.MooClientSettings.AccentColorPreset.values();
-        com.mooclient.util.MooClientSettings.AccentColorPreset activePreset = com.mooclient.util.MooClientSettings.getAccentPreset();
+        com.mooclient.util.MooClientSettings.AccentColorPreset[] presets = com.mooclient.util.MooClientSettings.AccentColorPreset
+                .values();
+        com.mooclient.util.MooClientSettings.AccentColorPreset activePreset = com.mooclient.util.MooClientSettings
+                .getAccentPreset();
 
         int cols = 5;
         int pW = 100;
@@ -1124,7 +1356,8 @@ public class MooClientScreen extends Screen {
             boolean hover = mouseX >= bx && mouseX <= bx + pW && mouseY >= by && mouseY <= by + pH;
 
             int bg = selected ? 0x55252538 : (hover ? 0x33252535 : 0x22151520);
-            int border = selected ? com.mooclient.util.MooClientSettings.getAccentColor() : (hover ? 0x66FFFFFF : 0x22FFFFFF);
+            int border = selected ? com.mooclient.util.MooClientSettings.getAccentColor()
+                    : (hover ? 0x66FFFFFF : 0x22FFFFFF);
 
             context.fill(bx, by, bx + pW, by + pH, bg);
             drawBorder(context, bx, by, pW, pH, border);
@@ -1137,7 +1370,9 @@ public class MooClientScreen extends Screen {
             if (p == com.mooclient.util.MooClientSettings.AccentColorPreset.CHROMA) {
                 dotColor = com.mooclient.util.MooClientSettings.getAccentColor();
             } else if (p == com.mooclient.util.MooClientSettings.AccentColorPreset.CUSTOM) {
-                dotColor = 0xFF000000 | (com.mooclient.util.MooClientSettings.getCustomRed() << 16) | (com.mooclient.util.MooClientSettings.getCustomGreen() << 8) | com.mooclient.util.MooClientSettings.getCustomBlue();
+                dotColor = 0xFF000000 | (com.mooclient.util.MooClientSettings.getCustomRed() << 16)
+                        | (com.mooclient.util.MooClientSettings.getCustomGreen() << 8)
+                        | com.mooclient.util.MooClientSettings.getCustomBlue();
             } else {
                 dotColor = p.getColor();
             }
@@ -1146,8 +1381,10 @@ public class MooClientScreen extends Screen {
             drawBorder(context, dotX, dotY, dotSize, dotSize, 0x55FFFFFF);
 
             String name = p.getDisplayName();
-            if (selected) name += " ✓";
-            context.drawTextWithShadow(this.textRenderer, name, dotX + dotSize + 5, by + 6, selected ? COLOR_TEXT_WHITE : (hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB));
+            if (selected)
+                name += " ✓";
+            context.drawTextWithShadow(this.textRenderer, name, dotX + dotSize + 5, by + 6,
+                    selected ? COLOR_TEXT_WHITE : (hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB));
         }
 
         // Custom RGB Sliders Section & Live Preview
@@ -1157,7 +1394,8 @@ public class MooClientScreen extends Screen {
         boolean isCustom = (activePreset == com.mooclient.util.MooClientSettings.AccentColorPreset.CUSTOM);
 
         if (isCustom) {
-            context.drawTextWithShadow(this.textRenderer, MooLanguage.get("custom_rgb_label"), panelX + 18, customY + 6, 0xFFA0A0AB);
+            context.drawTextWithShadow(this.textRenderer, MooLanguage.get("custom_rgb_label"), panelX + 18, customY + 6,
+                    0xFFA0A0AB);
 
             int sliderStartX = panelX + 50;
             int sliderW = 210;
@@ -1165,11 +1403,14 @@ public class MooClientScreen extends Screen {
             int sY = customY + 20;
 
             // Slider 1: Red
-            renderRgbSlider(context, panelX + 18, sliderStartX, sY, sliderW, sliderH, "R:", com.mooclient.util.MooClientSettings.getCustomRed(), 0xFFFF4444, mouseX, mouseY);
+            renderRgbSlider(context, panelX + 18, sliderStartX, sY, sliderW, sliderH, "R:",
+                    com.mooclient.util.MooClientSettings.getCustomRed(), 0xFFFF4444, mouseX, mouseY);
             // Slider 2: Green
-            renderRgbSlider(context, panelX + 18, sliderStartX, sY + 20, sliderW, sliderH, "G:", com.mooclient.util.MooClientSettings.getCustomGreen(), 0xFF44FF44, mouseX, mouseY);
+            renderRgbSlider(context, panelX + 18, sliderStartX, sY + 20, sliderW, sliderH, "G:",
+                    com.mooclient.util.MooClientSettings.getCustomGreen(), 0xFF44FF44, mouseX, mouseY);
             // Slider 3: Blue
-            renderRgbSlider(context, panelX + 18, sliderStartX, sY + 40, sliderW, sliderH, "B:", com.mooclient.util.MooClientSettings.getCustomBlue(), 0xFF4488FF, mouseX, mouseY);
+            renderRgbSlider(context, panelX + 18, sliderStartX, sY + 40, sliderW, sliderH, "B:",
+                    com.mooclient.util.MooClientSettings.getCustomBlue(), 0xFF4488FF, mouseX, mouseY);
 
             // Preview Box on the right
             int prevX = panelX + 290;
@@ -1180,20 +1421,24 @@ public class MooClientScreen extends Screen {
             context.fill(prevX, prevY, prevX + prevW, prevY + prevH, 0x44101018);
             drawBorder(context, prevX, prevY, prevW, prevH, com.mooclient.util.MooClientSettings.getAccentColor());
 
-            drawCenteredText(context, MooLanguage.current == MooLanguage.PL ? "Podgląd akcentu UI:" : "Live UI Preview:", prevX + prevW / 2, prevY + 8, 0xFFA0A0AB);
+            drawCenteredText(context,
+                    MooLanguage.current == MooLanguage.PL ? "Podgląd akcentu UI:" : "Live UI Preview:",
+                    prevX + prevW / 2, prevY + 8, 0xFFA0A0AB);
 
             // Live mock ENABLED button
             int mBtnW = 100;
             int mBtnH = 20;
             int mBtnX = prevX + (prevW - mBtnW) / 2;
             int mBtnY = prevY + 24;
-            context.fill(mBtnX, mBtnY, mBtnX + mBtnW, mBtnY + mBtnH, com.mooclient.util.MooClientSettings.getAccentColor());
+            context.fill(mBtnX, mBtnY, mBtnX + mBtnW, mBtnY + mBtnH,
+                    com.mooclient.util.MooClientSettings.getAccentColor());
             drawBorder(context, mBtnX, mBtnY, mBtnW, mBtnH, 0x55FFFFFF);
-            drawCenteredText(context, "ENABLED", mBtnX + mBtnW / 2, mBtnY + 6, 0xFF082212);
+            drawCenteredText(context, MooLanguage.get("enabled"), mBtnX + mBtnW / 2, mBtnY + 6, 0xFF082212);
 
             // Hex / RGB Code display
             int hexCol = com.mooclient.util.MooClientSettings.getAccentColor();
-            String codeText = (activePreset == com.mooclient.util.MooClientSettings.AccentColorPreset.CHROMA) ? "RGB" : ("HEX: " + String.format("#%06X", (0xFFFFFF & hexCol)));
+            String codeText = (activePreset == com.mooclient.util.MooClientSettings.AccentColorPreset.CHROMA) ? "RGB"
+                    : ("HEX: " + String.format("#%06X", (0xFFFFFF & hexCol)));
             drawCenteredText(context, codeText, prevX + prevW / 2, prevY + 50, 0x88FFFFFF);
         } else {
             // Centered Live Preview Box when a standard preset is selected
@@ -1205,25 +1450,30 @@ public class MooClientScreen extends Screen {
             context.fill(prevX, prevY, prevX + prevW, prevY + prevH, 0x44101018);
             drawBorder(context, prevX, prevY, prevW, prevH, com.mooclient.util.MooClientSettings.getAccentColor());
 
-            drawCenteredText(context, MooLanguage.current == MooLanguage.PL ? "Podgląd akcentu UI:" : "Live UI Preview:", prevX + prevW / 2, prevY + 8, 0xFFA0A0AB);
+            drawCenteredText(context,
+                    MooLanguage.current == MooLanguage.PL ? "Podgląd akcentu UI:" : "Live UI Preview:",
+                    prevX + prevW / 2, prevY + 8, 0xFFA0A0AB);
 
             // Live mock ENABLED button
             int mBtnW = 100;
             int mBtnH = 20;
             int mBtnX = prevX + (prevW - mBtnW) / 2;
             int mBtnY = prevY + 24;
-            context.fill(mBtnX, mBtnY, mBtnX + mBtnW, mBtnY + mBtnH, com.mooclient.util.MooClientSettings.getAccentColor());
+            context.fill(mBtnX, mBtnY, mBtnX + mBtnW, mBtnY + mBtnH,
+                    com.mooclient.util.MooClientSettings.getAccentColor());
             drawBorder(context, mBtnX, mBtnY, mBtnW, mBtnH, 0x55FFFFFF);
-            drawCenteredText(context, "ENABLED", mBtnX + mBtnW / 2, mBtnY + 6, 0xFF082212);
+            drawCenteredText(context, MooLanguage.get("enabled"), mBtnX + mBtnW / 2, mBtnY + 6, 0xFF082212);
 
             // Hex / RGB Code display
             int hexCol = com.mooclient.util.MooClientSettings.getAccentColor();
-            String codeText = (activePreset == com.mooclient.util.MooClientSettings.AccentColorPreset.CHROMA) ? "RGB" : ("HEX: " + String.format("#%06X", (0xFFFFFF & hexCol)));
+            String codeText = (activePreset == com.mooclient.util.MooClientSettings.AccentColorPreset.CHROMA) ? "RGB"
+                    : ("HEX: " + String.format("#%06X", (0xFFFFFF & hexCol)));
             drawCenteredText(context, codeText, prevX + prevW / 2, prevY + 50, 0x88FFFFFF);
         }
     }
 
-    private void renderRgbSlider(DrawContext context, int labelX, int trackX, int y, int trackW, int trackH, String label, int value, int colorBar, int mouseX, int mouseY) {
+    private void renderRgbSlider(DrawContext context, int labelX, int trackX, int y, int trackW, int trackH,
+            String label, int value, int colorBar, int mouseX, int mouseY) {
         context.drawTextWithShadow(this.textRenderer, label, labelX, y + 1, COLOR_TEXT_WHITE);
         context.drawTextWithShadow(this.textRenderer, String.valueOf(value), labelX + 14, y + 1, 0xFFA0A0AB);
 
@@ -1243,7 +1493,8 @@ public class MooClientScreen extends Screen {
         drawBorder(context, knobX, y - 2, 6, trackH + 4, 0xFF000000);
     }
 
-    private void renderHudSettingsTab(DrawContext context, int panelX, int contentY, int panelW, int mouseX, int mouseY) {
+    private void renderHudSettingsTab(DrawContext context, int panelX, int contentY, int panelW, int mouseX,
+            int mouseY) {
         int rowX = panelX + 20;
         int rowW = panelW - 40;
         int rowH = 34;
@@ -1256,8 +1507,10 @@ public class MooClientScreen extends Screen {
         boolean resetHover = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= curY && mouseY <= curY + btnH;
         boolean justReset = (System.currentTimeMillis() - resetHudFeedbackTime < 2500);
 
-        int btnBg = justReset ? com.mooclient.util.MooClientSettings.getAccentColor() : (resetHover ? 0xCC2A2A3A : 0x88181826);
-        int btnBorder = justReset ? 0xFFFFFFFF : (resetHover ? com.mooclient.util.MooClientSettings.getAccentColor() : 0x44FFFFFF);
+        int btnBg = justReset ? com.mooclient.util.MooClientSettings.getAccentColor()
+                : (resetHover ? 0xCC2A2A3A : 0x88181826);
+        int btnBorder = justReset ? 0xFFFFFFFF
+                : (resetHover ? com.mooclient.util.MooClientSettings.getAccentColor() : 0x44FFFFFF);
         context.fill(btnX, curY, btnX + btnW, curY + btnH, btnBg);
         drawBorder(context, btnX, curY, btnW, btnH, btnBorder);
 
@@ -1269,24 +1522,28 @@ public class MooClientScreen extends Screen {
 
         // Row 1: Snapping
         drawOptionRow(context, rowX, curY, rowW, rowH, MooLanguage.get("hud_snapping_label"));
-        drawOptionToggle(context, rowX + rowW - 44, curY + 8, mouseX, mouseY, com.mooclient.util.MooClientSettings.isHudSnapping());
+        drawOptionToggle(context, rowX + rowW - 44, curY + 8, mouseX, mouseY,
+                com.mooclient.util.MooClientSettings.isHudSnapping());
 
         // Row 2: Scale (0-100%)
         curY += rowH + 6;
         drawOptionRow(context, rowX, curY, rowW, rowH, MooLanguage.get("hud_scale_label"));
         int hudSliderW = 180;
         int hudSliderX = rowX + rowW - hudSliderW - 8;
-        renderPercentageSlider(context, hudSliderX, curY + 6, hudSliderW, 22, com.mooclient.util.MooClientSettings.getHudScale(), mouseX, mouseY);
+        renderPercentageSlider(context, hudSliderX, curY + 6, hudSliderW, 22,
+                com.mooclient.util.MooClientSettings.getHudScale(), mouseX, mouseY);
 
         // Row 3: Global Text Shadows
         curY += rowH + 6;
         drawOptionRow(context, rowX, curY, rowW, rowH, MooLanguage.get("global_shadow_label"));
-        drawOptionToggle(context, rowX + rowW - 44, curY + 8, mouseX, mouseY, com.mooclient.util.MooClientSettings.isGlobalTextShadow());
+        drawOptionToggle(context, rowX + rowW - 44, curY + 8, mouseX, mouseY,
+                com.mooclient.util.MooClientSettings.isGlobalTextShadow());
     }
 
-    private void renderScaleSelector(DrawContext context, int startX, int y, int mouseX, int mouseY, int selectedOrdinal) {
-        String[] labels = new String[]{"85%", "100%", "115%"};
-        int[] widths = new int[]{64, 66, 64};
+    private void renderScaleSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
+            int selectedOrdinal) {
+        String[] labels = new String[] { "85%", "100%", "115%" };
+        int[] widths = new int[] { 64, 66, 64 };
         int gap = 4;
         int curX = startX;
         int h = 22;
@@ -1296,8 +1553,10 @@ public class MooClientScreen extends Screen {
             boolean selected = (i == selectedOrdinal);
             boolean hover = mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h;
 
-            int bg = selected ? com.mooclient.util.MooClientSettings.getAccentColor() : (hover ? 0xCC252535 : 0x66141420);
-            int border = selected ? com.mooclient.util.MooClientSettings.getAccentHoverColor() : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
+            int bg = selected ? com.mooclient.util.MooClientSettings.getAccentColor()
+                    : (hover ? 0xCC252535 : 0x66141420);
+            int border = selected ? com.mooclient.util.MooClientSettings.getAccentHoverColor()
+                    : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
             int textColor = selected ? 0xFF0A2514 : (hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
 
             context.fill(curX, y, curX + w, y + h, bg);
@@ -1308,7 +1567,8 @@ public class MooClientScreen extends Screen {
         }
     }
 
-    private void renderGuiSettingsTab(DrawContext context, int panelX, int contentY, int panelW, int mouseX, int mouseY) {
+    private void renderGuiSettingsTab(DrawContext context, int panelX, int contentY, int panelW, int mouseX,
+            int mouseY) {
         int rowX = panelX + 20;
         int rowW = panelW - 40;
         int rowH = 34;
@@ -1316,17 +1576,20 @@ public class MooClientScreen extends Screen {
 
         // Row 1: Background Dim
         drawOptionRow(context, rowX, curY, rowW, rowH, MooLanguage.get("bg_dim_label"));
-        renderDimSelector(context, rowX + rowW - 206, curY + 6, mouseX, mouseY, com.mooclient.util.MooClientSettings.getMenuBackgroundDim());
+        renderDimSelector(context, rowX + rowW - 206, curY + 6, mouseX, mouseY,
+                com.mooclient.util.MooClientSettings.getMenuBackgroundDim());
 
         // Row 2: GUI Animations
         curY += rowH + 8;
         drawOptionRow(context, rowX, curY, rowW, rowH, MooLanguage.get("gui_anim_label"));
-        drawOptionToggle(context, rowX + rowW - 44, curY + 8, mouseX, mouseY, com.mooclient.util.MooClientSettings.isGuiAnimations());
+        drawOptionToggle(context, rowX + rowW - 44, curY + 8, mouseX, mouseY,
+                com.mooclient.util.MooClientSettings.isGuiAnimations());
     }
 
-    private void renderDimSelector(DrawContext context, int startX, int y, int mouseX, int mouseY, int selectedOrdinal) {
-        String[] labels = new String[]{"30%", "50%", "75%"};
-        int[] widths = new int[]{64, 66, 64};
+    private void renderDimSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
+            int selectedOrdinal) {
+        String[] labels = new String[] { "30%", "50%", "75%" };
+        int[] widths = new int[] { 64, 66, 64 };
         int gap = 4;
         int curX = startX;
         int h = 22;
@@ -1336,8 +1599,10 @@ public class MooClientScreen extends Screen {
             boolean selected = (i == selectedOrdinal);
             boolean hover = mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h;
 
-            int bg = selected ? com.mooclient.util.MooClientSettings.getAccentColor() : (hover ? 0xCC252535 : 0x66141420);
-            int border = selected ? com.mooclient.util.MooClientSettings.getAccentHoverColor() : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
+            int bg = selected ? com.mooclient.util.MooClientSettings.getAccentColor()
+                    : (hover ? 0xCC252535 : 0x66141420);
+            int border = selected ? com.mooclient.util.MooClientSettings.getAccentHoverColor()
+                    : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
             int textColor = selected ? 0xFF0A2514 : (hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
 
             context.fill(curX, y, curX + w, y + h, bg);
@@ -1375,9 +1640,13 @@ public class MooClientScreen extends Screen {
         context.fill(x + w - 1, y + 1, x + w, y + h - 1, color);
     }
 
-    private void renderStyleSelector(DrawContext context, int startX, int y, int mouseX, int mouseY, int selectedOrdinal) {
-        String[] labels = new String[]{"Moo Client", "Simple", "Brackets"};
-        int[] widths = new int[]{74, 54, 64};
+    private void renderStyleSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
+            int selectedOrdinal) {
+        String[] labels = new String[] { "Moo Client", "Simple", "Brackets" };
+        if (MooLanguage.current.equals(MooLanguage.PL)) {
+            labels = new String[] { "Moo Client", "Prosty", "Nawiasy" };
+        }
+        int[] widths = MooLanguage.current.equals(MooLanguage.PL) ? new int[] { 74, 56, 66 } : new int[] { 74, 54, 64 };
         int gap = 4;
         int curX = startX;
         int h = 22;
@@ -1387,8 +1656,10 @@ public class MooClientScreen extends Screen {
             boolean selected = (i == selectedOrdinal);
             boolean hover = mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h;
 
-            int bg = selected ? 0xDD22C55E : (hover ? 0xCC252535 : 0x66141420);
-            int border = selected ? 0xFF4ADE80 : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
+            int bg = selected ? com.mooclient.util.MooClientSettings.getAccentColor()
+                    : (hover ? 0xCC252535 : 0x66141420);
+            int border = selected ? com.mooclient.util.MooClientSettings.getAccentHoverColor()
+                    : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
             int textColor = selected ? 0xFF0A2514 : (hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
 
             context.fill(curX, y, curX + w, y + h, bg);
@@ -1400,7 +1671,7 @@ public class MooClientScreen extends Screen {
     }
 
     private int getStyleSelectorClick(int startX, int y, int mouseX, int mouseY) {
-        int[] widths = new int[]{74, 54, 64};
+        int[] widths = MooLanguage.current.equals(MooLanguage.PL) ? new int[] { 74, 56, 66 } : new int[] { 74, 54, 64 };
         int gap = 4;
         int curX = startX;
         int h = 22;
@@ -1415,9 +1686,13 @@ public class MooClientScreen extends Screen {
         return -1;
     }
 
-    private void renderModeSelector(DrawContext context, int startX, int y, int mouseX, int mouseY, int selectedOrdinal) {
-        String[] labels = new String[]{"Hold", "Toggle"};
-        int[] widths = new int[]{100, 100};
+    private void renderModeSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
+            int selectedOrdinal) {
+        String[] labels = new String[] { "Hold", "Toggle" };
+        if (MooLanguage.current.equals(MooLanguage.PL)) {
+            labels = new String[] { "Przytrzymaj", "Przełącz" };
+        }
+        int[] widths = new int[] { 100, 100 };
         int gap = 6;
         int curX = startX;
         int h = 22;
@@ -1427,8 +1702,10 @@ public class MooClientScreen extends Screen {
             boolean selected = (i == selectedOrdinal);
             boolean hover = mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h;
 
-            int bg = selected ? 0xDD22C55E : (hover ? 0xCC252535 : 0x66141420);
-            int border = selected ? 0xFF4ADE80 : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
+            int bg = selected ? com.mooclient.util.MooClientSettings.getAccentColor()
+                    : (hover ? 0xCC252535 : 0x66141420);
+            int border = selected ? com.mooclient.util.MooClientSettings.getAccentHoverColor()
+                    : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
             int textColor = selected ? 0xFF0A2514 : (hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
 
             context.fill(curX, y, curX + w, y + h, bg);
@@ -1439,9 +1716,10 @@ public class MooClientScreen extends Screen {
         }
     }
 
-    private void renderPingPositionSelector(DrawContext context, int startX, int y, int mouseX, int mouseY, int selectedOrdinal) {
-        String[] labels = new String[]{MooLanguage.get("ping_pos_beside"), MooLanguage.get("ping_pos_above")};
-        int[] widths = new int[]{100, 100};
+    private void renderPingPositionSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
+            int selectedOrdinal) {
+        String[] labels = new String[] { MooLanguage.get("ping_pos_beside"), MooLanguage.get("ping_pos_above") };
+        int[] widths = new int[] { 100, 100 };
         int gap = 6;
         int curX = startX;
         int h = 22;
@@ -1451,8 +1729,10 @@ public class MooClientScreen extends Screen {
             boolean selected = (i == selectedOrdinal);
             boolean hover = mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h;
 
-            int bg = selected ? 0xDD22C55E : (hover ? 0xCC252535 : 0x66141420);
-            int border = selected ? 0xFF4ADE80 : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
+            int bg = selected ? com.mooclient.util.MooClientSettings.getAccentColor()
+                    : (hover ? 0xCC252535 : 0x66141420);
+            int border = selected ? com.mooclient.util.MooClientSettings.getAccentHoverColor()
+                    : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
             int textColor = selected ? 0xFF0A2514 : (hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
 
             context.fill(curX, y, curX + w, y + h, bg);
@@ -1463,9 +1743,13 @@ public class MooClientScreen extends Screen {
         }
     }
 
-    private void renderPotionStyleSelector(DrawContext context, int startX, int y, int mouseX, int mouseY, int selectedOrdinal) {
-        String[] labels = new String[]{"Moo Client", "Simple", "Compact"};
-        int[] widths = new int[]{90, 75, 75};
+    private void renderCpsDisplayModeSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
+            int selectedOrdinal) {
+        String[] labels = new String[] { "LPM | PPM", "Tylko LPM", "Tylko PPM" };
+        if (MooLanguage.current == MooLanguage.EN) {
+            labels = new String[] { "LMB | RMB", "Left Only", "Right Only" };
+        }
+        int[] widths = new int[] { 78, 68, 68 };
         int gap = 4;
         int curX = startX;
         int h = 22;
@@ -1475,8 +1759,56 @@ public class MooClientScreen extends Screen {
             boolean selected = (i == selectedOrdinal);
             boolean hover = mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h;
 
-            int bg = selected ? 0xDD22C55E : (hover ? 0xCC252535 : 0x66141420);
-            int border = selected ? 0xFF4ADE80 : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
+            int bg = selected ? com.mooclient.util.MooClientSettings.getAccentColor()
+                    : (hover ? 0xCC252535 : 0x66141420);
+            int border = selected ? com.mooclient.util.MooClientSettings.getAccentHoverColor()
+                    : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
+            int textColor = selected ? 0xFF0A2514 : (hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
+
+            context.fill(curX, y, curX + w, y + h, bg);
+            drawBorder(context, curX, y, w, h, border);
+            drawCenteredText(context, labels[i], curX + w / 2, y + 7, textColor);
+
+            curX += w + gap;
+        }
+    }
+
+    private int getCpsDisplayModeClick(int startX, int y, int mouseX, int mouseY) {
+        int[] widths = new int[] { 78, 68, 68 };
+        int gap = 4;
+        int curX = startX;
+        int h = 22;
+
+        for (int i = 0; i < widths.length; i++) {
+            int w = widths[i];
+            if (mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h) {
+                return i;
+            }
+            curX += w + gap;
+        }
+        return -1;
+    }
+
+    private void renderPotionStyleSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
+            int selectedOrdinal) {
+        String[] labels = new String[] { "Moo Client", "Simple", "Compact" };
+        if (MooLanguage.current.equals(MooLanguage.PL)) {
+            labels = new String[] { "Moo Client", "Prosty", "Kompaktowy" };
+        }
+        int[] widths = MooLanguage.current.equals(MooLanguage.PL) ? new int[] { 78, 56, 84 } : new int[] { 78, 56, 72 };
+        int gap = 4;
+        int curX = startX;
+        int h = 22;
+
+        for (int i = 0; i < labels.length; i++) {
+            int w = widths[i];
+            boolean selected = (i == selectedOrdinal);
+            boolean hover = mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h;
+
+            int bg = selected ? com.mooclient.util.MooClientSettings.getAccentColor()
+                    : (hover ? 0xCC252535 : 0x66141420);
+            int border = selected ? com.mooclient.util.MooClientSettings.getAccentHoverColor()
+                    : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
             int textColor = selected ? 0xFF0A2514 : (hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
 
             context.fill(curX, y, curX + w, y + h, bg);
@@ -1488,7 +1820,7 @@ public class MooClientScreen extends Screen {
     }
 
     private int getPotionStyleClick(int startX, int y, int mouseX, int mouseY) {
-        int[] widths = new int[]{90, 75, 75};
+        int[] widths = MooLanguage.current.equals(MooLanguage.PL) ? new int[] { 78, 56, 84 } : new int[] { 78, 56, 72 };
         int gap = 4;
         int curX = startX;
         int h = 22;
@@ -1503,8 +1835,9 @@ public class MooClientScreen extends Screen {
         return -1;
     }
 
-    private void renderFactorSelector(DrawContext context, int startX, int y, int mouseX, int mouseY, int selectedOrdinal) {
-        String[] labels = new String[]{"2x", "3x", "4x", "5x", "6x"};
+    private void renderFactorSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
+            int selectedOrdinal) {
+        String[] labels = new String[] { "2x", "3x", "4x", "5x", "6x" };
         int w = 44;
         int gap = 4;
         int curX = startX;
@@ -1542,7 +1875,7 @@ public class MooClientScreen extends Screen {
     }
 
     private int getModeSelectorClick(int startX, int y, int mouseX, int mouseY) {
-        int[] widths = new int[]{100, 100};
+        int[] widths = new int[] { 100, 100 };
         int gap = 6;
         int curX = startX;
         int h = 22;
@@ -1557,7 +1890,8 @@ public class MooClientScreen extends Screen {
         return -1;
     }
 
-    private void renderPercentageSlider(DrawContext context, int x, int y, int w, int h, int percent, int mouseX, int mouseY) {
+    private void renderPercentageSlider(DrawContext context, int x, int y, int w, int h, int percent, int mouseX,
+            int mouseY) {
         percent = Math.max(0, Math.min(100, percent));
         String text = percent + "%";
 
@@ -1573,12 +1907,14 @@ public class MooClientScreen extends Screen {
         // Filled bar (Accent color)
         int fillW = Math.round((percent / 100.0f) * trackW);
         if (fillW > 0) {
-            context.fill(trackX + 1, trackY + 1, trackX + fillW, trackY + trackH - 1, com.mooclient.util.MooClientSettings.getAccentColor());
+            context.fill(trackX + 1, trackY + 1, trackX + fillW, trackY + trackH - 1,
+                    com.mooclient.util.MooClientSettings.getAccentColor());
         }
 
         // Draggable Knob
         int knobX = trackX + fillW - 2;
-        boolean hover = mouseX >= trackX && mouseX <= trackX + trackW && mouseY >= trackY - 4 && mouseY <= trackY + trackH + 4;
+        boolean hover = mouseX >= trackX && mouseX <= trackX + trackW && mouseY >= trackY - 4
+                && mouseY <= trackY + trackH + 4;
         int knobBorder = hover ? 0xFFFFFFFF : com.mooclient.util.MooClientSettings.getAccentColor();
         context.fill(knobX, trackY - 4, knobX + 5, trackY + trackH + 4, COLOR_TEXT_WHITE);
         drawBorder(context, knobX, trackY - 4, 5, trackH + 8, knobBorder);
@@ -1597,10 +1933,8 @@ public class MooClientScreen extends Screen {
     private void playClickSound() {
         if (this.client != null) {
             this.client.getSoundManager().play(
-                net.minecraft.client.sound.PositionedSoundInstance.master(
-                    net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK, 1.0f
-                )
-            );
+                    net.minecraft.client.sound.PositionedSoundInstance.master(
+                            net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK, 1.0f));
         }
     }
 
@@ -1671,7 +2005,8 @@ public class MooClientScreen extends Screen {
                 MooLanguage.current = MooLanguage.PL;
                 return true;
             }
-            if (mouseX >= langX + pillW + langGap && mouseX <= langX + (pillW * 2) + langGap && mouseY >= langY && mouseY <= langY + pillH) {
+            if (mouseX >= langX + pillW + langGap && mouseX <= langX + (pillW * 2) + langGap && mouseY >= langY
+                    && mouseY <= langY + pillH) {
                 playClickSound();
                 MooLanguage.current = MooLanguage.EN;
                 return true;
@@ -1682,8 +2017,8 @@ public class MooClientScreen extends Screen {
                 if (FpsModule.isFpsEnabled()) {
                     int w = FpsModule.width;
                     int h = FpsModule.height;
-                    int x = MooHudPositionHelper.calculateRenderX(FpsModule.posX, w, this.width, MooHudPositionHelper.HudAnchorX.LEFT, 6);
-                    int y = MooHudPositionHelper.calculateRenderY(FpsModule.posY, h, this.height, MooHudPositionHelper.HudAnchorY.TOP, 6);
+                    int x = FpsModule.position.calculateX(w, this.width);
+                    int y = FpsModule.position.calculateY(h, this.height);
                     if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
                         draggingWidget = "FPS";
                         dragOffsetX = (int) mouseX - x;
@@ -1695,8 +2030,8 @@ public class MooClientScreen extends Screen {
                 if (ToggleSprintModule.isSprintEnabled()) {
                     int w = ToggleSprintModule.width;
                     int h = ToggleSprintModule.height;
-                    int x = MooHudPositionHelper.calculateRenderX(ToggleSprintModule.posX, w, this.width, MooHudPositionHelper.HudAnchorX.LEFT, 6);
-                    int y = MooHudPositionHelper.calculateRenderY(ToggleSprintModule.posY, h, this.height, MooHudPositionHelper.HudAnchorY.TOP, 20);
+                    int x = ToggleSprintModule.position.calculateX(w, this.width);
+                    int y = ToggleSprintModule.position.calculateY(h, this.height);
                     if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
                         draggingWidget = "SPRINT";
                         dragOffsetX = (int) mouseX - x;
@@ -1708,8 +2043,8 @@ public class MooClientScreen extends Screen {
                 if (PotionEffectsModule.isModuleEnabled()) {
                     int w = PotionEffectsModule.width;
                     int h = PotionEffectsModule.height;
-                    int x = MooHudPositionHelper.calculateRenderX(PotionEffectsModule.posX, w, this.width, MooHudPositionHelper.HudAnchorX.LEFT, 6);
-                    int y = MooHudPositionHelper.calculateRenderY(PotionEffectsModule.posY, h, this.height, MooHudPositionHelper.HudAnchorY.TOP, 50);
+                    int x = PotionEffectsModule.position.calculateX(w, this.width);
+                    int y = PotionEffectsModule.position.calculateY(h, this.height);
                     if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
                         draggingWidget = "POTIONS";
                         dragOffsetX = (int) mouseX - x;
@@ -1721,10 +2056,23 @@ public class MooClientScreen extends Screen {
                 if (com.mooclient.module.modules.PingModule.isPingEnabled()) {
                     int w = com.mooclient.module.modules.PingModule.width;
                     int h = com.mooclient.module.modules.PingModule.height;
-                    int x = MooHudPositionHelper.calculateRenderX(com.mooclient.module.modules.PingModule.posX, w, this.width, MooHudPositionHelper.HudAnchorX.LEFT, 6);
-                    int y = MooHudPositionHelper.calculateRenderY(com.mooclient.module.modules.PingModule.posY, h, this.height, MooHudPositionHelper.HudAnchorY.TOP, 34);
+                    int x = com.mooclient.module.modules.PingModule.position.calculateX(w, this.width);
+                    int y = com.mooclient.module.modules.PingModule.position.calculateY(h, this.height);
                     if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
                         draggingWidget = "PING";
+                        dragOffsetX = (int) mouseX - x;
+                        dragOffsetY = (int) mouseY - y;
+                        return true;
+                    }
+                }
+
+                if (com.mooclient.module.modules.CpsModule.isCpsEnabled()) {
+                    int w = com.mooclient.module.modules.CpsModule.width;
+                    int h = com.mooclient.module.modules.CpsModule.height;
+                    int x = com.mooclient.module.modules.CpsModule.position.calculateX(w, this.width);
+                    int y = com.mooclient.module.modules.CpsModule.position.calculateY(h, this.height);
+                    if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
+                        draggingWidget = "CPS";
                         dragOffsetX = (int) mouseX - x;
                         dragOffsetY = (int) mouseY - y;
                         return true;
@@ -1734,8 +2082,8 @@ public class MooClientScreen extends Screen {
                 if (com.mooclient.module.modules.ScoreboardModule.isScoreboardEnabled()) {
                     int w = com.mooclient.module.modules.ScoreboardModule.width;
                     int h = com.mooclient.module.modules.ScoreboardModule.height;
-                    int x = MooHudPositionHelper.calculateRenderX(com.mooclient.module.modules.ScoreboardModule.posX, w, this.width, MooHudPositionHelper.HudAnchorX.RIGHT, 6);
-                    int y = MooHudPositionHelper.calculateRenderY(com.mooclient.module.modules.ScoreboardModule.posY, h, this.height, MooHudPositionHelper.HudAnchorY.CENTER, 0);
+                    int x = com.mooclient.module.modules.ScoreboardModule.position.calculateX(w, this.width);
+                    int y = com.mooclient.module.modules.ScoreboardModule.position.calculateY(h, this.height);
                     if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
                         draggingWidget = "SCOREBOARD";
                         dragOffsetX = (int) mouseX - x;
@@ -1781,7 +2129,8 @@ public class MooClientScreen extends Screen {
                 int setBtnH = 20;
                 int setBtnX = panelX + panelW - setBtnW - 14;
                 int setBtnY = panelY + 12;
-                if (mouseX >= setBtnX && mouseX <= setBtnX + setBtnW && mouseY >= setBtnY && mouseY <= setBtnY + setBtnH) {
+                if (mouseX >= setBtnX && mouseX <= setBtnX + setBtnW && mouseY >= setBtnY
+                        && mouseY <= setBtnY + setBtnH) {
                     playClickSound();
                     this.currentView = View.SETTINGS;
                     this.searching = false;
@@ -1793,7 +2142,8 @@ public class MooClientScreen extends Screen {
                 int searchH = 18;
                 int searchX = panelX + (panelW - searchW) / 2;
                 int searchY = panelY + 26;
-                if (mouseX >= searchX && mouseX <= searchX + searchW && mouseY >= searchY && mouseY <= searchY + searchH) {
+                if (mouseX >= searchX && mouseX <= searchX + searchW && mouseY >= searchY
+                        && mouseY <= searchY + searchH) {
                     playClickSound();
                     if (!searchFilter.isEmpty() && mouseX >= searchX + searchW - 18) {
                         searchFilter = "";
@@ -1855,8 +2205,10 @@ public class MooClientScreen extends Screen {
                     int optY = cardY + cardH - 52;
                     int optX = cardX + 8;
                     int optW = cardW - 16;
-                    boolean optClicked = mouseX >= optX && mouseX <= optX + optW && mouseY >= optY && mouseY <= optY + optH;
-                    boolean cardBodyClicked = mouseX >= cardX && mouseX <= cardX + cardW && mouseY >= cardY && mouseY <= optY;
+                    boolean optClicked = mouseX >= optX && mouseX <= optX + optW && mouseY >= optY
+                            && mouseY <= optY + optH;
+                    boolean cardBodyClicked = mouseX >= cardX && mouseX <= cardX + cardW && mouseY >= cardY
+                            && mouseY <= optY;
 
                     if (optClicked || cardBodyClicked) {
                         playClickSound();
@@ -1901,21 +2253,24 @@ public class MooClientScreen extends Screen {
                     }
 
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         FpsModule.toggleShowBackground();
                         return true;
                     }
 
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         FpsModule.toggleTextShadow();
                         return true;
                     }
 
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         FpsModule.toggleShowPrefix();
                         return true;
@@ -1924,28 +2279,74 @@ public class MooClientScreen extends Screen {
                     int styleClick = getStyleSelectorClick(rowX + rowW - 206, rowY + 6, (int) mouseX, (int) mouseY);
                     if (styleClick >= 0) {
                         playClickSound();
-                        com.mooclient.module.modules.PingModule.setStyle(com.mooclient.module.modules.PingModule.PingStyle.values()[styleClick]);
+                        com.mooclient.module.modules.PingModule
+                                .setStyle(com.mooclient.module.modules.PingModule.PingStyle.values()[styleClick]);
                         return true;
                     }
 
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.PingModule.toggleShowBackground();
                         return true;
                     }
 
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.PingModule.toggleTextShadow();
                         return true;
                     }
 
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.PingModule.toggleShowPrefix();
+                        return true;
+                    }
+                } else if (modName.equalsIgnoreCase("CPS")) {
+                    int modeClick = getCpsDisplayModeClick(rowX + rowW - 230, rowY + 6, (int) mouseX, (int) mouseY);
+                    if (modeClick >= 0) {
+                        playClickSound();
+                        com.mooclient.module.modules.CpsModule
+                                .setDisplayMode(
+                                        com.mooclient.module.modules.CpsModule.CpsDisplayMode.values()[modeClick]);
+                        return true;
+                    }
+
+                    rowY += rowH + 6;
+                    int styleClick = getStyleSelectorClick(rowX + rowW - 206, rowY + 6, (int) mouseX, (int) mouseY);
+                    if (styleClick >= 0) {
+                        playClickSound();
+                        com.mooclient.module.modules.CpsModule
+                                .setStyle(com.mooclient.module.modules.CpsModule.CpsStyle.values()[styleClick]);
+                        return true;
+                    }
+
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        com.mooclient.module.modules.CpsModule.toggleShowBackground();
+                        return true;
+                    }
+
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        com.mooclient.module.modules.CpsModule.toggleTextShadow();
+                        return true;
+                    }
+
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        com.mooclient.module.modules.CpsModule.toggleShowPrefix();
                         return true;
                     }
                 } else if (modName.equalsIgnoreCase("Sprint")) {
@@ -1973,7 +2374,8 @@ public class MooClientScreen extends Screen {
 
                     // Row 3: Show Background
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         this.listeningForKeybind = false;
                         ToggleSprintModule.toggleShowBackground();
@@ -1982,7 +2384,8 @@ public class MooClientScreen extends Screen {
 
                     // Row 4: Text Shadow
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         this.listeningForKeybind = false;
                         ToggleSprintModule.toggleTextShadow();
@@ -2013,7 +2416,8 @@ public class MooClientScreen extends Screen {
 
                     // Row 3: Invert Pitch Toggle
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         this.listeningForKeybind = false;
                         FreelookModule.toggleInvertPitch();
@@ -2030,7 +2434,8 @@ public class MooClientScreen extends Screen {
 
                     // Row 2: Show Background
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         PotionEffectsModule.toggleShowBackground();
                         return true;
@@ -2038,14 +2443,16 @@ public class MooClientScreen extends Screen {
 
                     // Row 3: Text Shadow
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         PotionEffectsModule.toggleTextShadow();
                         return true;
                     }
                 } else if (modName.equalsIgnoreCase("Nametags")) {
                     // Row 1: Show Ping
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.NametagsModule.toggleShowPing();
                         com.mooclient.util.MooConfig.save();
@@ -2054,7 +2461,8 @@ public class MooClientScreen extends Screen {
 
                     // Row 2: Show Self Ping
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.NametagsModule.toggleShowSelfPing();
                         com.mooclient.util.MooConfig.save();
@@ -2066,14 +2474,16 @@ public class MooClientScreen extends Screen {
                     int pingPosClick = getModeSelectorClick(rowX + rowW - 206, rowY + 6, (int) mouseX, (int) mouseY);
                     if (pingPosClick >= 0) {
                         playClickSound();
-                        com.mooclient.module.modules.NametagsModule.setPingPosition(com.mooclient.module.modules.NametagsModule.PingPosition.values()[pingPosClick]);
+                        com.mooclient.module.modules.NametagsModule.setPingPosition(
+                                com.mooclient.module.modules.NametagsModule.PingPosition.values()[pingPosClick]);
                         com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
                     // Row 4: Remove Background
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.NametagsModule.toggleRemoveBackground();
                         com.mooclient.util.MooConfig.save();
@@ -2082,7 +2492,8 @@ public class MooClientScreen extends Screen {
 
                     // Row 5: Text Shadow
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.NametagsModule.toggleTextShadow();
                         com.mooclient.util.MooConfig.save();
@@ -2107,7 +2518,8 @@ public class MooClientScreen extends Screen {
                     if (factorClick >= 0) {
                         playClickSound();
                         this.listeningForKeybind = false;
-                        com.mooclient.module.modules.ZoomModule.setFactor(com.mooclient.module.modules.ZoomModule.ZoomFactor.values()[factorClick]);
+                        com.mooclient.module.modules.ZoomModule
+                                .setFactor(com.mooclient.module.modules.ZoomModule.ZoomFactor.values()[factorClick]);
                         return true;
                     }
 
@@ -2117,13 +2529,15 @@ public class MooClientScreen extends Screen {
                     if (modeClick >= 0) {
                         playClickSound();
                         this.listeningForKeybind = false;
-                        com.mooclient.module.modules.ZoomModule.setMode(com.mooclient.module.modules.ZoomModule.ActivationMode.values()[modeClick]);
+                        com.mooclient.module.modules.ZoomModule
+                                .setMode(com.mooclient.module.modules.ZoomModule.ActivationMode.values()[modeClick]);
                         return true;
                     }
 
                     // Row 4: Smooth Zoom Toggle
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         this.listeningForKeybind = false;
                         com.mooclient.module.modules.ZoomModule.toggleSmoothZoom();
@@ -2131,7 +2545,8 @@ public class MooClientScreen extends Screen {
                     }
                 } else if (modName.equalsIgnoreCase("Chat")) {
                     // Row 1: Transparent Background
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.ChatModule.toggleTransparentBackground();
                         com.mooclient.util.MooConfig.save();
@@ -2140,7 +2555,8 @@ public class MooClientScreen extends Screen {
 
                     // Row 2: Unlimited Chat
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.ChatModule.toggleUnlimitedChat();
                         com.mooclient.util.MooConfig.save();
@@ -2149,7 +2565,8 @@ public class MooClientScreen extends Screen {
 
                     // Row 3: Smooth Chat
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.ChatModule.toggleSmoothChat();
                         com.mooclient.util.MooConfig.save();
@@ -2158,14 +2575,16 @@ public class MooClientScreen extends Screen {
 
                     // Row 4: Text Shadow
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.ChatModule.toggleTextShadow();
                         com.mooclient.util.MooConfig.save();
                         return true;
                     }
                 } else if (modName.equalsIgnoreCase("Macro")) {
-                    java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> macroList = com.mooclient.module.modules.MacroModule.getMacros();
+                    java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> macroList = com.mooclient.module.modules.MacroModule
+                            .getMacros();
                     int mRowH = 28;
                     int curY = panelY + headerH + 10;
 
@@ -2197,7 +2616,8 @@ public class MooClientScreen extends Screen {
                         int tY = curY + 5;
 
                         // Click Command Box
-                        if (mouseX >= cmdBoxX && mouseX <= cmdBoxX + cmdBoxW && mouseY >= cmdBoxY && mouseY <= cmdBoxY + cmdBoxH) {
+                        if (mouseX >= cmdBoxX && mouseX <= cmdBoxX + cmdBoxW && mouseY >= cmdBoxY
+                                && mouseY <= cmdBoxY + cmdBoxH) {
                             playClickSound();
                             this.editingMacroIndex = (this.editingMacroIndex == i ? -1 : i);
                             this.listeningMacroIndex = -1;
@@ -2241,7 +2661,8 @@ public class MooClientScreen extends Screen {
                     int openBtnH = 22;
                     int openBtnX = rowX + rowW - openBtnW - 10;
                     int openBtnY = rowY + 6;
-                    if (mouseX >= openBtnX && mouseX <= openBtnX + openBtnW && mouseY >= openBtnY && mouseY <= openBtnY + openBtnH) {
+                    if (mouseX >= openBtnX && mouseX <= openBtnX + openBtnW && mouseY >= openBtnY
+                            && mouseY <= openBtnY + openBtnH) {
                         playClickSound();
                         if (this.client != null) {
                             this.client.setScreen(new MooWaypointScreen());
@@ -2253,7 +2674,8 @@ public class MooClientScreen extends Screen {
                     rowY += rowH + 6;
                     int wpSliderW = 180;
                     int wpSliderX = rowX + rowW - wpSliderW - 8;
-                    if (mouseX >= wpSliderX - 4 && mouseX <= wpSliderX + wpSliderW + 4 && mouseY >= rowY + 2 && mouseY <= rowY + 24) {
+                    if (mouseX >= wpSliderX - 4 && mouseX <= wpSliderX + wpSliderW + 4 && mouseY >= rowY + 2
+                            && mouseY <= rowY + 24) {
                         this.draggingSlider = 4;
                         handleSliderDrag(mouseX);
                         playClickSound();
@@ -2262,7 +2684,8 @@ public class MooClientScreen extends Screen {
 
                     // Row 4: Auto Death Waypoint Toggle
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.WaypointsModule.toggleDeathWaypoint();
                         com.mooclient.util.MooConfig.save();
@@ -2271,7 +2694,8 @@ public class MooClientScreen extends Screen {
 
                     // Row 5: Show Distance
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.WaypointsModule.toggleShowDistance();
                         com.mooclient.util.MooConfig.save();
@@ -2280,7 +2704,8 @@ public class MooClientScreen extends Screen {
 
                     // Row 6: Background Toggle
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.WaypointsModule.toggleShowBackground();
                         com.mooclient.util.MooConfig.save();
@@ -2289,7 +2714,8 @@ public class MooClientScreen extends Screen {
 
                     // Row 7: Text Shadow Toggle
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.WaypointsModule.toggleTextShadow();
                         com.mooclient.util.MooConfig.save();
@@ -2297,7 +2723,8 @@ public class MooClientScreen extends Screen {
                     }
                 } else if (modName.equalsIgnoreCase("Scoreboard")) {
                     // Row 1: Enable / Disable
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         boolean newState = !com.mooclient.module.modules.ScoreboardModule.isScoreboardEnabled();
                         com.mooclient.module.modules.ScoreboardModule.setScoreboardEnabled(newState);
@@ -2308,7 +2735,8 @@ public class MooClientScreen extends Screen {
 
                     // Row 2: Text Shadow
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.ScoreboardModule.toggleTextShadow();
                         com.mooclient.util.MooConfig.save();
@@ -2317,7 +2745,8 @@ public class MooClientScreen extends Screen {
 
                     // Row 3: Background
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.ScoreboardModule.toggleShowBackground();
                         com.mooclient.util.MooConfig.save();
@@ -2326,7 +2755,8 @@ public class MooClientScreen extends Screen {
 
                     // Row 4: Show Scores / Numbers
                     rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.ScoreboardModule.toggleShowScores();
                         com.mooclient.util.MooConfig.save();
@@ -2346,9 +2776,11 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
                 } else {
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
                         playClickSound();
-                        if (selectedModule != null) selectedModule.toggle();
+                        if (selectedModule != null)
+                            selectedModule.toggle();
                         return true;
                     }
                 }
@@ -2388,7 +2820,8 @@ public class MooClientScreen extends Screen {
 
                 // Tab 0: Accent Color
                 if (settingsTab == 0) {
-                    com.mooclient.util.MooClientSettings.AccentColorPreset[] presets = com.mooclient.util.MooClientSettings.AccentColorPreset.values();
+                    com.mooclient.util.MooClientSettings.AccentColorPreset[] presets = com.mooclient.util.MooClientSettings.AccentColorPreset
+                            .values();
                     int cols = 5;
                     int pW = 100;
                     int pH = 22;
@@ -2411,7 +2844,8 @@ public class MooClientScreen extends Screen {
                     }
 
                     // RGB Sliders Click (only if CUSTOM preset is active)
-                    if (com.mooclient.util.MooClientSettings.getAccentPreset() == com.mooclient.util.MooClientSettings.AccentColorPreset.CUSTOM) {
+                    if (com.mooclient.util.MooClientSettings
+                            .getAccentPreset() == com.mooclient.util.MooClientSettings.AccentColorPreset.CUSTOM) {
                         int customY = startY + 2 * (pH + gap) + 8;
                         int sliderStartX = panelX + 50;
                         int sliderW = 210;
@@ -2419,7 +2853,8 @@ public class MooClientScreen extends Screen {
                         int sY = customY + 18;
 
                         // Red slider click
-                        if (mouseX >= sliderStartX - 5 && mouseX <= sliderStartX + sliderW + 5 && mouseY >= sY && mouseY <= sY + sliderH) {
+                        if (mouseX >= sliderStartX - 5 && mouseX <= sliderStartX + sliderW + 5 && mouseY >= sY
+                                && mouseY <= sY + sliderH) {
                             this.draggingSlider = 0;
                             handleSliderDrag(mouseX);
                             playClickSound();
@@ -2427,7 +2862,8 @@ public class MooClientScreen extends Screen {
                         }
                         // Green slider click
                         sY += 20;
-                        if (mouseX >= sliderStartX - 5 && mouseX <= sliderStartX + sliderW + 5 && mouseY >= sY && mouseY <= sY + sliderH) {
+                        if (mouseX >= sliderStartX - 5 && mouseX <= sliderStartX + sliderW + 5 && mouseY >= sY
+                                && mouseY <= sY + sliderH) {
                             this.draggingSlider = 1;
                             handleSliderDrag(mouseX);
                             playClickSound();
@@ -2435,7 +2871,8 @@ public class MooClientScreen extends Screen {
                         }
                         // Blue slider click
                         sY += 20;
-                        if (mouseX >= sliderStartX - 5 && mouseX <= sliderStartX + sliderW + 5 && mouseY >= sY && mouseY <= sY + sliderH) {
+                        if (mouseX >= sliderStartX - 5 && mouseX <= sliderStartX + sliderW + 5 && mouseY >= sY
+                                && mouseY <= sY + sliderH) {
                             this.draggingSlider = 2;
                             handleSliderDrag(mouseX);
                             playClickSound();
@@ -2464,7 +2901,8 @@ public class MooClientScreen extends Screen {
                     curY += btnH + 12;
 
                     // Snapping Toggle
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= curY + 8 && mouseY <= curY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= curY + 8
+                            && mouseY <= curY + 26) {
                         playClickSound();
                         com.mooclient.util.MooClientSettings.toggleHudSnapping();
                         return true;
@@ -2474,7 +2912,8 @@ public class MooClientScreen extends Screen {
                     curY += rowH + 6;
                     int hudSliderW = 180;
                     int hudSliderX = rowX + rowW - hudSliderW - 8;
-                    if (mouseX >= hudSliderX - 4 && mouseX <= hudSliderX + hudSliderW + 4 && mouseY >= curY + 2 && mouseY <= curY + 24) {
+                    if (mouseX >= hudSliderX - 4 && mouseX <= hudSliderX + hudSliderW + 4 && mouseY >= curY + 2
+                            && mouseY <= curY + 24) {
                         this.draggingSlider = 3;
                         handleSliderDrag(mouseX);
                         playClickSound();
@@ -2483,7 +2922,8 @@ public class MooClientScreen extends Screen {
 
                     // Global Shadows Toggle
                     curY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= curY + 8 && mouseY <= curY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= curY + 8
+                            && mouseY <= curY + 26) {
                         playClickSound();
                         com.mooclient.util.MooClientSettings.toggleGlobalTextShadow();
                         return true;
@@ -2506,7 +2946,8 @@ public class MooClientScreen extends Screen {
 
                     // Animations Toggle
                     curY += rowH + 8;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= curY + 8 && mouseY <= curY + 26) {
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= curY + 8
+                            && mouseY <= curY + 26) {
                         playClickSound();
                         com.mooclient.util.MooClientSettings.toggleGuiAnimations();
                         return true;
@@ -2518,7 +2959,7 @@ public class MooClientScreen extends Screen {
     }
 
     private int getSelector3Click(int startX, int y, int mouseX, int mouseY) {
-        int[] widths = new int[]{64, 66, 64};
+        int[] widths = new int[] { 64, 66, 64 };
         int gap = 4;
         int curX = startX;
         int h = 22;
@@ -2546,13 +2987,16 @@ public class MooClientScreen extends Screen {
 
                 if (draggingSlider == 0) {
                     com.mooclient.util.MooClientSettings.setCustomRed(val);
-                    com.mooclient.util.MooClientSettings.setAccentPreset(com.mooclient.util.MooClientSettings.AccentColorPreset.CUSTOM);
+                    com.mooclient.util.MooClientSettings
+                            .setAccentPreset(com.mooclient.util.MooClientSettings.AccentColorPreset.CUSTOM);
                 } else if (draggingSlider == 1) {
                     com.mooclient.util.MooClientSettings.setCustomGreen(val);
-                    com.mooclient.util.MooClientSettings.setAccentPreset(com.mooclient.util.MooClientSettings.AccentColorPreset.CUSTOM);
+                    com.mooclient.util.MooClientSettings
+                            .setAccentPreset(com.mooclient.util.MooClientSettings.AccentColorPreset.CUSTOM);
                 } else if (draggingSlider == 2) {
                     com.mooclient.util.MooClientSettings.setCustomBlue(val);
-                    com.mooclient.util.MooClientSettings.setAccentPreset(com.mooclient.util.MooClientSettings.AccentColorPreset.CUSTOM);
+                    com.mooclient.util.MooClientSettings
+                            .setAccentPreset(com.mooclient.util.MooClientSettings.AccentColorPreset.CUSTOM);
                 }
             } else if (settingsTab == 1 && draggingSlider == 3) {
                 int panelW = 560;
@@ -2593,7 +3037,8 @@ public class MooClientScreen extends Screen {
             }
         }
         if (currentView == View.OPTIONS && editingMacroIndex >= 0) {
-            java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> macroList = com.mooclient.module.modules.MacroModule.getMacros();
+            java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> macroList = com.mooclient.module.modules.MacroModule
+                    .getMacros();
             if (editingMacroIndex < macroList.size()) {
                 com.mooclient.module.modules.MacroModule.MacroEntry m = macroList.get(editingMacroIndex);
                 if (chr >= 32 && chr != 127) { // printable character
@@ -2609,29 +3054,84 @@ public class MooClientScreen extends Screen {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         if (currentView == View.HUB && draggingWidget != null) {
-            int newX = (int) mouseX - dragOffsetX;
-            int newY = (int) mouseY - dragOffsetY;
+            int rawX = (int) mouseX - dragOffsetX;
+            int rawY = (int) mouseY - dragOffsetY;
             boolean snapping = com.mooclient.util.MooClientSettings.isHudSnapping();
+            int accent = com.mooclient.util.MooClientSettings.getAccentColor();
+            java.util.List<com.mooclient.util.MooHudPositionHelper.WidgetRect> others = getOtherActiveWidgetRects(
+                    draggingWidget);
 
             if ("FPS".equals(draggingWidget)) {
-                FpsModule.posX = MooHudPositionHelper.snapAndClampX(newX, FpsModule.width, this.width, snapping);
-                FpsModule.posY = MooHudPositionHelper.snapAndClampY(newY, FpsModule.height, this.height, snapping);
+                com.mooclient.util.MooHudPositionHelper.SnapResult res = com.mooclient.util.MooHudPositionHelper
+                        .calculateSmartSnap(
+                                rawX, rawY, FpsModule.width, FpsModule.height, this.width, this.height, others,
+                                snapping, accent);
+                this.activeGuideLines = res.guideLines;
+                FpsModule.position.setFromScreenCoords(res.snappedX, res.snappedY, FpsModule.width, FpsModule.height,
+                        this.width, this.height);
+                FpsModule.posX = res.snappedX;
+                FpsModule.posY = res.snappedY;
                 return true;
             } else if ("SPRINT".equals(draggingWidget)) {
-                ToggleSprintModule.posX = MooHudPositionHelper.snapAndClampX(newX, ToggleSprintModule.width, this.width, snapping);
-                ToggleSprintModule.posY = MooHudPositionHelper.snapAndClampY(newY, ToggleSprintModule.height, this.height, snapping);
+                com.mooclient.util.MooHudPositionHelper.SnapResult res = com.mooclient.util.MooHudPositionHelper
+                        .calculateSmartSnap(
+                                rawX, rawY, ToggleSprintModule.width, ToggleSprintModule.height, this.width,
+                                this.height, others, snapping, accent);
+                this.activeGuideLines = res.guideLines;
+                ToggleSprintModule.position.setFromScreenCoords(res.snappedX, res.snappedY, ToggleSprintModule.width,
+                        ToggleSprintModule.height, this.width, this.height);
+                ToggleSprintModule.posX = res.snappedX;
+                ToggleSprintModule.posY = res.snappedY;
                 return true;
             } else if ("POTIONS".equals(draggingWidget)) {
-                PotionEffectsModule.posX = MooHudPositionHelper.snapAndClampX(newX, PotionEffectsModule.width, this.width, snapping);
-                PotionEffectsModule.posY = MooHudPositionHelper.snapAndClampY(newY, PotionEffectsModule.height, this.height, snapping);
+                com.mooclient.util.MooHudPositionHelper.SnapResult res = com.mooclient.util.MooHudPositionHelper
+                        .calculateSmartSnap(
+                                rawX, rawY, PotionEffectsModule.width, PotionEffectsModule.height, this.width,
+                                this.height, others, snapping, accent);
+                this.activeGuideLines = res.guideLines;
+                PotionEffectsModule.position.setFromScreenCoords(res.snappedX, res.snappedY, PotionEffectsModule.width,
+                        PotionEffectsModule.height, this.width, this.height);
+                PotionEffectsModule.posX = res.snappedX;
+                PotionEffectsModule.posY = res.snappedY;
                 return true;
             } else if ("PING".equals(draggingWidget)) {
-                com.mooclient.module.modules.PingModule.posX = MooHudPositionHelper.snapAndClampX(newX, com.mooclient.module.modules.PingModule.width, this.width, snapping);
-                com.mooclient.module.modules.PingModule.posY = MooHudPositionHelper.snapAndClampY(newY, com.mooclient.module.modules.PingModule.height, this.height, snapping);
+                com.mooclient.util.MooHudPositionHelper.SnapResult res = com.mooclient.util.MooHudPositionHelper
+                        .calculateSmartSnap(
+                                rawX, rawY, com.mooclient.module.modules.PingModule.width,
+                                com.mooclient.module.modules.PingModule.height, this.width, this.height, others,
+                                snapping, accent);
+                this.activeGuideLines = res.guideLines;
+                com.mooclient.module.modules.PingModule.position.setFromScreenCoords(res.snappedX, res.snappedY,
+                        com.mooclient.module.modules.PingModule.width, com.mooclient.module.modules.PingModule.height,
+                        this.width, this.height);
+                com.mooclient.module.modules.PingModule.posX = res.snappedX;
+                com.mooclient.module.modules.PingModule.posY = res.snappedY;
+                return true;
+            } else if ("CPS".equals(draggingWidget)) {
+                com.mooclient.util.MooHudPositionHelper.SnapResult res = com.mooclient.util.MooHudPositionHelper
+                        .calculateSmartSnap(
+                                rawX, rawY, com.mooclient.module.modules.CpsModule.width,
+                                com.mooclient.module.modules.CpsModule.height, this.width, this.height, others,
+                                snapping, accent);
+                this.activeGuideLines = res.guideLines;
+                com.mooclient.module.modules.CpsModule.position.setFromScreenCoords(res.snappedX, res.snappedY,
+                        com.mooclient.module.modules.CpsModule.width, com.mooclient.module.modules.CpsModule.height,
+                        this.width, this.height);
+                com.mooclient.module.modules.CpsModule.posX = res.snappedX;
+                com.mooclient.module.modules.CpsModule.posY = res.snappedY;
                 return true;
             } else if ("SCOREBOARD".equals(draggingWidget)) {
-                com.mooclient.module.modules.ScoreboardModule.posX = MooHudPositionHelper.snapAndClampX(newX, com.mooclient.module.modules.ScoreboardModule.width, this.width, snapping);
-                com.mooclient.module.modules.ScoreboardModule.posY = MooHudPositionHelper.snapAndClampY(newY, com.mooclient.module.modules.ScoreboardModule.height, this.height, snapping);
+                com.mooclient.util.MooHudPositionHelper.SnapResult res = com.mooclient.util.MooHudPositionHelper
+                        .calculateSmartSnap(
+                                rawX, rawY, com.mooclient.module.modules.ScoreboardModule.width,
+                                com.mooclient.module.modules.ScoreboardModule.height, this.width, this.height, others,
+                                snapping, accent);
+                this.activeGuideLines = res.guideLines;
+                com.mooclient.module.modules.ScoreboardModule.position.setFromScreenCoords(res.snappedX, res.snappedY,
+                        com.mooclient.module.modules.ScoreboardModule.width,
+                        com.mooclient.module.modules.ScoreboardModule.height, this.width, this.height);
+                com.mooclient.module.modules.ScoreboardModule.posX = res.snappedX;
+                com.mooclient.module.modules.ScoreboardModule.posY = res.snappedY;
                 return true;
             }
         }
@@ -2646,6 +3146,9 @@ public class MooClientScreen extends Screen {
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         draggingWidget = null;
         draggingSlider = -1;
+        if (activeGuideLines != null) {
+            activeGuideLines.clear();
+        }
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
@@ -2659,10 +3162,12 @@ public class MooClientScreen extends Screen {
                     scrollY = 0;
                 }
                 return true;
-            } else if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+            } else if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER
+                    || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
                 searching = false;
                 return true;
-            } else if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_V && (modifiers & org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL) != 0) {
+            } else if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_V
+                    && (modifiers & org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL) != 0) {
                 try {
                     if (this.client != null && this.client.keyboard != null) {
                         String clip = this.client.keyboard.getClipboard();
@@ -2671,7 +3176,8 @@ public class MooClientScreen extends Screen {
                             scrollY = 0;
                         }
                     }
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
                 return true;
             }
             // Consume key when searching so inventory key (E) doesn't close the screen
@@ -2680,7 +3186,8 @@ public class MooClientScreen extends Screen {
 
         // If editing macro command text
         if (currentView == View.OPTIONS && editingMacroIndex >= 0) {
-            java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> macroList = com.mooclient.module.modules.MacroModule.getMacros();
+            java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> macroList = com.mooclient.module.modules.MacroModule
+                    .getMacros();
             if (editingMacroIndex < macroList.size()) {
                 com.mooclient.module.modules.MacroModule.MacroEntry m = macroList.get(editingMacroIndex);
                 if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE) {
@@ -2690,12 +3197,15 @@ public class MooClientScreen extends Screen {
                         com.mooclient.util.MooConfig.save();
                     }
                     return true;
-                } else if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+                } else if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER
+                        || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER
+                        || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
                     editingMacroIndex = -1;
                     com.mooclient.util.MooConfig.save();
                     playClickSound();
                     return true;
-                } else if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_V && (modifiers & org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL) != 0) {
+                } else if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_V
+                        && (modifiers & org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL) != 0) {
                     try {
                         if (this.client != null && this.client.keyboard != null) {
                             String clip = this.client.keyboard.getClipboard();
@@ -2704,7 +3214,8 @@ public class MooClientScreen extends Screen {
                                 com.mooclient.util.MooConfig.save();
                             }
                         }
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                     return true;
                 }
             }
@@ -2719,12 +3230,14 @@ public class MooClientScreen extends Screen {
                 return true;
             }
 
-            java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> macroList = com.mooclient.module.modules.MacroModule.getMacros();
+            java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> macroList = com.mooclient.module.modules.MacroModule
+                    .getMacros();
             if (listeningMacroIndex < macroList.size()) {
                 com.mooclient.module.modules.MacroModule.MacroEntry m = macroList.get(listeningMacroIndex);
                 String kName;
                 try {
-                    kName = net.minecraft.client.util.InputUtil.fromKeyCode(keyCode, scanCode).getLocalizedText().getString().toUpperCase();
+                    kName = net.minecraft.client.util.InputUtil.fromKeyCode(keyCode, scanCode).getLocalizedText()
+                            .getString().toUpperCase();
                 } catch (Exception e) {
                     kName = "KEY " + keyCode;
                 }

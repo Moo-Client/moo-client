@@ -26,8 +26,14 @@ public class PotionEffectsModule extends Module {
     }
 
     private static boolean enabled = true;
+    // Draggable coordinates & anchor
+    public static com.mooclient.util.MooHudPositionHelper.WidgetPosition position =
+            new com.mooclient.util.MooHudPositionHelper.WidgetPosition(
+                    com.mooclient.util.MooHudPositionHelper.HudAnchorX.LEFT,
+                    com.mooclient.util.MooHudPositionHelper.HudAnchorY.TOP,
+                    6, 64);
     public static int posX = 6;
-    public static int posY = 70;
+    public static int posY = 64;
     public static int width = 120;
     public static int height = 80;
 

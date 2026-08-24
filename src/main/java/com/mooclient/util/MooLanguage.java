@@ -38,9 +38,17 @@ public class MooLanguage {
                 case "ping_desc" -> "Opóźnienie połączenia z serwerem";
                 case "macro_desc" -> "Własne komendy pod klawiszami";
                 case "waypoints_desc" -> "Punkty nawigacyjne i promień w świecie";
+                case "cps_desc" -> "Licznik kliknięć na sekundę (CPS)";
+                case "cps_opt_title" -> "CPS";
+                case "cps_opt_subtitle" -> "Wyświetlaj i dostosuj swój licznik kliknięć na HUDzie.";
+                case "cps_buttons_label" -> "Wyświetlane przyciski";
+                case "fps_prefix_label" -> "Pokazuj przedrostek 'FPS:'";
+                case "ping_prefix_label" -> "Pokazuj przedrostek 'Ping:'";
+                case "cps_prefix_label" -> "Pokazuj przedrostek 'CPS:'";
                 case "scoreboard_desc" -> "Dostosuj pozycję, tło, cienie i cyfry tablicy wyników";
                 case "scoreboard_opt_title" -> "SCOREBOARD";
-                case "scoreboard_opt_subtitle" -> "Przesuwaj tablicę wyników, włącz cienie tekstu, ukrywaj tło i cyfry.";
+                case "scoreboard_opt_subtitle" ->
+                    "Przesuwaj tablicę wyników, włącz cienie tekstu, ukrywaj tło i cyfry.";
                 case "scoreboard_scores_label" -> "Wyświetlaj cyfry / punkty (Scores)";
                 case "reset_pos_btn" -> "↺ Zresetuj pozycję";
                 case "fps_opt_title" -> "FPS";
@@ -144,6 +152,13 @@ public class MooLanguage {
                 case "ping_desc" -> "Ping Latency on HUD";
                 case "macro_desc" -> "Macro Command Keybinds";
                 case "waypoints_desc" -> "In-world waypoints and beacon beams";
+                case "cps_desc" -> "Clicks Per Second (CPS) on HUD";
+                case "cps_opt_title" -> "CPS";
+                case "cps_opt_subtitle" -> "Display and customize your CPS counter on the HUD.";
+                case "cps_buttons_label" -> "Displayed Buttons";
+                case "fps_prefix_label" -> "Show 'FPS:' Prefix";
+                case "ping_prefix_label" -> "Show 'Ping:' Prefix";
+                case "cps_prefix_label" -> "Show 'CPS:' Prefix";
                 case "scoreboard_desc" -> "Customize scoreboard position, background, shadows and scores";
                 case "scoreboard_opt_title" -> "SCOREBOARD";
                 case "scoreboard_opt_subtitle" -> "Reposition scoreboard, toggle text shadow, background and scores.";

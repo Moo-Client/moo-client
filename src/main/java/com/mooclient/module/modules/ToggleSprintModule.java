@@ -34,7 +34,12 @@ public class ToggleSprintModule extends Module {
     private static int keyCode = GLFW.GLFW_KEY_LEFT_CONTROL;
     private static String keyName = "LCONTROL";
 
-    // Draggable coordinates
+    // Draggable coordinates & anchor
+    public static com.mooclient.util.MooHudPositionHelper.WidgetPosition position =
+            new com.mooclient.util.MooHudPositionHelper.WidgetPosition(
+                    com.mooclient.util.MooHudPositionHelper.HudAnchorX.LEFT,
+                    com.mooclient.util.MooHudPositionHelper.HudAnchorY.TOP,
+                    6, 20);
     public static int posX = 6;
     public static int posY = 22;
     public static int width = 90;

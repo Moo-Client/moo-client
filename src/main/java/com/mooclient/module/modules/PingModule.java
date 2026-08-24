@@ -31,9 +31,14 @@ public class PingModule extends Module {
     private static boolean textShadow = true;
     private static boolean showPrefix = true;
 
-    // Draggable coordinates (default below FPS widget)
+    // Draggable coordinates & anchor (default below ToggleSprint widget)
+    public static com.mooclient.util.MooHudPositionHelper.WidgetPosition position =
+            new com.mooclient.util.MooHudPositionHelper.WidgetPosition(
+                    com.mooclient.util.MooHudPositionHelper.HudAnchorX.LEFT,
+                    com.mooclient.util.MooHudPositionHelper.HudAnchorY.TOP,
+                    6, 34);
     public static int posX = 6;
-    public static int posY = 20;
+    public static int posY = 34;
     public static int width = 54;
     public static int height = 12;
 

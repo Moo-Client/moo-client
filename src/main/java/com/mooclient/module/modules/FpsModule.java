@@ -29,7 +29,12 @@ public class FpsModule extends Module {
     private static boolean textShadow = true;
     private static boolean showPrefix = true;
 
-    // Draggable coordinates
+    // Draggable coordinates & anchor
+    public static com.mooclient.util.MooHudPositionHelper.WidgetPosition position =
+            new com.mooclient.util.MooHudPositionHelper.WidgetPosition(
+                    com.mooclient.util.MooHudPositionHelper.HudAnchorX.LEFT,
+                    com.mooclient.util.MooHudPositionHelper.HudAnchorY.TOP,
+                    6, 6);
     public static int posX = 6;
     public static int posY = 6;
     public static int width = 54;

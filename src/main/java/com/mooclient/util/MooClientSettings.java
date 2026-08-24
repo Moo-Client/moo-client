@@ -15,7 +15,8 @@ import com.mooclient.module.modules.MacroModule;
 import java.awt.Color;
 
 /**
- * Global settings manager for Moo Client (Accent Colors, HUD Snapping/Reset, GUI Appearance, Profiles).
+ * Global settings manager for Moo Client (Accent Colors, HUD Snapping/Reset,
+ * GUI Appearance, Profiles).
  */
 public class MooClientSettings {
 
@@ -120,44 +121,101 @@ public class MooClientSettings {
         MooConfig.save();
     }
 
-    public static int getCustomRed() { return customRed; }
-    public static void setCustomRed(int r) { customRed = Math.max(0, Math.min(255, r)); MooConfig.save(); }
+    public static int getCustomRed() {
+        return customRed;
+    }
 
-    public static int getCustomGreen() { return customGreen; }
-    public static void setCustomGreen(int g) { customGreen = Math.max(0, Math.min(255, g)); MooConfig.save(); }
+    public static void setCustomRed(int r) {
+        customRed = Math.max(0, Math.min(255, r));
+        MooConfig.save();
+    }
 
-    public static int getCustomBlue() { return customBlue; }
-    public static void setCustomBlue(int b) { customBlue = Math.max(0, Math.min(255, b)); MooConfig.save(); }
+    public static int getCustomGreen() {
+        return customGreen;
+    }
+
+    public static void setCustomGreen(int g) {
+        customGreen = Math.max(0, Math.min(255, g));
+        MooConfig.save();
+    }
+
+    public static int getCustomBlue() {
+        return customBlue;
+    }
+
+    public static void setCustomBlue(int b) {
+        customBlue = Math.max(0, Math.min(255, b));
+        MooConfig.save();
+    }
 
     // --- HUD Management ---
 
     public static void resetHudPositions() {
+        FpsModule.position = new com.mooclient.util.MooHudPositionHelper.WidgetPosition(
+                com.mooclient.util.MooHudPositionHelper.HudAnchorX.LEFT,
+                com.mooclient.util.MooHudPositionHelper.HudAnchorY.TOP, 10, 10);
         FpsModule.posX = 10;
         FpsModule.posY = 10;
 
+        ToggleSprintModule.position = new com.mooclient.util.MooHudPositionHelper.WidgetPosition(
+                com.mooclient.util.MooHudPositionHelper.HudAnchorX.LEFT,
+                com.mooclient.util.MooHudPositionHelper.HudAnchorY.TOP, 10, 26);
         ToggleSprintModule.posX = 10;
         ToggleSprintModule.posY = 26;
 
+        PingModule.position = new com.mooclient.util.MooHudPositionHelper.WidgetPosition(
+                com.mooclient.util.MooHudPositionHelper.HudAnchorX.LEFT,
+                com.mooclient.util.MooHudPositionHelper.HudAnchorY.TOP, 10, 42);
         PingModule.posX = 10;
         PingModule.posY = 42;
 
+        com.mooclient.module.modules.CpsModule.position = new com.mooclient.util.MooHudPositionHelper.WidgetPosition(
+                com.mooclient.util.MooHudPositionHelper.HudAnchorX.LEFT,
+                com.mooclient.util.MooHudPositionHelper.HudAnchorY.TOP, 10, 58);
+        com.mooclient.module.modules.CpsModule.posX = 10;
+        com.mooclient.module.modules.CpsModule.posY = 58;
+
+        PotionEffectsModule.position = new com.mooclient.util.MooHudPositionHelper.WidgetPosition(
+                com.mooclient.util.MooHudPositionHelper.HudAnchorX.LEFT,
+                com.mooclient.util.MooHudPositionHelper.HudAnchorY.TOP, 10, 74);
         PotionEffectsModule.posX = 10;
-        PotionEffectsModule.posY = 58;
+        PotionEffectsModule.posY = 74;
 
         com.mooclient.module.modules.ScoreboardModule.resetPosition();
 
         MooConfig.save();
     }
 
-    public static boolean isHudSnapping() { return hudSnapping; }
-    public static void setHudSnapping(boolean snapping) { hudSnapping = snapping; MooConfig.save(); }
-    public static void toggleHudSnapping() { setHudSnapping(!hudSnapping); }
+    public static boolean isHudSnapping() {
+        return hudSnapping;
+    }
 
-    public static int getHudScale() { return hudScale; }
-    public static void setHudScale(int scale) { hudScale = Math.max(0, Math.min(100, scale)); MooConfig.save(); }
-    public static float getHudScaleFactor() { return Math.max(0.2f, hudScale / 100.0f); }
+    public static void setHudSnapping(boolean snapping) {
+        hudSnapping = snapping;
+        MooConfig.save();
+    }
 
-    public static boolean isGlobalTextShadow() { return globalTextShadow; }
+    public static void toggleHudSnapping() {
+        setHudSnapping(!hudSnapping);
+    }
+
+    public static int getHudScale() {
+        return hudScale;
+    }
+
+    public static void setHudScale(int scale) {
+        hudScale = Math.max(0, Math.min(100, scale));
+        MooConfig.save();
+    }
+
+    public static float getHudScaleFactor() {
+        return Math.max(0.2f, hudScale / 100.0f);
+    }
+
+    public static boolean isGlobalTextShadow() {
+        return globalTextShadow;
+    }
+
     public static void setGlobalTextShadow(boolean shadow) {
         globalTextShadow = shadow;
         FpsModule.setTextShadow(shadow);
@@ -168,10 +226,19 @@ public class MooClientSettings {
         ChatModule.setTextShadow(shadow);
         MooConfig.save();
     }
-    public static void toggleGlobalTextShadow() { setGlobalTextShadow(!globalTextShadow); }
 
-    public static int getMenuBackgroundDim() { return menuBackgroundDim; }
-    public static void setMenuBackgroundDim(int dim) { menuBackgroundDim = dim; MooConfig.save(); }
+    public static void toggleGlobalTextShadow() {
+        setGlobalTextShadow(!globalTextShadow);
+    }
+
+    public static int getMenuBackgroundDim() {
+        return menuBackgroundDim;
+    }
+
+    public static void setMenuBackgroundDim(int dim) {
+        menuBackgroundDim = dim;
+        MooConfig.save();
+    }
 
     public static int getBackgroundDimColor() {
         return switch (menuBackgroundDim) {
@@ -181,11 +248,22 @@ public class MooClientSettings {
         };
     }
 
-    public static boolean isGuiAnimations() { return guiAnimations; }
-    public static void setGuiAnimations(boolean anim) { guiAnimations = anim; MooConfig.save(); }
-    public static void toggleGuiAnimations() { setGuiAnimations(!guiAnimations); }
+    public static boolean isGuiAnimations() {
+        return guiAnimations;
+    }
 
-    public static ProfileType getActiveProfile() { return activeProfile; }
+    public static void setGuiAnimations(boolean anim) {
+        guiAnimations = anim;
+        MooConfig.save();
+    }
+
+    public static void toggleGuiAnimations() {
+        setGuiAnimations(!guiAnimations);
+    }
+
+    public static ProfileType getActiveProfile() {
+        return activeProfile;
+    }
 
     public static void applyProfile(ProfileType profile) {
         activeProfile = profile;
@@ -241,15 +319,20 @@ public class MooClientSettings {
         }
 
         // Synchronize module state in ModuleManager
-        ModuleManager.getInstance().getModule("Gamma").ifPresent(m -> m.setEnabled(FullbrightModule.isFullbrightActive()));
+        ModuleManager.getInstance().getModule("Gamma")
+                .ifPresent(m -> m.setEnabled(FullbrightModule.isFullbrightActive()));
         ModuleManager.getInstance().getModule("FPS").ifPresent(m -> m.setEnabled(FpsModule.isFpsEnabled()));
-        ModuleManager.getInstance().getModule("Sprint").ifPresent(m -> m.setEnabled(ToggleSprintModule.isSprintEnabled()));
+        ModuleManager.getInstance().getModule("Sprint")
+                .ifPresent(m -> m.setEnabled(ToggleSprintModule.isSprintEnabled()));
         ModuleManager.getInstance().getModule("Ping").ifPresent(m -> m.setEnabled(PingModule.isPingEnabled()));
-        ModuleManager.getInstance().getModule("Potion Effects").ifPresent(m -> m.setEnabled(PotionEffectsModule.isModuleEnabled()));
+        ModuleManager.getInstance().getModule("Potion Effects")
+                .ifPresent(m -> m.setEnabled(PotionEffectsModule.isModuleEnabled()));
         ModuleManager.getInstance().getModule("Zoom").ifPresent(m -> m.setEnabled(ZoomModule.isZoomEnabled()));
-        ModuleManager.getInstance().getModule("Nametags").ifPresent(m -> m.setEnabled(NametagsModule.isNametagsEnabled()));
+        ModuleManager.getInstance().getModule("Nametags")
+                .ifPresent(m -> m.setEnabled(NametagsModule.isNametagsEnabled()));
         ModuleManager.getInstance().getModule("Chat").ifPresent(m -> m.setEnabled(ChatModule.isModuleEnabled()));
-        ModuleManager.getInstance().getModule("Freelook").ifPresent(m -> m.setEnabled(FreelookModule.isFreelookEnabled()));
+        ModuleManager.getInstance().getModule("Freelook")
+                .ifPresent(m -> m.setEnabled(FreelookModule.isFreelookEnabled()));
         ModuleManager.getInstance().getModule("Macro").ifPresent(m -> m.setEnabled(MacroModule.isMacroEnabled()));
 
         MooConfig.save();

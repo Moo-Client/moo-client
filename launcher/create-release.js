@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.6.3';
+const VERSION = '1.6.4';
 
 function getGitHubToken() {
     try {
@@ -80,7 +80,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         res = await apiRequest('POST', '/repos/Moo-Client/moo-client/releases', token, {
             tag_name: `v${VERSION}`,
             name: `Moo Client v${VERSION}`,
-            body: '🚀 **Moo Client v1.6.3 (HUD Scaling & Responsive Scoreboard Patch)**\n\n✓ Naprawiono znikanie Scoreboarda w pomniejszonym oknie i przy zmianie skali GUI\n✓ Poprawiono pozycjonowanie i skalowanie efektów mikstur (Potion Effects)\n✓ Dodano responsywny system kotwiczenia (MooHudPositionHelper) dla wszystkich widgetów HUD',
+            body: '🚀 **Moo Client v1.6.4 (CPS Module & Smart Snapping)**\n\n✓ Dodano nowy moduł CPS (Clicks Per Second - LPM, PPM lub oba) z czasem rzeczywistym\n✓ Wdrożono Smart Snapping & Alignment Guidelines (inteligentne linie pomocnicze w edytorze HUD)\n✓ Naprawiono responsywne pozycjonowanie modułów przy zmianie rozmiaru okna gry\n✓ Spolszczono style wyglądu (Prosty, Nawiasy, Kompaktowy) i tryby aktywacji',
             draft: false,
             prerelease: false
         });
@@ -106,7 +106,10 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
     }
 
     // Upload asar if exists
-    let asarPath = path.join(__dirname, 'release-dist', 'win-unpacked', 'resources', 'app.asar');
+    let asarPath = path.join(__dirname, 'build-out', 'win-unpacked', 'resources', 'app.asar');
+    if (!fs.existsSync(asarPath)) {
+        asarPath = path.join(__dirname, 'release-dist', 'win-unpacked', 'resources', 'app.asar');
+    }
     if (!fs.existsSync(asarPath)) {
         asarPath = path.join(__dirname, 'dist', 'win-unpacked', 'resources', 'app.asar');
     }
@@ -118,7 +121,10 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
     }
 
     // Upload exe if exists
-    let exePath = path.join(__dirname, 'release-dist', `Moo Client Setup ${VERSION}.exe`);
+    let exePath = path.join(__dirname, 'build-out', `Moo Client Setup ${VERSION}.exe`);
+    if (!fs.existsSync(exePath)) {
+        exePath = path.join(__dirname, 'release-dist', `Moo Client Setup ${VERSION}.exe`);
+    }
     if (!fs.existsSync(exePath)) {
         exePath = path.join(__dirname, 'dist', `Moo Client Setup ${VERSION}.exe`);
     }

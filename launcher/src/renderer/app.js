@@ -225,7 +225,7 @@ function initVideoBackground() {
         if (promise !== undefined) {
             promise.catch(() => {
                 const onInteraction = () => {
-                    bgVideo.play().catch(() => {});
+                    bgVideo.play().catch(() => { });
                     window.removeEventListener('click', onInteraction);
                     window.removeEventListener('keydown', onInteraction);
                 };
@@ -839,8 +839,8 @@ async function searchAndRenderMods(query = '') {
         if (res?.success && res.data?.hits?.length > 0) {
             const hits = res.data.hits;
             hits.forEach((mod) => {
-                const isInstalled = installedModsCache.some(im => 
-                    im.filename.toLowerCase().includes(mod.slug.toLowerCase()) || 
+                const isInstalled = installedModsCache.some(im =>
+                    im.filename.toLowerCase().includes(mod.slug.toLowerCase()) ||
                     im.filename.toLowerCase().includes(mod.title.toLowerCase().replace(/\s+/g, '-'))
                 );
 
@@ -848,8 +848,8 @@ async function searchAndRenderMods(query = '') {
                 card.className = 'mod-card';
 
                 const iconUrl = mod.icon_url || 'logo.png';
-                const formattedDownloads = (mod.downloads >= 1000000) 
-                    ? (mod.downloads / 1000000).toFixed(1) + 'M' 
+                const formattedDownloads = (mod.downloads >= 1000000)
+                    ? (mod.downloads / 1000000).toFixed(1) + 'M'
                     : (mod.downloads >= 1000) ? (mod.downloads / 1000).toFixed(0) + 'k' : mod.downloads;
 
                 card.innerHTML = `
@@ -894,7 +894,7 @@ async function searchAndRenderMods(query = '') {
                                 document.querySelectorAll('.btn-install-mod').forEach((otherBtn) => {
                                     const pid = otherBtn.dataset.project;
                                     const pTitle = otherBtn.dataset.title;
-                                    if (installedModsCache.some(im => 
+                                    if (installedModsCache.some(im =>
                                         (im.name && im.name.toLowerCase() === pTitle?.toLowerCase()) ||
                                         (im.filename && im.filename.toLowerCase().includes(pid?.toLowerCase()))
                                     )) {
@@ -1118,7 +1118,7 @@ function renderVersionList(filter = '') {
     const filtered = currentModalVersions.filter(v => {
         if (!query) return true;
         return (v.version_number && v.version_number.toLowerCase().includes(query)) ||
-               (v.name && v.name.toLowerCase().includes(query));
+            (v.name && v.name.toLowerCase().includes(query));
     });
 
     if (filtered.length === 0) {
@@ -1135,9 +1135,9 @@ function renderVersionList(filter = '') {
 
         const type = (ver.version_type || 'release').toLowerCase();
         const letter = type === 'beta' ? 'B' : type === 'alpha' ? 'A' : 'R';
-        const isCurrent = currentVersionModalContext?.currentVersion && 
-            (ver.version_number === currentVersionModalContext.currentVersion || 
-             currentVersionModalContext.currentVersion.includes(ver.version_number));
+        const isCurrent = currentVersionModalContext?.currentVersion &&
+            (ver.version_number === currentVersionModalContext.currentVersion ||
+                currentVersionModalContext.currentVersion.includes(ver.version_number));
 
         item.innerHTML = `
             <div class="version-item-left">
@@ -1168,7 +1168,7 @@ function selectVersionInModal(ver) {
     if (!ver) return;
 
     if (versionDetailNumber) versionDetailNumber.textContent = ver.version_number || ver.name;
-    
+
     if (versionDetailBadge) {
         versionDetailBadge.classList.remove('hidden', 'release', 'beta', 'alpha');
         const type = (ver.version_type || 'release').toLowerCase();
@@ -1177,7 +1177,7 @@ function selectVersionInModal(ver) {
     }
 
     if (versionDetailDate) {
-        versionDetailDate.textContent = ver.date_published 
+        versionDetailDate.textContent = ver.date_published
             ? new Date(ver.date_published).toLocaleDateString(currentLang === 'pl' ? 'pl-PL' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })
             : '';
     }
@@ -1641,7 +1641,7 @@ window.addEventListener('drop', async (e) => {
             if (window.mooAPI?.getFilePath) {
                 fullPath = window.mooAPI.getFilePath(file);
             }
-        } catch (e) {}
+        } catch (e) { }
         if (!fullPath && file.path) fullPath = file.path;
 
         if (fullPath) {
@@ -1815,7 +1815,7 @@ async function performClientCoreUpdate() {
                 showToast('Aktualizacja ukończona! Uruchamianie nowej wersji...', 'success');
                 // Process is restarting via external updater, keep modal showing 100% until termination
             } else {
-                const newVer = res.version || currentClientUpdateInfo?.latestVersion || '1.6.3';
+                const newVer = res.version || currentClientUpdateInfo?.latestVersion || '1.6.4';
                 currentClientUpdateInfo = null;
                 if (pill) pill.classList.remove('has-update');
                 if (label) label.textContent = `v${newVer} (${t('update_up_to_date')})`;

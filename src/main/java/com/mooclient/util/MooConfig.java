@@ -43,6 +43,10 @@ public class MooConfig {
             fps.addProperty("showBackground", FpsModule.isShowBackground());
             fps.addProperty("textShadow", FpsModule.isTextShadow());
             fps.addProperty("showPrefix", FpsModule.isShowPrefix());
+            fps.addProperty("anchorX", FpsModule.position.anchorX.name());
+            fps.addProperty("anchorY", FpsModule.position.anchorY.name());
+            fps.addProperty("offsetX", FpsModule.position.offsetX);
+            fps.addProperty("offsetY", FpsModule.position.offsetY);
             fps.addProperty("posX", FpsModule.posX);
             fps.addProperty("posY", FpsModule.posY);
             root.add("fps", fps);
@@ -55,6 +59,10 @@ public class MooConfig {
             sprint.addProperty("textShadow", ToggleSprintModule.isTextShadow());
             sprint.addProperty("keyCode", ToggleSprintModule.getKeyCode());
             sprint.addProperty("keyName", ToggleSprintModule.getKeyName());
+            sprint.addProperty("anchorX", ToggleSprintModule.position.anchorX.name());
+            sprint.addProperty("anchorY", ToggleSprintModule.position.anchorY.name());
+            sprint.addProperty("offsetX", ToggleSprintModule.position.offsetX);
+            sprint.addProperty("offsetY", ToggleSprintModule.position.offsetY);
             sprint.addProperty("posX", ToggleSprintModule.posX);
             sprint.addProperty("posY", ToggleSprintModule.posY);
             root.add("sprint", sprint);
@@ -74,6 +82,10 @@ public class MooConfig {
             potions.addProperty("style", com.mooclient.module.modules.PotionEffectsModule.getStyle().name());
             potions.addProperty("showBackground", com.mooclient.module.modules.PotionEffectsModule.isShowBackground());
             potions.addProperty("textShadow", com.mooclient.module.modules.PotionEffectsModule.isTextShadow());
+            potions.addProperty("anchorX", com.mooclient.module.modules.PotionEffectsModule.position.anchorX.name());
+            potions.addProperty("anchorY", com.mooclient.module.modules.PotionEffectsModule.position.anchorY.name());
+            potions.addProperty("offsetX", com.mooclient.module.modules.PotionEffectsModule.position.offsetX);
+            potions.addProperty("offsetY", com.mooclient.module.modules.PotionEffectsModule.position.offsetY);
             potions.addProperty("posX", com.mooclient.module.modules.PotionEffectsModule.posX);
             potions.addProperty("posY", com.mooclient.module.modules.PotionEffectsModule.posY);
             root.add("potions", potions);
@@ -104,7 +116,8 @@ public class MooConfig {
             JsonObject macroJson = new JsonObject();
             macroJson.addProperty("enabled", com.mooclient.module.modules.MacroModule.isMacroEnabled());
             com.google.gson.JsonArray macrosArray = new com.google.gson.JsonArray();
-            for (com.mooclient.module.modules.MacroModule.MacroEntry m : com.mooclient.module.modules.MacroModule.getMacros()) {
+            for (com.mooclient.module.modules.MacroModule.MacroEntry m : com.mooclient.module.modules.MacroModule
+                    .getMacros()) {
                 JsonObject mObj = new JsonObject();
                 mObj.addProperty("id", m.getId());
                 mObj.addProperty("command", m.getCommand());
@@ -120,7 +133,8 @@ public class MooConfig {
             // Chat Module
             JsonObject chat = new JsonObject();
             chat.addProperty("enabled", com.mooclient.module.modules.ChatModule.isModuleEnabled());
-            chat.addProperty("transparentBackground", com.mooclient.module.modules.ChatModule.isTransparentBackground());
+            chat.addProperty("transparentBackground",
+                    com.mooclient.module.modules.ChatModule.isTransparentBackground());
             chat.addProperty("unlimitedChat", com.mooclient.module.modules.ChatModule.isUnlimitedChat());
             chat.addProperty("smoothChat", com.mooclient.module.modules.ChatModule.isSmoothChat());
             chat.addProperty("textShadow", com.mooclient.module.modules.ChatModule.isTextShadow());
@@ -133,6 +147,10 @@ public class MooConfig {
             ping.addProperty("showBackground", com.mooclient.module.modules.PingModule.isShowBackground());
             ping.addProperty("textShadow", com.mooclient.module.modules.PingModule.isTextShadow());
             ping.addProperty("showPrefix", com.mooclient.module.modules.PingModule.isShowPrefix());
+            ping.addProperty("anchorX", com.mooclient.module.modules.PingModule.position.anchorX.name());
+            ping.addProperty("anchorY", com.mooclient.module.modules.PingModule.position.anchorY.name());
+            ping.addProperty("offsetX", com.mooclient.module.modules.PingModule.position.offsetX);
+            ping.addProperty("offsetY", com.mooclient.module.modules.PingModule.position.offsetY);
             ping.addProperty("posX", com.mooclient.module.modules.PingModule.posX);
             ping.addProperty("posY", com.mooclient.module.modules.PingModule.posY);
             root.add("ping", ping);
@@ -145,7 +163,8 @@ public class MooConfig {
             waypoints.addProperty("showBackground", com.mooclient.module.modules.WaypointsModule.isShowBackground());
             waypoints.addProperty("textShadow", com.mooclient.module.modules.WaypointsModule.isTextShadow());
             waypoints.addProperty("deathWaypoint", com.mooclient.module.modules.WaypointsModule.isDeathWaypoint());
-            waypoints.addProperty("showAllDimensions", com.mooclient.module.modules.WaypointsModule.isShowAllDimensions());
+            waypoints.addProperty("showAllDimensions",
+                    com.mooclient.module.modules.WaypointsModule.isShowAllDimensions());
             waypoints.addProperty("showAllServers", com.mooclient.module.modules.WaypointsModule.isShowAllServers());
             waypoints.addProperty("scale", com.mooclient.module.modules.WaypointsModule.getScale());
             waypoints.addProperty("keyCode", com.mooclient.module.modules.WaypointsModule.getKeyCode());
@@ -158,9 +177,29 @@ public class MooConfig {
             scoreboard.addProperty("textShadow", com.mooclient.module.modules.ScoreboardModule.isTextShadow());
             scoreboard.addProperty("showBackground", com.mooclient.module.modules.ScoreboardModule.isShowBackground());
             scoreboard.addProperty("showScores", com.mooclient.module.modules.ScoreboardModule.isShowScores());
+            scoreboard.addProperty("anchorX", com.mooclient.module.modules.ScoreboardModule.position.anchorX.name());
+            scoreboard.addProperty("anchorY", com.mooclient.module.modules.ScoreboardModule.position.anchorY.name());
+            scoreboard.addProperty("offsetX", com.mooclient.module.modules.ScoreboardModule.position.offsetX);
+            scoreboard.addProperty("offsetY", com.mooclient.module.modules.ScoreboardModule.position.offsetY);
             scoreboard.addProperty("posX", com.mooclient.module.modules.ScoreboardModule.posX);
             scoreboard.addProperty("posY", com.mooclient.module.modules.ScoreboardModule.posY);
             root.add("scoreboard", scoreboard);
+
+            // CPS Module
+            JsonObject cps = new JsonObject();
+            cps.addProperty("enabled", com.mooclient.module.modules.CpsModule.isCpsEnabled());
+            cps.addProperty("displayMode", com.mooclient.module.modules.CpsModule.getDisplayMode().name());
+            cps.addProperty("style", com.mooclient.module.modules.CpsModule.getStyle().name());
+            cps.addProperty("showBackground", com.mooclient.module.modules.CpsModule.isShowBackground());
+            cps.addProperty("textShadow", com.mooclient.module.modules.CpsModule.isTextShadow());
+            cps.addProperty("showPrefix", com.mooclient.module.modules.CpsModule.isShowPrefix());
+            cps.addProperty("anchorX", com.mooclient.module.modules.CpsModule.position.anchorX.name());
+            cps.addProperty("anchorY", com.mooclient.module.modules.CpsModule.position.anchorY.name());
+            cps.addProperty("offsetX", com.mooclient.module.modules.CpsModule.position.offsetX);
+            cps.addProperty("offsetY", com.mooclient.module.modules.CpsModule.position.offsetY);
+            cps.addProperty("posX", com.mooclient.module.modules.CpsModule.posX);
+            cps.addProperty("posY", com.mooclient.module.modules.CpsModule.posY);
+            root.add("cps", cps);
 
             // Global Client Settings
             JsonObject settings = new JsonObject();
@@ -217,13 +256,38 @@ public class MooConfig {
                 if (fps.has("style")) {
                     try {
                         FpsModule.setStyle(FpsModule.FpsStyle.valueOf(fps.get("style").getAsString()));
-                    } catch (IllegalArgumentException ignored) {}
+                    } catch (IllegalArgumentException ignored) {
+                    }
                 }
-                if (fps.has("showBackground")) FpsModule.setShowBackground(fps.get("showBackground").getAsBoolean());
-                if (fps.has("textShadow")) FpsModule.setTextShadow(fps.get("textShadow").getAsBoolean());
-                if (fps.has("showPrefix")) FpsModule.setShowPrefix(fps.get("showPrefix").getAsBoolean());
-                if (fps.has("posX")) FpsModule.posX = fps.get("posX").getAsInt();
-                if (fps.has("posY")) FpsModule.posY = fps.get("posY").getAsInt();
+                if (fps.has("showBackground"))
+                    FpsModule.setShowBackground(fps.get("showBackground").getAsBoolean());
+                if (fps.has("textShadow"))
+                    FpsModule.setTextShadow(fps.get("textShadow").getAsBoolean());
+                if (fps.has("showPrefix"))
+                    FpsModule.setShowPrefix(fps.get("showPrefix").getAsBoolean());
+                if (fps.has("anchorX") && fps.has("anchorY") && fps.has("offsetX") && fps.has("offsetY")) {
+                    try {
+                        FpsModule.position.anchorX = MooHudPositionHelper.HudAnchorX.valueOf(fps.get("anchorX").getAsString());
+                        FpsModule.position.anchorY = MooHudPositionHelper.HudAnchorY.valueOf(fps.get("anchorY").getAsString());
+                        FpsModule.position.offsetX = fps.get("offsetX").getAsInt();
+                        FpsModule.position.offsetY = fps.get("offsetY").getAsInt();
+                    } catch (Exception ignored) {}
+                } else if (fps.has("posX") && fps.has("posY")) {
+                    int px = fps.get("posX").getAsInt();
+                    int py = fps.get("posY").getAsInt();
+                    if (px <= 150) {
+                        FpsModule.position.anchorX = MooHudPositionHelper.HudAnchorX.LEFT;
+                        FpsModule.position.offsetX = px;
+                        FpsModule.position.anchorY = MooHudPositionHelper.HudAnchorY.TOP;
+                        FpsModule.position.offsetY = py;
+                    } else {
+                        FpsModule.position.setFromScreenCoords(px, py, FpsModule.width, FpsModule.height, 960, 540);
+                    }
+                }
+                if (fps.has("posX"))
+                    FpsModule.posX = fps.get("posX").getAsInt();
+                if (fps.has("posY"))
+                    FpsModule.posY = fps.get("posY").getAsInt();
             }
 
             // Sprint Module
@@ -236,16 +300,42 @@ public class MooConfig {
                 }
                 if (sprint.has("style")) {
                     try {
-                        ToggleSprintModule.setStyle(ToggleSprintModule.SprintStyle.valueOf(sprint.get("style").getAsString()));
-                    } catch (IllegalArgumentException ignored) {}
+                        ToggleSprintModule
+                                .setStyle(ToggleSprintModule.SprintStyle.valueOf(sprint.get("style").getAsString()));
+                    } catch (IllegalArgumentException ignored) {
+                    }
                 }
-                if (sprint.has("showBackground")) ToggleSprintModule.setShowBackground(sprint.get("showBackground").getAsBoolean());
-                if (sprint.has("textShadow")) ToggleSprintModule.setTextShadow(sprint.get("textShadow").getAsBoolean());
+                if (sprint.has("showBackground"))
+                    ToggleSprintModule.setShowBackground(sprint.get("showBackground").getAsBoolean());
+                if (sprint.has("textShadow"))
+                    ToggleSprintModule.setTextShadow(sprint.get("textShadow").getAsBoolean());
                 if (sprint.has("keyCode") && sprint.has("keyName")) {
-                    ToggleSprintModule.setKeybind(sprint.get("keyCode").getAsInt(), sprint.get("keyName").getAsString());
+                    ToggleSprintModule.setKeybind(sprint.get("keyCode").getAsInt(),
+                            sprint.get("keyName").getAsString());
                 }
-                if (sprint.has("posX")) ToggleSprintModule.posX = sprint.get("posX").getAsInt();
-                if (sprint.has("posY")) ToggleSprintModule.posY = sprint.get("posY").getAsInt();
+                if (sprint.has("anchorX") && sprint.has("anchorY") && sprint.has("offsetX") && sprint.has("offsetY")) {
+                    try {
+                        ToggleSprintModule.position.anchorX = MooHudPositionHelper.HudAnchorX.valueOf(sprint.get("anchorX").getAsString());
+                        ToggleSprintModule.position.anchorY = MooHudPositionHelper.HudAnchorY.valueOf(sprint.get("anchorY").getAsString());
+                        ToggleSprintModule.position.offsetX = sprint.get("offsetX").getAsInt();
+                        ToggleSprintModule.position.offsetY = sprint.get("offsetY").getAsInt();
+                    } catch (Exception ignored) {}
+                } else if (sprint.has("posX") && sprint.has("posY")) {
+                    int px = sprint.get("posX").getAsInt();
+                    int py = sprint.get("posY").getAsInt();
+                    if (px <= 150) {
+                        ToggleSprintModule.position.anchorX = MooHudPositionHelper.HudAnchorX.LEFT;
+                        ToggleSprintModule.position.offsetX = px;
+                        ToggleSprintModule.position.anchorY = MooHudPositionHelper.HudAnchorY.TOP;
+                        ToggleSprintModule.position.offsetY = py;
+                    } else {
+                        ToggleSprintModule.position.setFromScreenCoords(px, py, ToggleSprintModule.width, ToggleSprintModule.height, 960, 540);
+                    }
+                }
+                if (sprint.has("posX"))
+                    ToggleSprintModule.posX = sprint.get("posX").getAsInt();
+                if (sprint.has("posY"))
+                    ToggleSprintModule.posY = sprint.get("posY").getAsInt();
             }
 
             // Freelook Module
@@ -258,14 +348,19 @@ public class MooConfig {
                 }
                 if (freelook.has("mode")) {
                     try {
-                        com.mooclient.module.modules.FreelookModule.setMode(com.mooclient.module.modules.FreelookModule.ActivationMode.valueOf(freelook.get("mode").getAsString()));
-                    } catch (IllegalArgumentException ignored) {}
+                        com.mooclient.module.modules.FreelookModule
+                                .setMode(com.mooclient.module.modules.FreelookModule.ActivationMode
+                                        .valueOf(freelook.get("mode").getAsString()));
+                    } catch (IllegalArgumentException ignored) {
+                    }
                 }
                 if (freelook.has("invertPitch")) {
-                    com.mooclient.module.modules.FreelookModule.setInvertPitch(freelook.get("invertPitch").getAsBoolean());
+                    com.mooclient.module.modules.FreelookModule
+                            .setInvertPitch(freelook.get("invertPitch").getAsBoolean());
                 }
                 if (freelook.has("keyCode") && freelook.has("keyName")) {
-                    com.mooclient.module.modules.FreelookModule.setKeybind(freelook.get("keyCode").getAsInt(), freelook.get("keyName").getAsString());
+                    com.mooclient.module.modules.FreelookModule.setKeybind(freelook.get("keyCode").getAsInt(),
+                            freelook.get("keyName").getAsString());
                 }
             }
 
@@ -279,17 +374,43 @@ public class MooConfig {
                 }
                 if (potions.has("style")) {
                     try {
-                        com.mooclient.module.modules.PotionEffectsModule.setStyle(com.mooclient.module.modules.PotionEffectsModule.PotionStyle.valueOf(potions.get("style").getAsString()));
-                    } catch (IllegalArgumentException ignored) {}
+                        com.mooclient.module.modules.PotionEffectsModule
+                                .setStyle(com.mooclient.module.modules.PotionEffectsModule.PotionStyle
+                                        .valueOf(potions.get("style").getAsString()));
+                    } catch (IllegalArgumentException ignored) {
+                    }
                 }
                 if (potions.has("showBackground")) {
-                    com.mooclient.module.modules.PotionEffectsModule.setShowBackground(potions.get("showBackground").getAsBoolean());
+                    com.mooclient.module.modules.PotionEffectsModule
+                            .setShowBackground(potions.get("showBackground").getAsBoolean());
                 }
                 if (potions.has("textShadow")) {
-                    com.mooclient.module.modules.PotionEffectsModule.setTextShadow(potions.get("textShadow").getAsBoolean());
+                    com.mooclient.module.modules.PotionEffectsModule
+                            .setTextShadow(potions.get("textShadow").getAsBoolean());
                 }
-                if (potions.has("posX")) com.mooclient.module.modules.PotionEffectsModule.posX = potions.get("posX").getAsInt();
-                if (potions.has("posY")) com.mooclient.module.modules.PotionEffectsModule.posY = potions.get("posY").getAsInt();
+                if (potions.has("anchorX") && potions.has("anchorY") && potions.has("offsetX") && potions.has("offsetY")) {
+                    try {
+                        com.mooclient.module.modules.PotionEffectsModule.position.anchorX = MooHudPositionHelper.HudAnchorX.valueOf(potions.get("anchorX").getAsString());
+                        com.mooclient.module.modules.PotionEffectsModule.position.anchorY = MooHudPositionHelper.HudAnchorY.valueOf(potions.get("anchorY").getAsString());
+                        com.mooclient.module.modules.PotionEffectsModule.position.offsetX = potions.get("offsetX").getAsInt();
+                        com.mooclient.module.modules.PotionEffectsModule.position.offsetY = potions.get("offsetY").getAsInt();
+                    } catch (Exception ignored) {}
+                } else if (potions.has("posX") && potions.has("posY")) {
+                    int px = potions.get("posX").getAsInt();
+                    int py = potions.get("posY").getAsInt();
+                    if (px <= 150) {
+                        com.mooclient.module.modules.PotionEffectsModule.position.anchorX = MooHudPositionHelper.HudAnchorX.LEFT;
+                        com.mooclient.module.modules.PotionEffectsModule.position.offsetX = px;
+                        com.mooclient.module.modules.PotionEffectsModule.position.anchorY = MooHudPositionHelper.HudAnchorY.TOP;
+                        com.mooclient.module.modules.PotionEffectsModule.position.offsetY = py;
+                    } else {
+                        com.mooclient.module.modules.PotionEffectsModule.position.setFromScreenCoords(px, py, com.mooclient.module.modules.PotionEffectsModule.width, com.mooclient.module.modules.PotionEffectsModule.height, 960, 540);
+                    }
+                }
+                if (potions.has("posX"))
+                    com.mooclient.module.modules.PotionEffectsModule.posX = potions.get("posX").getAsInt();
+                if (potions.has("posY"))
+                    com.mooclient.module.modules.PotionEffectsModule.posY = potions.get("posY").getAsInt();
             }
 
             // Nametags Module
@@ -307,18 +428,24 @@ public class MooConfig {
                     com.mooclient.module.modules.NametagsModule.setShowPing(nametags.get("showPing").getAsBoolean());
                 }
                 if (nametags.has("showSelfPing")) {
-                    com.mooclient.module.modules.NametagsModule.setShowSelfPing(nametags.get("showSelfPing").getAsBoolean());
+                    com.mooclient.module.modules.NametagsModule
+                            .setShowSelfPing(nametags.get("showSelfPing").getAsBoolean());
                 }
                 if (nametags.has("pingPosition")) {
                     try {
-                        com.mooclient.module.modules.NametagsModule.setPingPosition(com.mooclient.module.modules.NametagsModule.PingPosition.valueOf(nametags.get("pingPosition").getAsString()));
-                    } catch (Exception ignored) {}
+                        com.mooclient.module.modules.NametagsModule
+                                .setPingPosition(com.mooclient.module.modules.NametagsModule.PingPosition
+                                        .valueOf(nametags.get("pingPosition").getAsString()));
+                    } catch (Exception ignored) {
+                    }
                 }
                 if (nametags.has("removeBackground")) {
-                    com.mooclient.module.modules.NametagsModule.setRemoveBackground(nametags.get("removeBackground").getAsBoolean());
+                    com.mooclient.module.modules.NametagsModule
+                            .setRemoveBackground(nametags.get("removeBackground").getAsBoolean());
                 }
                 if (nametags.has("textShadow")) {
-                    com.mooclient.module.modules.NametagsModule.setTextShadow(nametags.get("textShadow").getAsBoolean());
+                    com.mooclient.module.modules.NametagsModule
+                            .setTextShadow(nametags.get("textShadow").getAsBoolean());
                 }
             }
 
@@ -332,20 +459,27 @@ public class MooConfig {
                 }
                 if (zoom.has("factor")) {
                     try {
-                        com.mooclient.module.modules.ZoomModule.setFactor(com.mooclient.module.modules.ZoomModule.ZoomFactor.valueOf(zoom.get("factor").getAsString()));
-                    } catch (IllegalArgumentException ignored) {}
+                        com.mooclient.module.modules.ZoomModule
+                                .setFactor(com.mooclient.module.modules.ZoomModule.ZoomFactor
+                                        .valueOf(zoom.get("factor").getAsString()));
+                    } catch (IllegalArgumentException ignored) {
+                    }
                 }
                 if (zoom.has("mode")) {
                     try {
-                        com.mooclient.module.modules.ZoomModule.setMode(com.mooclient.module.modules.ZoomModule.ActivationMode.valueOf(zoom.get("mode").getAsString()));
-                    } catch (IllegalArgumentException ignored) {}
+                        com.mooclient.module.modules.ZoomModule
+                                .setMode(com.mooclient.module.modules.ZoomModule.ActivationMode
+                                        .valueOf(zoom.get("mode").getAsString()));
+                    } catch (IllegalArgumentException ignored) {
+                    }
                 }
                 if (zoom.has("smoothZoom")) {
                     com.mooclient.module.modules.ZoomModule.setSmoothZoom(zoom.get("smoothZoom").getAsBoolean());
                 }
                 if (zoom.has("keyCode") && zoom.has("keyName")) {
                     boolean isMouse = zoom.has("isMouseButton") && zoom.get("isMouseButton").getAsBoolean();
-                    com.mooclient.module.modules.ZoomModule.setKeybind(zoom.get("keyCode").getAsInt(), zoom.get("keyName").getAsString(), isMouse);
+                    com.mooclient.module.modules.ZoomModule.setKeybind(zoom.get("keyCode").getAsInt(),
+                            zoom.get("keyName").getAsString(), isMouse);
                 }
             }
 
@@ -359,7 +493,8 @@ public class MooConfig {
                 }
                 if (macroJson.has("list")) {
                     com.google.gson.JsonArray list = macroJson.getAsJsonArray("list");
-                    java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> existing = com.mooclient.module.modules.MacroModule.getMacros();
+                    java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> existing = com.mooclient.module.modules.MacroModule
+                            .getMacros();
                     for (int i = 0; i < list.size(); i++) {
                         JsonObject mObj = list.get(i).getAsJsonObject();
                         String id = mObj.has("id") ? mObj.get("id").getAsString() : ("macro_" + (i + 1));
@@ -377,7 +512,8 @@ public class MooConfig {
                             e.setMouseButton(isMouse);
                             e.setEnabled(mEnabled);
                         } else {
-                            existing.add(new com.mooclient.module.modules.MacroModule.MacroEntry(id, cmd, kCode, kName, isMouse, mEnabled));
+                            existing.add(new com.mooclient.module.modules.MacroModule.MacroEntry(id, cmd, kCode, kName,
+                                    isMouse, mEnabled));
                         }
                     }
                 }
@@ -392,7 +528,8 @@ public class MooConfig {
                     ModuleManager.getInstance().getModule("Chat").ifPresent(m -> m.setEnabled(state));
                 }
                 if (chat.has("transparentBackground")) {
-                    com.mooclient.module.modules.ChatModule.setTransparentBackground(chat.get("transparentBackground").getAsBoolean());
+                    com.mooclient.module.modules.ChatModule
+                            .setTransparentBackground(chat.get("transparentBackground").getAsBoolean());
                 }
                 if (chat.has("unlimitedChat")) {
                     com.mooclient.module.modules.ChatModule.setUnlimitedChat(chat.get("unlimitedChat").getAsBoolean());
@@ -415,17 +552,40 @@ public class MooConfig {
                 }
                 if (ping.has("style")) {
                     try {
-                        com.mooclient.module.modules.PingModule.setStyle(com.mooclient.module.modules.PingModule.PingStyle.valueOf(ping.get("style").getAsString()));
-                    } catch (IllegalArgumentException ignored) {}
+                        com.mooclient.module.modules.PingModule
+                                .setStyle(com.mooclient.module.modules.PingModule.PingStyle
+                                        .valueOf(ping.get("style").getAsString()));
+                    } catch (IllegalArgumentException ignored) {
+                    }
                 }
                 if (ping.has("showBackground")) {
-                    com.mooclient.module.modules.PingModule.setShowBackground(ping.get("showBackground").getAsBoolean());
+                    com.mooclient.module.modules.PingModule
+                            .setShowBackground(ping.get("showBackground").getAsBoolean());
                 }
                 if (ping.has("textShadow")) {
                     com.mooclient.module.modules.PingModule.setTextShadow(ping.get("textShadow").getAsBoolean());
                 }
                 if (ping.has("showPrefix")) {
                     com.mooclient.module.modules.PingModule.setShowPrefix(ping.get("showPrefix").getAsBoolean());
+                }
+                if (ping.has("anchorX") && ping.has("anchorY") && ping.has("offsetX") && ping.has("offsetY")) {
+                    try {
+                        com.mooclient.module.modules.PingModule.position.anchorX = MooHudPositionHelper.HudAnchorX.valueOf(ping.get("anchorX").getAsString());
+                        com.mooclient.module.modules.PingModule.position.anchorY = MooHudPositionHelper.HudAnchorY.valueOf(ping.get("anchorY").getAsString());
+                        com.mooclient.module.modules.PingModule.position.offsetX = ping.get("offsetX").getAsInt();
+                        com.mooclient.module.modules.PingModule.position.offsetY = ping.get("offsetY").getAsInt();
+                    } catch (Exception ignored) {}
+                } else if (ping.has("posX") && ping.has("posY")) {
+                    int px = ping.get("posX").getAsInt();
+                    int py = ping.get("posY").getAsInt();
+                    if (px <= 150) {
+                        com.mooclient.module.modules.PingModule.position.anchorX = MooHudPositionHelper.HudAnchorX.LEFT;
+                        com.mooclient.module.modules.PingModule.position.offsetX = px;
+                        com.mooclient.module.modules.PingModule.position.anchorY = MooHudPositionHelper.HudAnchorY.TOP;
+                        com.mooclient.module.modules.PingModule.position.offsetY = py;
+                    } else {
+                        com.mooclient.module.modules.PingModule.position.setFromScreenCoords(px, py, com.mooclient.module.modules.PingModule.width, com.mooclient.module.modules.PingModule.height, 960, 540);
+                    }
                 }
                 if (ping.has("posX")) {
                     com.mooclient.module.modules.PingModule.posX = ping.get("posX").getAsInt();
@@ -444,31 +604,39 @@ public class MooConfig {
                     ModuleManager.getInstance().getModule("Waypoints").ifPresent(m -> m.setEnabled(state));
                 }
                 if (waypoints.has("showDistance")) {
-                    com.mooclient.module.modules.WaypointsModule.setShowDistance(waypoints.get("showDistance").getAsBoolean());
+                    com.mooclient.module.modules.WaypointsModule
+                            .setShowDistance(waypoints.get("showDistance").getAsBoolean());
                 }
                 if (waypoints.has("showBeacons")) {
-                    com.mooclient.module.modules.WaypointsModule.setShowBeacons(waypoints.get("showBeacons").getAsBoolean());
+                    com.mooclient.module.modules.WaypointsModule
+                            .setShowBeacons(waypoints.get("showBeacons").getAsBoolean());
                 }
                 if (waypoints.has("showBackground")) {
-                    com.mooclient.module.modules.WaypointsModule.setShowBackground(waypoints.get("showBackground").getAsBoolean());
+                    com.mooclient.module.modules.WaypointsModule
+                            .setShowBackground(waypoints.get("showBackground").getAsBoolean());
                 }
                 if (waypoints.has("textShadow")) {
-                    com.mooclient.module.modules.WaypointsModule.setTextShadow(waypoints.get("textShadow").getAsBoolean());
+                    com.mooclient.module.modules.WaypointsModule
+                            .setTextShadow(waypoints.get("textShadow").getAsBoolean());
                 }
                 if (waypoints.has("deathWaypoint")) {
-                    com.mooclient.module.modules.WaypointsModule.setDeathWaypoint(waypoints.get("deathWaypoint").getAsBoolean());
+                    com.mooclient.module.modules.WaypointsModule
+                            .setDeathWaypoint(waypoints.get("deathWaypoint").getAsBoolean());
                 }
                 if (waypoints.has("showAllDimensions")) {
-                    com.mooclient.module.modules.WaypointsModule.setShowAllDimensions(waypoints.get("showAllDimensions").getAsBoolean());
+                    com.mooclient.module.modules.WaypointsModule
+                            .setShowAllDimensions(waypoints.get("showAllDimensions").getAsBoolean());
                 }
                 if (waypoints.has("showAllServers")) {
-                    com.mooclient.module.modules.WaypointsModule.setShowAllServers(waypoints.get("showAllServers").getAsBoolean());
+                    com.mooclient.module.modules.WaypointsModule
+                            .setShowAllServers(waypoints.get("showAllServers").getAsBoolean());
                 }
                 if (waypoints.has("scale")) {
                     com.mooclient.module.modules.WaypointsModule.setScale(waypoints.get("scale").getAsFloat());
                 }
                 if (waypoints.has("keyCode") && waypoints.has("keyName")) {
-                    com.mooclient.module.modules.WaypointsModule.setKeybind(waypoints.get("keyCode").getAsInt(), waypoints.get("keyName").getAsString());
+                    com.mooclient.module.modules.WaypointsModule.setKeybind(waypoints.get("keyCode").getAsInt(),
+                            waypoints.get("keyName").getAsString());
                 }
             }
 
@@ -481,13 +649,32 @@ public class MooConfig {
                     ModuleManager.getInstance().getModule("Scoreboard").ifPresent(m -> m.setEnabled(state));
                 }
                 if (scoreboard.has("textShadow")) {
-                    com.mooclient.module.modules.ScoreboardModule.setTextShadow(scoreboard.get("textShadow").getAsBoolean());
+                    com.mooclient.module.modules.ScoreboardModule
+                            .setTextShadow(scoreboard.get("textShadow").getAsBoolean());
                 }
                 if (scoreboard.has("showBackground")) {
-                    com.mooclient.module.modules.ScoreboardModule.setShowBackground(scoreboard.get("showBackground").getAsBoolean());
+                    com.mooclient.module.modules.ScoreboardModule
+                            .setShowBackground(scoreboard.get("showBackground").getAsBoolean());
                 }
                 if (scoreboard.has("showScores")) {
-                    com.mooclient.module.modules.ScoreboardModule.setShowScores(scoreboard.get("showScores").getAsBoolean());
+                    com.mooclient.module.modules.ScoreboardModule
+                            .setShowScores(scoreboard.get("showScores").getAsBoolean());
+                }
+                if (scoreboard.has("anchorX") && scoreboard.has("anchorY") && scoreboard.has("offsetX") && scoreboard.has("offsetY")) {
+                    try {
+                        com.mooclient.module.modules.ScoreboardModule.position.anchorX = MooHudPositionHelper.HudAnchorX.valueOf(scoreboard.get("anchorX").getAsString());
+                        com.mooclient.module.modules.ScoreboardModule.position.anchorY = MooHudPositionHelper.HudAnchorY.valueOf(scoreboard.get("anchorY").getAsString());
+                        com.mooclient.module.modules.ScoreboardModule.position.offsetX = scoreboard.get("offsetX").getAsInt();
+                        com.mooclient.module.modules.ScoreboardModule.position.offsetY = scoreboard.get("offsetY").getAsInt();
+                    } catch (Exception ignored) {}
+                } else if (scoreboard.has("posX") && scoreboard.has("posY")) {
+                    int px = scoreboard.get("posX").getAsInt();
+                    int py = scoreboard.get("posY").getAsInt();
+                    if (px < 0) {
+                        com.mooclient.module.modules.ScoreboardModule.resetPosition();
+                    } else {
+                        com.mooclient.module.modules.ScoreboardModule.position.setFromScreenCoords(px, py, com.mooclient.module.modules.ScoreboardModule.width, com.mooclient.module.modules.ScoreboardModule.height, 960, 540);
+                    }
                 }
                 if (scoreboard.has("posX")) {
                     com.mooclient.module.modules.ScoreboardModule.posX = scoreboard.get("posX").getAsInt();
@@ -497,18 +684,78 @@ public class MooConfig {
                 }
             }
 
+            // CPS Module
+            if (root.has("cps")) {
+                JsonObject cps = root.getAsJsonObject("cps");
+                if (cps.has("enabled")) {
+                    boolean state = cps.get("enabled").getAsBoolean();
+                    com.mooclient.module.modules.CpsModule.setCpsEnabled(state);
+                    ModuleManager.getInstance().getModule("CPS").ifPresent(m -> m.setEnabled(state));
+                }
+                if (cps.has("displayMode")) {
+                    try {
+                        com.mooclient.module.modules.CpsModule.setDisplayMode(com.mooclient.module.modules.CpsModule.CpsDisplayMode.valueOf(cps.get("displayMode").getAsString()));
+                    } catch (Exception ignored) {}
+                }
+                if (cps.has("style")) {
+                    try {
+                        com.mooclient.module.modules.CpsModule.setStyle(com.mooclient.module.modules.CpsModule.CpsStyle.valueOf(cps.get("style").getAsString()));
+                    } catch (Exception ignored) {}
+                }
+                if (cps.has("showBackground")) {
+                    com.mooclient.module.modules.CpsModule.setShowBackground(cps.get("showBackground").getAsBoolean());
+                }
+                if (cps.has("textShadow")) {
+                    com.mooclient.module.modules.CpsModule.setTextShadow(cps.get("textShadow").getAsBoolean());
+                }
+                if (cps.has("showPrefix")) {
+                    com.mooclient.module.modules.CpsModule.setShowPrefix(cps.get("showPrefix").getAsBoolean());
+                }
+                if (cps.has("anchorX") && cps.has("anchorY") && cps.has("offsetX") && cps.has("offsetY")) {
+                    try {
+                        com.mooclient.module.modules.CpsModule.position.anchorX = MooHudPositionHelper.HudAnchorX.valueOf(cps.get("anchorX").getAsString());
+                        com.mooclient.module.modules.CpsModule.position.anchorY = MooHudPositionHelper.HudAnchorY.valueOf(cps.get("anchorY").getAsString());
+                        com.mooclient.module.modules.CpsModule.position.offsetX = cps.get("offsetX").getAsInt();
+                        com.mooclient.module.modules.CpsModule.position.offsetY = cps.get("offsetY").getAsInt();
+                    } catch (Exception ignored) {}
+                } else if (cps.has("posX") && cps.has("posY")) {
+                    int px = cps.get("posX").getAsInt();
+                    int py = cps.get("posY").getAsInt();
+                    if (px <= 150) {
+                        com.mooclient.module.modules.CpsModule.position.anchorX = MooHudPositionHelper.HudAnchorX.LEFT;
+                        com.mooclient.module.modules.CpsModule.position.offsetX = px;
+                        com.mooclient.module.modules.CpsModule.position.anchorY = MooHudPositionHelper.HudAnchorY.TOP;
+                        com.mooclient.module.modules.CpsModule.position.offsetY = py;
+                    } else {
+                        com.mooclient.module.modules.CpsModule.position.setFromScreenCoords(px, py, com.mooclient.module.modules.CpsModule.width, com.mooclient.module.modules.CpsModule.height, 960, 540);
+                    }
+                }
+                if (cps.has("posX")) {
+                    com.mooclient.module.modules.CpsModule.posX = cps.get("posX").getAsInt();
+                }
+                if (cps.has("posY")) {
+                    com.mooclient.module.modules.CpsModule.posY = cps.get("posY").getAsInt();
+                }
+            }
+
             // Global Client Settings
             if (root.has("settings")) {
                 JsonObject settings = root.getAsJsonObject("settings");
                 if (settings.has("accentPreset")) {
                     try {
-                        MooClientSettings.setAccentPreset(MooClientSettings.AccentColorPreset.valueOf(settings.get("accentPreset").getAsString()));
-                    } catch (Exception ignored) {}
+                        MooClientSettings.setAccentPreset(MooClientSettings.AccentColorPreset
+                                .valueOf(settings.get("accentPreset").getAsString()));
+                    } catch (Exception ignored) {
+                    }
                 }
-                if (settings.has("customRed")) MooClientSettings.setCustomRed(settings.get("customRed").getAsInt());
-                if (settings.has("customGreen")) MooClientSettings.setCustomGreen(settings.get("customGreen").getAsInt());
-                if (settings.has("customBlue")) MooClientSettings.setCustomBlue(settings.get("customBlue").getAsInt());
-                if (settings.has("hudSnapping")) MooClientSettings.setHudSnapping(settings.get("hudSnapping").getAsBoolean());
+                if (settings.has("customRed"))
+                    MooClientSettings.setCustomRed(settings.get("customRed").getAsInt());
+                if (settings.has("customGreen"))
+                    MooClientSettings.setCustomGreen(settings.get("customGreen").getAsInt());
+                if (settings.has("customBlue"))
+                    MooClientSettings.setCustomBlue(settings.get("customBlue").getAsInt());
+                if (settings.has("hudSnapping"))
+                    MooClientSettings.setHudSnapping(settings.get("hudSnapping").getAsBoolean());
                 if (settings.has("hudScale")) {
                     int scale = settings.get("hudScale").getAsInt();
                     if (scale <= 2) {
@@ -516,9 +763,12 @@ public class MooConfig {
                     }
                     MooClientSettings.setHudScale(scale);
                 }
-                if (settings.has("globalTextShadow")) MooClientSettings.setGlobalTextShadow(settings.get("globalTextShadow").getAsBoolean());
-                if (settings.has("menuBackgroundDim")) MooClientSettings.setMenuBackgroundDim(settings.get("menuBackgroundDim").getAsInt());
-                if (settings.has("guiAnimations")) MooClientSettings.setGuiAnimations(settings.get("guiAnimations").getAsBoolean());
+                if (settings.has("globalTextShadow"))
+                    MooClientSettings.setGlobalTextShadow(settings.get("globalTextShadow").getAsBoolean());
+                if (settings.has("menuBackgroundDim"))
+                    MooClientSettings.setMenuBackgroundDim(settings.get("menuBackgroundDim").getAsInt());
+                if (settings.has("guiAnimations"))
+                    MooClientSettings.setGuiAnimations(settings.get("guiAnimations").getAsBoolean());
             }
 
             MooClient.LOGGER.info("Loaded config from {}", CONFIG_PATH);
