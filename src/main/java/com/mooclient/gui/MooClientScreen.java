@@ -2,11 +2,17 @@ package com.mooclient.gui;
 
 import com.mooclient.module.Module;
 import com.mooclient.module.ModuleManager;
+import com.mooclient.module.modules.CpsModule;
 import com.mooclient.module.modules.FpsModule;
 import com.mooclient.module.modules.FreelookModule;
+import com.mooclient.module.modules.PingModule;
 import com.mooclient.module.modules.PotionEffectsModule;
+import com.mooclient.module.modules.ScoreboardModule;
 import com.mooclient.module.modules.ToggleSprintModule;
+import com.mooclient.util.MooClientSettings;
 import com.mooclient.util.MooHudPositionHelper;
+import com.mooclient.util.MooHudPositionHelper.GuideLine;
+import com.mooclient.util.MooHudPositionHelper.WidgetRect;
 import com.mooclient.util.MooLanguage;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -16,6 +22,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -53,7 +60,7 @@ public class MooClientScreen extends Screen {
     private String draggingWidget = null;
     private int dragOffsetX = 0;
     private int dragOffsetY = 0;
-    private java.util.List<com.mooclient.util.MooHudPositionHelper.GuideLine> activeGuideLines = new java.util.ArrayList<>();
+    private List<GuideLine> activeGuideLines = new ArrayList<>();
 
     // Palette
     private static final int COLOR_HUB_OVERLAY = 0x55000000;
@@ -312,52 +319,43 @@ public class MooClientScreen extends Screen {
         }
     }
 
-    private java.util.List<com.mooclient.util.MooHudPositionHelper.WidgetRect> getOtherActiveWidgetRects(
-            String currentWidgetId) {
-        java.util.List<com.mooclient.util.MooHudPositionHelper.WidgetRect> list = new java.util.ArrayList<>();
+    private List<WidgetRect> getOtherActiveWidgetRects(String currentWidgetId) {
+        List<WidgetRect> list = new ArrayList<>();
         if (!"FPS".equals(currentWidgetId) && FpsModule.isFpsEnabled()) {
-            list.add(new com.mooclient.util.MooHudPositionHelper.WidgetRect("FPS",
+            list.add(new WidgetRect("FPS",
                     FpsModule.position.calculateX(FpsModule.width, this.width),
                     FpsModule.position.calculateY(FpsModule.height, this.height),
                     FpsModule.width, FpsModule.height));
         }
         if (!"SPRINT".equals(currentWidgetId) && ToggleSprintModule.isSprintEnabled()) {
-            list.add(new com.mooclient.util.MooHudPositionHelper.WidgetRect("SPRINT",
+            list.add(new WidgetRect("SPRINT",
                     ToggleSprintModule.position.calculateX(ToggleSprintModule.width, this.width),
                     ToggleSprintModule.position.calculateY(ToggleSprintModule.height, this.height),
                     ToggleSprintModule.width, ToggleSprintModule.height));
         }
         if (!"POTIONS".equals(currentWidgetId) && PotionEffectsModule.isModuleEnabled()) {
-            list.add(new com.mooclient.util.MooHudPositionHelper.WidgetRect("POTIONS",
+            list.add(new WidgetRect("POTIONS",
                     PotionEffectsModule.position.calculateX(PotionEffectsModule.width, this.width),
                     PotionEffectsModule.position.calculateY(PotionEffectsModule.height, this.height),
                     PotionEffectsModule.width, PotionEffectsModule.height));
         }
-        if (!"PING".equals(currentWidgetId) && com.mooclient.module.modules.PingModule.isPingEnabled()) {
-            list.add(new com.mooclient.util.MooHudPositionHelper.WidgetRect("PING",
-                    com.mooclient.module.modules.PingModule.position
-                            .calculateX(com.mooclient.module.modules.PingModule.width, this.width),
-                    com.mooclient.module.modules.PingModule.position
-                            .calculateY(com.mooclient.module.modules.PingModule.height, this.height),
-                    com.mooclient.module.modules.PingModule.width, com.mooclient.module.modules.PingModule.height));
+        if (!"PING".equals(currentWidgetId) && PingModule.isPingEnabled()) {
+            list.add(new WidgetRect("PING",
+                    PingModule.position.calculateX(PingModule.width, this.width),
+                    PingModule.position.calculateY(PingModule.height, this.height),
+                    PingModule.width, PingModule.height));
         }
-        if (!"CPS".equals(currentWidgetId) && com.mooclient.module.modules.CpsModule.isCpsEnabled()) {
-            list.add(new com.mooclient.util.MooHudPositionHelper.WidgetRect("CPS",
-                    com.mooclient.module.modules.CpsModule.position
-                            .calculateX(com.mooclient.module.modules.CpsModule.width, this.width),
-                    com.mooclient.module.modules.CpsModule.position
-                            .calculateY(com.mooclient.module.modules.CpsModule.height, this.height),
-                    com.mooclient.module.modules.CpsModule.width, com.mooclient.module.modules.CpsModule.height));
+        if (!"CPS".equals(currentWidgetId) && CpsModule.isCpsEnabled()) {
+            list.add(new WidgetRect("CPS",
+                    CpsModule.position.calculateX(CpsModule.width, this.width),
+                    CpsModule.position.calculateY(CpsModule.height, this.height),
+                    CpsModule.width, CpsModule.height));
         }
-        if (!"SCOREBOARD".equals(currentWidgetId)
-                && com.mooclient.module.modules.ScoreboardModule.isScoreboardEnabled()) {
-            list.add(new com.mooclient.util.MooHudPositionHelper.WidgetRect("SCOREBOARD",
-                    com.mooclient.module.modules.ScoreboardModule.position
-                            .calculateX(com.mooclient.module.modules.ScoreboardModule.width, this.width),
-                    com.mooclient.module.modules.ScoreboardModule.position
-                            .calculateY(com.mooclient.module.modules.ScoreboardModule.height, this.height),
-                    com.mooclient.module.modules.ScoreboardModule.width,
-                    com.mooclient.module.modules.ScoreboardModule.height));
+        if (!"SCOREBOARD".equals(currentWidgetId) && ScoreboardModule.isScoreboardEnabled()) {
+            list.add(new WidgetRect("SCOREBOARD",
+                    ScoreboardModule.position.calculateX(ScoreboardModule.width, this.width),
+                    ScoreboardModule.position.calculateY(ScoreboardModule.height, this.height),
+                    ScoreboardModule.width, ScoreboardModule.height));
         }
         return list;
     }
@@ -3056,16 +3054,14 @@ public class MooClientScreen extends Screen {
         if (currentView == View.HUB && draggingWidget != null) {
             int rawX = (int) mouseX - dragOffsetX;
             int rawY = (int) mouseY - dragOffsetY;
-            boolean snapping = com.mooclient.util.MooClientSettings.isHudSnapping();
-            int accent = com.mooclient.util.MooClientSettings.getAccentColor();
-            java.util.List<com.mooclient.util.MooHudPositionHelper.WidgetRect> others = getOtherActiveWidgetRects(
-                    draggingWidget);
+            boolean snapping = MooClientSettings.isHudSnapping();
+            int accent = MooClientSettings.getAccentColor();
+            List<WidgetRect> others = getOtherActiveWidgetRects(draggingWidget);
 
             if ("FPS".equals(draggingWidget)) {
-                com.mooclient.util.MooHudPositionHelper.SnapResult res = com.mooclient.util.MooHudPositionHelper
-                        .calculateSmartSnap(
-                                rawX, rawY, FpsModule.width, FpsModule.height, this.width, this.height, others,
-                                snapping, accent);
+                MooHudPositionHelper.SnapResult res = MooHudPositionHelper.calculateSmartSnap(
+                        rawX, rawY, FpsModule.width, FpsModule.height, this.width, this.height, others,
+                        snapping, accent);
                 this.activeGuideLines = res.guideLines;
                 FpsModule.position.setFromScreenCoords(res.snappedX, res.snappedY, FpsModule.width, FpsModule.height,
                         this.width, this.height);
@@ -3073,10 +3069,9 @@ public class MooClientScreen extends Screen {
                 FpsModule.posY = res.snappedY;
                 return true;
             } else if ("SPRINT".equals(draggingWidget)) {
-                com.mooclient.util.MooHudPositionHelper.SnapResult res = com.mooclient.util.MooHudPositionHelper
-                        .calculateSmartSnap(
-                                rawX, rawY, ToggleSprintModule.width, ToggleSprintModule.height, this.width,
-                                this.height, others, snapping, accent);
+                MooHudPositionHelper.SnapResult res = MooHudPositionHelper.calculateSmartSnap(
+                        rawX, rawY, ToggleSprintModule.width, ToggleSprintModule.height, this.width,
+                        this.height, others, snapping, accent);
                 this.activeGuideLines = res.guideLines;
                 ToggleSprintModule.position.setFromScreenCoords(res.snappedX, res.snappedY, ToggleSprintModule.width,
                         ToggleSprintModule.height, this.width, this.height);
@@ -3084,10 +3079,9 @@ public class MooClientScreen extends Screen {
                 ToggleSprintModule.posY = res.snappedY;
                 return true;
             } else if ("POTIONS".equals(draggingWidget)) {
-                com.mooclient.util.MooHudPositionHelper.SnapResult res = com.mooclient.util.MooHudPositionHelper
-                        .calculateSmartSnap(
-                                rawX, rawY, PotionEffectsModule.width, PotionEffectsModule.height, this.width,
-                                this.height, others, snapping, accent);
+                MooHudPositionHelper.SnapResult res = MooHudPositionHelper.calculateSmartSnap(
+                        rawX, rawY, PotionEffectsModule.width, PotionEffectsModule.height, this.width,
+                        this.height, others, snapping, accent);
                 this.activeGuideLines = res.guideLines;
                 PotionEffectsModule.position.setFromScreenCoords(res.snappedX, res.snappedY, PotionEffectsModule.width,
                         PotionEffectsModule.height, this.width, this.height);
@@ -3095,43 +3089,34 @@ public class MooClientScreen extends Screen {
                 PotionEffectsModule.posY = res.snappedY;
                 return true;
             } else if ("PING".equals(draggingWidget)) {
-                com.mooclient.util.MooHudPositionHelper.SnapResult res = com.mooclient.util.MooHudPositionHelper
-                        .calculateSmartSnap(
-                                rawX, rawY, com.mooclient.module.modules.PingModule.width,
-                                com.mooclient.module.modules.PingModule.height, this.width, this.height, others,
-                                snapping, accent);
+                MooHudPositionHelper.SnapResult res = MooHudPositionHelper.calculateSmartSnap(
+                        rawX, rawY, PingModule.width, PingModule.height, this.width, this.height, others,
+                        snapping, accent);
                 this.activeGuideLines = res.guideLines;
-                com.mooclient.module.modules.PingModule.position.setFromScreenCoords(res.snappedX, res.snappedY,
-                        com.mooclient.module.modules.PingModule.width, com.mooclient.module.modules.PingModule.height,
-                        this.width, this.height);
-                com.mooclient.module.modules.PingModule.posX = res.snappedX;
-                com.mooclient.module.modules.PingModule.posY = res.snappedY;
+                PingModule.position.setFromScreenCoords(res.snappedX, res.snappedY,
+                        PingModule.width, PingModule.height, this.width, this.height);
+                PingModule.posX = res.snappedX;
+                PingModule.posY = res.snappedY;
                 return true;
             } else if ("CPS".equals(draggingWidget)) {
-                com.mooclient.util.MooHudPositionHelper.SnapResult res = com.mooclient.util.MooHudPositionHelper
-                        .calculateSmartSnap(
-                                rawX, rawY, com.mooclient.module.modules.CpsModule.width,
-                                com.mooclient.module.modules.CpsModule.height, this.width, this.height, others,
-                                snapping, accent);
+                MooHudPositionHelper.SnapResult res = MooHudPositionHelper.calculateSmartSnap(
+                        rawX, rawY, CpsModule.width, CpsModule.height, this.width, this.height, others,
+                        snapping, accent);
                 this.activeGuideLines = res.guideLines;
-                com.mooclient.module.modules.CpsModule.position.setFromScreenCoords(res.snappedX, res.snappedY,
-                        com.mooclient.module.modules.CpsModule.width, com.mooclient.module.modules.CpsModule.height,
-                        this.width, this.height);
-                com.mooclient.module.modules.CpsModule.posX = res.snappedX;
-                com.mooclient.module.modules.CpsModule.posY = res.snappedY;
+                CpsModule.position.setFromScreenCoords(res.snappedX, res.snappedY,
+                        CpsModule.width, CpsModule.height, this.width, this.height);
+                CpsModule.posX = res.snappedX;
+                CpsModule.posY = res.snappedY;
                 return true;
             } else if ("SCOREBOARD".equals(draggingWidget)) {
-                com.mooclient.util.MooHudPositionHelper.SnapResult res = com.mooclient.util.MooHudPositionHelper
-                        .calculateSmartSnap(
-                                rawX, rawY, com.mooclient.module.modules.ScoreboardModule.width,
-                                com.mooclient.module.modules.ScoreboardModule.height, this.width, this.height, others,
-                                snapping, accent);
+                MooHudPositionHelper.SnapResult res = MooHudPositionHelper.calculateSmartSnap(
+                        rawX, rawY, ScoreboardModule.width, ScoreboardModule.height, this.width, this.height, others,
+                        snapping, accent);
                 this.activeGuideLines = res.guideLines;
-                com.mooclient.module.modules.ScoreboardModule.position.setFromScreenCoords(res.snappedX, res.snappedY,
-                        com.mooclient.module.modules.ScoreboardModule.width,
-                        com.mooclient.module.modules.ScoreboardModule.height, this.width, this.height);
-                com.mooclient.module.modules.ScoreboardModule.posX = res.snappedX;
-                com.mooclient.module.modules.ScoreboardModule.posY = res.snappedY;
+                ScoreboardModule.position.setFromScreenCoords(res.snappedX, res.snappedY,
+                        ScoreboardModule.width, ScoreboardModule.height, this.width, this.height);
+                ScoreboardModule.posX = res.snappedX;
+                ScoreboardModule.posY = res.snappedY;
                 return true;
             }
         }

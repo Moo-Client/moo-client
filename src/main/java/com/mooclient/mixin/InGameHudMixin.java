@@ -1,10 +1,13 @@
 package com.mooclient.mixin;
 
+import com.mooclient.module.modules.CpsModule;
 import com.mooclient.module.modules.FpsModule;
+import com.mooclient.module.modules.PingModule;
 import com.mooclient.module.modules.PotionEffectsModule;
 import com.mooclient.module.modules.ScoreboardModule;
 import com.mooclient.module.modules.ToggleSprintModule;
-import com.mooclient.util.MooHudPositionHelper;
+import com.mooclient.util.MooClientSettings;
+import com.mooclient.waypoint.WaypointRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
@@ -344,15 +347,14 @@ public class InGameHudMixin {
         }
 
         // 4. Ping Module Rendering
-        if (com.mooclient.module.modules.PingModule.isPingEnabled()) {
-            int ping = com.mooclient.module.modules.PingModule.getCurrentPing();
-            com.mooclient.module.modules.PingModule.PingStyle style = com.mooclient.module.modules.PingModule
-                    .getStyle();
+        if (PingModule.isPingEnabled()) {
+            int ping = PingModule.getCurrentPing();
+            PingModule.PingStyle style = PingModule.getStyle();
 
             String pingText;
-            if (style == com.mooclient.module.modules.PingModule.PingStyle.BRACKETS) {
+            if (style == PingModule.PingStyle.BRACKETS) {
                 pingText = "[" + ping + " ms]";
-            } else if (com.mooclient.module.modules.PingModule.isShowPrefix()) {
+            } else if (PingModule.isShowPrefix()) {
                 pingText = "Ping: " + ping + " ms";
             } else {
                 pingText = ping + " ms";
@@ -361,11 +363,11 @@ public class InGameHudMixin {
             int textWidth = client.textRenderer.getWidth(pingText);
             int boxW = (int) Math.round((textWidth + 6) * hudScale);
             int boxH = (int) Math.round(12 * hudScale);
-            com.mooclient.module.modules.PingModule.width = boxW;
-            com.mooclient.module.modules.PingModule.height = boxH;
+            PingModule.width = boxW;
+            PingModule.height = boxH;
 
-            int x = com.mooclient.module.modules.PingModule.position.calculateX(boxW, scaledWidth);
-            int y = com.mooclient.module.modules.PingModule.position.calculateY(boxH, scaledHeight);
+            int x = PingModule.position.calculateX(boxW, scaledWidth);
+            int y = PingModule.position.calculateY(boxH, scaledHeight);
 
             if (customScale) {
                 context.getMatrices().push();
@@ -374,20 +376,20 @@ public class InGameHudMixin {
                 context.getMatrices().translate(-x, -y, 0);
             }
 
-            if (style == com.mooclient.module.modules.PingModule.PingStyle.MOO_CLIENT) {
-                if (com.mooclient.module.modules.PingModule.isShowBackground()) {
+            if (style == PingModule.PingStyle.MOO_CLIENT) {
+                if (PingModule.isShowBackground()) {
                     context.fill(x - 2, y - 2, x + textWidth + 4, y + 10, 0x88000000);
                     context.fill(x - 3, y - 2, x - 2, y + 10, 0xFFFFFFFF);
                 }
                 context.drawText(client.textRenderer, pingText,
-                        x + (com.mooclient.module.modules.PingModule.isShowBackground() ? 2 : 0), y, 0xFFFFFFFF,
-                        com.mooclient.module.modules.PingModule.isTextShadow());
+                        x + (PingModule.isShowBackground() ? 2 : 0), y, 0xFFFFFFFF,
+                        PingModule.isTextShadow());
             } else {
-                if (com.mooclient.module.modules.PingModule.isShowBackground()) {
+                if (PingModule.isShowBackground()) {
                     context.fill(x - 2, y - 2, x + textWidth + 2, y + 10, 0x66000000);
                 }
                 context.drawText(client.textRenderer, pingText, x, y, 0xFFFFFFFF,
-                        com.mooclient.module.modules.PingModule.isTextShadow());
+                        PingModule.isTextShadow());
             }
 
             if (customScale) {
@@ -396,21 +398,21 @@ public class InGameHudMixin {
         }
 
         // 5. CPS Module Rendering
-        if (com.mooclient.module.modules.CpsModule.isCpsEnabled()) {
-            int leftCps = com.mooclient.module.modules.CpsModule.getLeftCps();
-            int rightCps = com.mooclient.module.modules.CpsModule.getRightCps();
-            com.mooclient.module.modules.CpsModule.CpsStyle style = com.mooclient.module.modules.CpsModule.getStyle();
+        if (CpsModule.isCpsEnabled()) {
+            int leftCps = CpsModule.getLeftCps();
+            int rightCps = CpsModule.getRightCps();
+            CpsModule.CpsStyle style = CpsModule.getStyle();
 
-            String cpsText = com.mooclient.module.modules.CpsModule.getFormattedText(leftCps, rightCps);
+            String cpsText = CpsModule.getFormattedText(leftCps, rightCps);
 
             int textWidth = client.textRenderer.getWidth(cpsText);
             int boxW = (int) Math.round((textWidth + 6) * hudScale);
             int boxH = (int) Math.round(12 * hudScale);
-            com.mooclient.module.modules.CpsModule.width = boxW;
-            com.mooclient.module.modules.CpsModule.height = boxH;
+            CpsModule.width = boxW;
+            CpsModule.height = boxH;
 
-            int x = com.mooclient.module.modules.CpsModule.position.calculateX(boxW, scaledWidth);
-            int y = com.mooclient.module.modules.CpsModule.position.calculateY(boxH, scaledHeight);
+            int x = CpsModule.position.calculateX(boxW, scaledWidth);
+            int y = CpsModule.position.calculateY(boxH, scaledHeight);
 
             if (customScale) {
                 context.getMatrices().push();
@@ -419,20 +421,20 @@ public class InGameHudMixin {
                 context.getMatrices().translate(-x, -y, 0);
             }
 
-            if (style == com.mooclient.module.modules.CpsModule.CpsStyle.MOO_CLIENT) {
-                if (com.mooclient.module.modules.CpsModule.isShowBackground()) {
+            if (style == CpsModule.CpsStyle.MOO_CLIENT) {
+                if (CpsModule.isShowBackground()) {
                     context.fill(x - 2, y - 2, x + textWidth + 4, y + 10, 0x88000000);
                     context.fill(x - 3, y - 2, x - 2, y + 10, 0xFFFFFFFF);
                 }
                 context.drawText(client.textRenderer, cpsText,
-                        x + (com.mooclient.module.modules.CpsModule.isShowBackground() ? 2 : 0), y, 0xFFFFFFFF,
-                        com.mooclient.module.modules.CpsModule.isTextShadow());
+                        x + (CpsModule.isShowBackground() ? 2 : 0), y, 0xFFFFFFFF,
+                        CpsModule.isTextShadow());
             } else {
-                if (com.mooclient.module.modules.CpsModule.isShowBackground()) {
+                if (CpsModule.isShowBackground()) {
                     context.fill(x - 2, y - 2, x + textWidth + 2, y + 10, 0x66000000);
                 }
                 context.drawText(client.textRenderer, cpsText, x, y, 0xFFFFFFFF,
-                        com.mooclient.module.modules.CpsModule.isTextShadow());
+                        CpsModule.isTextShadow());
             }
 
             if (customScale) {
@@ -449,7 +451,7 @@ public class InGameHudMixin {
         }
         // Render waypoints BEFORE crosshair and main HUD so crosshair is always visible
         // in front
-        com.mooclient.waypoint.WaypointRenderer.renderHudWaypoints(context, client, tickCounter.getTickDelta(true));
+        WaypointRenderer.renderHudWaypoints(context, client, tickCounter.getTickDelta(true));
     }
 
     @Inject(method = "renderScoreboardSidebar(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/scoreboard/ScoreboardObjective;)V", at = @At("HEAD"), cancellable = true)

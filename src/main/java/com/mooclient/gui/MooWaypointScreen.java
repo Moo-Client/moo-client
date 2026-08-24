@@ -5,7 +5,6 @@ import com.mooclient.util.MooClientSettings;
 import com.mooclient.util.MooLanguage;
 import com.mooclient.waypoint.Waypoint;
 import com.mooclient.waypoint.WaypointManager;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.RenderLayer;
