@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
-    "build": "electron-builder --dir && node patch-icon.js && electron-builder --win nsis --prepackaged dist/win-unpacked",
+    "build": "electron-builder --dir && node patch-icon.js && electron-builder --win nsis --prepackaged release-dist/win-unpacked",
     "publish": "electron-builder --win --publish always"
   },
   "author": "MooTeam",
@@ -27,7 +27,7 @@
     "appId": "com.mooclient.launcher",
     "productName": "Moo Client",
     "directories": {
-      "output": "dist"
+      "output": "release-dist"
     },
     "win": {
       "target": [
@@ -45,7 +45,6 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "include": "build/installer.nsh",
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
       "shortcutName": "Moo Client",

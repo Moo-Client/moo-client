@@ -106,17 +106,27 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
     }
 
     // Upload asar if exists
-    const asarPath = path.join(__dirname, 'dist', 'win-unpacked', 'resources', 'app.asar');
+    let asarPath = path.join(__dirname, 'release-dist', 'win-unpacked', 'resources', 'app.asar');
+    if (!fs.existsSync(asarPath)) {
+        asarPath = path.join(__dirname, 'dist', 'win-unpacked', 'resources', 'app.asar');
+    }
     if (fs.existsSync(asarPath)) {
         console.log('Uploading app.asar (65MB)...');
         await uploadAsset(release.upload_url, token, asarPath, 'app.asar', 'application/octet-stream');
+    } else {
+        console.warn(`app.asar not found at ${asarPath}`);
     }
 
     // Upload exe if exists
-    const exePath = path.join(__dirname, 'dist', `Moo Client Setup ${VERSION}.exe`);
+    let exePath = path.join(__dirname, 'release-dist', `Moo Client Setup ${VERSION}.exe`);
+    if (!fs.existsSync(exePath)) {
+        exePath = path.join(__dirname, 'dist', `Moo Client Setup ${VERSION}.exe`);
+    }
     if (fs.existsSync(exePath)) {
         console.log('Uploading exe (136MB)...');
         await uploadAsset(release.upload_url, token, exePath, `Moo.Client.Setup.${VERSION}.exe`, 'application/octet-stream');
+    } else {
+        console.warn(`Installer exe not found at ${exePath}`);
     }
 
     console.log(`ALL v${VERSION} ASSETS UPLOADED AND REPLACED SUCCESSFULLY!`);

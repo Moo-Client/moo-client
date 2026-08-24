@@ -20,7 +20,9 @@ run/
 node_modules/
 launcher/node_modules/
 launcher/dist/
+launcher/release-dist/
 dist/
+release-dist/
 *.log
 npm-debug.log*
 yarn-debug.log*
