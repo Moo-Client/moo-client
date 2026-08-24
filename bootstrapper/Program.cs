@@ -194,16 +194,34 @@ namespace MooClient.Bootstrapper
                 g.DrawIcon(this.Icon, new Rectangle(iconX, iconY, 24, 24));
             }
 
+            int titleX = iconX + 32;
             using (Font titleFont = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (Brush titleBrush = new SolidBrush(ColorTextWhite))
             {
-                g.DrawString("MOO CLIENT", titleFont, titleBrush, iconX + 32, 11);
-            }
+                g.DrawString("MOO CLIENT", titleFont, titleBrush, titleX, 10);
+                SizeF titleSize = g.MeasureString("MOO CLIENT", titleFont);
 
-            using (Font subTitleFont = new Font("Segoe UI", 8f, FontStyle.Bold))
-            using (Brush subTitleBrush = new SolidBrush(ColorAccentLight))
-            {
-                g.DrawString("INSTALLER", subTitleFont, subTitleBrush, iconX + 124, 13);
+                // Dynamic badge "INSTALLER" with rounded pill background
+                int badgeX = (int)(titleX + titleSize.Width + 6);
+                int badgeY = 12;
+                using (Font badgeFont = new Font("Segoe UI", 7.5f, FontStyle.Bold))
+                {
+                    SizeF badgeSize = g.MeasureString("INSTALLER", badgeFont);
+                    int badgeW = (int)badgeSize.Width + 10;
+                    int badgeH = 16;
+
+                    using (Brush bgBrush = new SolidBrush(Color.FromArgb(35, 34, 197, 94)))
+                    using (Pen borderPen = new Pen(Color.FromArgb(80, 74, 222, 128), 1f))
+                    {
+                        g.FillRectangle(bgBrush, badgeX, badgeY, badgeW, badgeH);
+                        g.DrawRectangle(borderPen, badgeX, badgeY, badgeW, badgeH);
+                    }
+
+                    using (Brush badgeBrush = new SolidBrush(ColorAccentLight))
+                    {
+                        g.DrawString("INSTALLER", badgeFont, badgeBrush, badgeX + 5, badgeY + 1);
+                    }
+                }
             }
 
             // Minimize Button
