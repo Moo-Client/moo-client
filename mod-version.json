@@ -2,5 +2,7 @@
   "version": "1.6.4",
   "minecraft": "1.21.4",
   "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.4/moo-client-1.6.4.jar",
-  "changelog": "🚀 Moo Client v1.6.4 (CPS Module & Smart Snapping):\n✓ Dodano nowy moduł CPS (LPM / PPM / Oba przyciski) z czasem rzeczywistym\n✓ Wdrożono Smart Snapping & Alignment Guidelines (linie pomocnicze HUD)\n✓ Naprawiono responsywne pozycjonowanie modułów przy zmianie rozmiaru okna\n✓ Spolszczono style wyświetlania (Prosty, Nawiasy, Kompaktowy) i tryby aktywacji"
+  "installer_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.4/MooClient-Setup.exe",
+  "bootstrapper_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.4/MooClient-Setup.exe",
+  "changelog": "🚀 Moo Client v1.6.4 (CPS Module & Smart Snapping):\n✓ Dodano nowy moduł CPS (LPM / PPM / Oba przyciski) z czasem rzeczywistym\n✓ Wdrożono Smart Snapping & Alignment Guidelines (linie pomocnicze HUD)\n✓ Wdrożono lekki Bootstrapper (~600 KB) dla szybkiej instalacji i aktualizacji\n✓ Naprawiono responsywne pozycjonowanie modułów przy zmianie rozmiaru okna\n✓ Spolszczono style wyświetlania (Prosty, Nawiasy, Kompaktowy) i tryby aktywacji"
 }
