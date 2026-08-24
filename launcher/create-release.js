@@ -88,7 +88,7 @@ async function ensureRelease(tag, name, body, token) {
     if (!token) { console.error('No token found'); process.exit(1); }
 
     // =============================================
-    // STEP 1: Upload backend assets to 'core-assets'
+    // STEP 1: Upload backend assets to 'core-assets' (Prerelease)
     // =============================================
     console.log('\n--- 1. Updating backend core-assets ---');
     const coreRelease = await ensureRelease(
@@ -98,6 +98,14 @@ async function ensureRelease(tag, name, body, token) {
         token
     );
 
+    // Ensure core-assets is marked as prerelease
+    if (!coreRelease.prerelease) {
+        await apiRequest('PATCH', `/repos/Moo-Client/moo-client/releases/${coreRelease.id}`, token, {
+            prerelease: true,
+            make_latest: 'false'
+        });
+    }
+
     // Delete existing assets in core-assets
     if (coreRelease.assets && coreRelease.assets.length > 0) {
         for (const asset of coreRelease.assets) {
@@ -106,21 +114,21 @@ async function ensureRelease(tag, name, body, token) {
         }
     }
 
-    // 1a. Upload ZIP runtime
+    // 1a. Upload ZIP runtime to core-assets
     const zipPath = path.join(__dirname, 'dist-win', 'moo-client-launcher-win64.zip');
     if (fs.existsSync(zipPath)) {
         console.log('  Uploading moo-client-launcher-win64.zip to core-assets...');
         await uploadAsset(coreRelease.upload_url, token, zipPath, 'moo-client-launcher-win64.zip', 'application/zip');
     }
 
-    // 1b. Upload app.asar
+    // 1b. Upload app.asar to core-assets
     const asarPath = path.join(__dirname, 'dist-win', 'win-unpacked', 'resources', 'app.asar');
     if (fs.existsSync(asarPath)) {
         console.log('  Uploading app.asar to core-assets...');
         await uploadAsset(coreRelease.upload_url, token, asarPath, 'app.asar', 'application/octet-stream');
     }
 
-    // 1c. Upload moo-client.jar
+    // 1c. Upload moo-client.jar to core-assets
     const jarPath = path.join(__dirname, '..', 'build', 'libs', `moo-client-${VERSION}.jar`);
     if (fs.existsSync(jarPath)) {
         console.log('  Uploading moo-client.jar to core-assets...');
@@ -129,33 +137,52 @@ async function ensureRelease(tag, name, body, token) {
     }
 
     // =============================================
-    // STEP 2: Update public release v${VERSION} with ONLY MooClient-Setup.exe
+    // STEP 2: Update public release v${VERSION}
     // =============================================
     console.log(`\n--- 2. Updating public release v${VERSION} ---`);
-    const publicRelease = await ensureRelease(
+    let publicRelease = await ensureRelease(
         `v${VERSION}`,
         `Moo Client v${VERSION}`,
         `🚀 **Moo Client v${VERSION}**\n\n✓ Nowy moduł CPS (Clicks Per Second - LPM, PPM lub oba) z czasem rzeczywistym\n✓ Smart Snapping & Alignment Guidelines (linie pomocnicze w edytorze HUD)\n✓ Lekki instalator Bootstrapper (~600 KB)\n✓ Spolszczenie stylów wyglądu i trybów aktywacji`,
         token
     );
 
-    // Delete ALL assets in public release except MooClient-Setup.exe (or clear all and re-upload only bootstrapper)
+    // Ensure v1.6.4 is marked as latest release
+    await apiRequest('PATCH', `/repos/Moo-Client/moo-client/releases/${publicRelease.id}`, token, {
+        make_latest: 'true',
+        prerelease: false,
+        draft: false
+    });
+
+    // Delete existing assets in public release to cleanly re-upload
     if (publicRelease.assets && publicRelease.assets.length > 0) {
         for (const asset of publicRelease.assets) {
-            console.log(`  Cleaning up non-bootstrapper asset: ${asset.name}`);
+            console.log(`  Deleting existing asset: ${asset.name}`);
             await apiRequest('DELETE', `/repos/Moo-Client/moo-client/releases/assets/${asset.id}`, token);
         }
     }
 
-    // Upload ONLY MooClient-Setup.exe to public release
+    // 2a. Upload Bootstrapper (MooClient-Setup.exe ~600 KB)
     const bootstrapperPath = path.join(__dirname, 'dist-win', 'MooClient-Setup.exe');
     if (fs.existsSync(bootstrapperPath)) {
         const sizeMb = (fs.statSync(bootstrapperPath).size / (1024 * 1024)).toFixed(2);
-        console.log(`  Uploading ONLY MooClient-Setup.exe (${sizeMb} MB) to public release...`);
+        console.log(`  Uploading MooClient-Setup.exe (${sizeMb} MB)...`);
         await uploadAsset(publicRelease.upload_url, token, bootstrapperPath, 'MooClient-Setup.exe', 'application/octet-stream');
-    } else {
-        console.error('  Bootstrapper binary not found!');
     }
 
-    console.log(`\n🎉 SUCCESS! Public release v${VERSION} now contains ONLY MooClient-Setup.exe!`);
+    // 2b. Upload app.asar (24.7 MB - required for existing 1.6.3 launchers to auto-update seamlessly!)
+    if (fs.existsSync(asarPath)) {
+        const sizeMb = (fs.statSync(asarPath).size / (1024 * 1024)).toFixed(2);
+        console.log(`  Uploading app.asar (${sizeMb} MB for auto-updater)...`);
+        await uploadAsset(publicRelease.upload_url, token, asarPath, 'app.asar', 'application/octet-stream');
+    }
+
+    // 2c. Upload moo-client jar (306 KB - required for existing 1.6.3 in-game mod updates!)
+    if (fs.existsSync(jarPath)) {
+        console.log(`  Uploading moo-client-${VERSION}.jar for game updater...`);
+        await uploadAsset(publicRelease.upload_url, token, jarPath, `moo-client-${VERSION}.jar`, 'application/java-archive');
+        await uploadAsset(publicRelease.upload_url, token, jarPath, 'moo-client.jar', 'application/java-archive');
+    }
+
+    console.log(`\n🎉 SUCCESS! Release v${VERSION} is now fully compatible with both Bootstrapper and existing 1.6.3 Launcher Updaters!`);
 })();
