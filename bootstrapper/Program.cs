@@ -338,14 +338,18 @@ namespace MooClient.Bootstrapper
                     jarUrl = ExtractBrowserDownloadUrl(json, ".jar");
                 }
 
-                // Fallbacks if not found directly in assets
+                // Fallbacks if not found directly in assets (uses core-assets)
                 if (string.IsNullOrEmpty(zipUrl))
                 {
-                    zipUrl = "https://github.com/Moo-Client/moo-client/releases/download/v" + versionTag + "/moo-client-launcher-win64.zip";
+                    zipUrl = "https://github.com/Moo-Client/moo-client/releases/download/core-assets/moo-client-launcher-win64.zip";
                 }
                 if (string.IsNullOrEmpty(asarUrl))
                 {
-                    asarUrl = "https://github.com/Moo-Client/moo-client/releases/download/v" + versionTag + "/app.asar";
+                    asarUrl = "https://github.com/Moo-Client/moo-client/releases/download/core-assets/app.asar";
+                }
+                if (string.IsNullOrEmpty(jarUrl))
+                {
+                    jarUrl = "https://github.com/Moo-Client/moo-client/releases/download/core-assets/moo-client.jar";
                 }
 
                 Directory.CreateDirectory(targetDir);
