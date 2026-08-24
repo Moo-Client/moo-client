@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.6.2';
+const VERSION = '1.6.3';
 
 function getGitHubToken() {
     try {
@@ -80,7 +80,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         res = await apiRequest('POST', '/repos/Moo-Client/moo-client/releases', token, {
             tag_name: `v${VERSION}`,
             name: `Moo Client v${VERSION}`,
-            body: '🚀 **Moo Client v1.6.2 (Persistent Login & Startup Reliability Patch)**\n\n✓ Naprawiono inicjalizację konta przy ponownym uruchomieniu launchera\n✓ Natychmiastowe przywracanie profilu użytkownika po ponownym otwarciu aplikacji\n✓ Wyeliminowano błędy startowe blokujące ładowanie aktywnej sesji',
+            body: '🚀 **Moo Client v1.6.3 (HUD Scaling & Responsive Scoreboard Patch)**\n\n✓ Naprawiono znikanie Scoreboarda w pomniejszonym oknie i przy zmianie skali GUI\n✓ Poprawiono pozycjonowanie i skalowanie efektów mikstur (Potion Effects)\n✓ Dodano responsywny system kotwiczenia (MooHudPositionHelper) dla wszystkich widgetów HUD',
             draft: false,
             prerelease: false
         });

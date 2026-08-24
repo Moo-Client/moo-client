@@ -6,6 +6,7 @@ import com.mooclient.module.modules.FpsModule;
 import com.mooclient.module.modules.FreelookModule;
 import com.mooclient.module.modules.PotionEffectsModule;
 import com.mooclient.module.modules.ToggleSprintModule;
+import com.mooclient.util.MooHudPositionHelper;
 import com.mooclient.util.MooLanguage;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -121,13 +122,13 @@ public class MooClientScreen extends Screen {
             int fps = this.client.getCurrentFps();
             String fpsText = FpsModule.getStyle() == FpsModule.FpsStyle.BRACKETS ? "[" + fps + " FPS]" : (FpsModule.isShowPrefix() ? "FPS: " + fps : fps + " FPS");
             int textWidth = this.textRenderer.getWidth(fpsText);
-            int boxW = (int) Math.round((textWidth + 4) * hudScale);
+            int boxW = (int) Math.round((textWidth + 6) * hudScale);
             int boxH = (int) Math.round(12 * hudScale);
             FpsModule.width = boxW;
             FpsModule.height = boxH;
 
-            int x = FpsModule.posX;
-            int y = FpsModule.posY;
+            int x = MooHudPositionHelper.calculateRenderX(FpsModule.posX, boxW, this.width, MooHudPositionHelper.HudAnchorX.LEFT, 6);
+            int y = MooHudPositionHelper.calculateRenderY(FpsModule.posY, boxH, this.height, MooHudPositionHelper.HudAnchorY.TOP, 6);
 
             boolean hovered = mouseX >= x - 2 && mouseX <= x - 2 + boxW && mouseY >= y - 2 && mouseY <= y - 2 + boxH;
             boolean isDragging = "FPS".equals(draggingWidget);
@@ -147,13 +148,13 @@ public class MooClientScreen extends Screen {
                 sprintText = "Sprinting (Toggled)";
             }
             int textWidth = this.textRenderer.getWidth(sprintText);
-            int boxW = (int) Math.round((textWidth + 4) * hudScale);
+            int boxW = (int) Math.round((textWidth + 6) * hudScale);
             int boxH = (int) Math.round(12 * hudScale);
             ToggleSprintModule.width = boxW;
             ToggleSprintModule.height = boxH;
 
-            int x = ToggleSprintModule.posX;
-            int y = ToggleSprintModule.posY;
+            int x = MooHudPositionHelper.calculateRenderX(ToggleSprintModule.posX, boxW, this.width, MooHudPositionHelper.HudAnchorX.LEFT, 6);
+            int y = MooHudPositionHelper.calculateRenderY(ToggleSprintModule.posY, boxH, this.height, MooHudPositionHelper.HudAnchorY.TOP, 20);
 
             boolean hovered = mouseX >= x - 2 && mouseX <= x - 2 + boxW && mouseY >= y - 2 && mouseY <= y - 2 + boxH;
             boolean isDragging = "SPRINT".equals(draggingWidget);
@@ -163,10 +164,11 @@ public class MooClientScreen extends Screen {
 
         // 3. Draggable Potion Effects Widget Preview
         if (PotionEffectsModule.isModuleEnabled()) {
-            int x = PotionEffectsModule.posX;
-            int y = PotionEffectsModule.posY;
-            int boxW = PotionEffectsModule.width;
-            int boxH = PotionEffectsModule.height;
+            int boxW = PotionEffectsModule.width > 0 ? PotionEffectsModule.width : (int) Math.round(110 * hudScale);
+            int boxH = PotionEffectsModule.height > 0 ? PotionEffectsModule.height : (int) Math.round(50 * hudScale);
+
+            int x = MooHudPositionHelper.calculateRenderX(PotionEffectsModule.posX, boxW, this.width, MooHudPositionHelper.HudAnchorX.LEFT, 6);
+            int y = MooHudPositionHelper.calculateRenderY(PotionEffectsModule.posY, boxH, this.height, MooHudPositionHelper.HudAnchorY.TOP, 50);
 
             boolean hovered = mouseX >= x - 2 && mouseX <= x - 2 + boxW && mouseY >= y - 2 && mouseY <= y - 2 + boxH;
             boolean isDragging = "POTIONS".equals(draggingWidget);
@@ -179,13 +181,13 @@ public class MooClientScreen extends Screen {
             int ping = com.mooclient.module.modules.PingModule.getCurrentPing();
             String pingText = com.mooclient.module.modules.PingModule.getStyle() == com.mooclient.module.modules.PingModule.PingStyle.BRACKETS ? "[" + ping + " ms]" : (com.mooclient.module.modules.PingModule.isShowPrefix() ? "Ping: " + ping + " ms" : ping + " ms");
             int textWidth = this.textRenderer.getWidth(pingText);
-            int boxW = (int) Math.round((textWidth + 4) * hudScale);
+            int boxW = (int) Math.round((textWidth + 6) * hudScale);
             int boxH = (int) Math.round(12 * hudScale);
             com.mooclient.module.modules.PingModule.width = boxW;
             com.mooclient.module.modules.PingModule.height = boxH;
 
-            int x = com.mooclient.module.modules.PingModule.posX;
-            int y = com.mooclient.module.modules.PingModule.posY;
+            int x = MooHudPositionHelper.calculateRenderX(com.mooclient.module.modules.PingModule.posX, boxW, this.width, MooHudPositionHelper.HudAnchorX.LEFT, 6);
+            int y = MooHudPositionHelper.calculateRenderY(com.mooclient.module.modules.PingModule.posY, boxH, this.height, MooHudPositionHelper.HudAnchorY.TOP, 34);
 
             boolean hovered = mouseX >= x - 2 && mouseX <= x - 2 + boxW && mouseY >= y - 2 && mouseY <= y - 2 + boxH;
             boolean isDragging = "PING".equals(draggingWidget);
@@ -243,17 +245,13 @@ public class MooClientScreen extends Screen {
                 totalHeight = 7 * lineHeight;
             }
 
-            if (com.mooclient.module.modules.ScoreboardModule.posX < 0 || com.mooclient.module.modules.ScoreboardModule.posY < 0) {
-                com.mooclient.module.modules.ScoreboardModule.posX = this.width - totalWidth - 10;
-                com.mooclient.module.modules.ScoreboardModule.posY = this.height / 2 - totalHeight / 2;
-            }
-
-            int x = com.mooclient.module.modules.ScoreboardModule.posX;
-            int y = com.mooclient.module.modules.ScoreboardModule.posY;
             int boxW = (int) Math.round((totalWidth + 4) * hudScale);
             int boxH = (int) Math.round((totalHeight + 3) * hudScale);
             com.mooclient.module.modules.ScoreboardModule.width = boxW;
             com.mooclient.module.modules.ScoreboardModule.height = boxH;
+
+            int x = MooHudPositionHelper.calculateRenderX(com.mooclient.module.modules.ScoreboardModule.posX, boxW, this.width, MooHudPositionHelper.HudAnchorX.RIGHT, 6);
+            int y = MooHudPositionHelper.calculateRenderY(com.mooclient.module.modules.ScoreboardModule.posY, boxH, this.height, MooHudPositionHelper.HudAnchorY.CENTER, 0);
 
             if (obj == null) {
                 renderScoreboardPreview(context, x, y, totalWidth, lineHeight);
@@ -1682,10 +1680,10 @@ public class MooClientScreen extends Screen {
             // 2. Hub View Clicks & Draggable HUD Handling
             if (currentView == View.HUB) {
                 if (FpsModule.isFpsEnabled()) {
-                    int x = FpsModule.posX;
-                    int y = FpsModule.posY;
                     int w = FpsModule.width;
                     int h = FpsModule.height;
+                    int x = MooHudPositionHelper.calculateRenderX(FpsModule.posX, w, this.width, MooHudPositionHelper.HudAnchorX.LEFT, 6);
+                    int y = MooHudPositionHelper.calculateRenderY(FpsModule.posY, h, this.height, MooHudPositionHelper.HudAnchorY.TOP, 6);
                     if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
                         draggingWidget = "FPS";
                         dragOffsetX = (int) mouseX - x;
@@ -1695,10 +1693,10 @@ public class MooClientScreen extends Screen {
                 }
 
                 if (ToggleSprintModule.isSprintEnabled()) {
-                    int x = ToggleSprintModule.posX;
-                    int y = ToggleSprintModule.posY;
                     int w = ToggleSprintModule.width;
                     int h = ToggleSprintModule.height;
+                    int x = MooHudPositionHelper.calculateRenderX(ToggleSprintModule.posX, w, this.width, MooHudPositionHelper.HudAnchorX.LEFT, 6);
+                    int y = MooHudPositionHelper.calculateRenderY(ToggleSprintModule.posY, h, this.height, MooHudPositionHelper.HudAnchorY.TOP, 20);
                     if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
                         draggingWidget = "SPRINT";
                         dragOffsetX = (int) mouseX - x;
@@ -1708,10 +1706,10 @@ public class MooClientScreen extends Screen {
                 }
 
                 if (PotionEffectsModule.isModuleEnabled()) {
-                    int x = PotionEffectsModule.posX;
-                    int y = PotionEffectsModule.posY;
                     int w = PotionEffectsModule.width;
                     int h = PotionEffectsModule.height;
+                    int x = MooHudPositionHelper.calculateRenderX(PotionEffectsModule.posX, w, this.width, MooHudPositionHelper.HudAnchorX.LEFT, 6);
+                    int y = MooHudPositionHelper.calculateRenderY(PotionEffectsModule.posY, h, this.height, MooHudPositionHelper.HudAnchorY.TOP, 50);
                     if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
                         draggingWidget = "POTIONS";
                         dragOffsetX = (int) mouseX - x;
@@ -1721,10 +1719,10 @@ public class MooClientScreen extends Screen {
                 }
 
                 if (com.mooclient.module.modules.PingModule.isPingEnabled()) {
-                    int x = com.mooclient.module.modules.PingModule.posX;
-                    int y = com.mooclient.module.modules.PingModule.posY;
                     int w = com.mooclient.module.modules.PingModule.width;
                     int h = com.mooclient.module.modules.PingModule.height;
+                    int x = MooHudPositionHelper.calculateRenderX(com.mooclient.module.modules.PingModule.posX, w, this.width, MooHudPositionHelper.HudAnchorX.LEFT, 6);
+                    int y = MooHudPositionHelper.calculateRenderY(com.mooclient.module.modules.PingModule.posY, h, this.height, MooHudPositionHelper.HudAnchorY.TOP, 34);
                     if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
                         draggingWidget = "PING";
                         dragOffsetX = (int) mouseX - x;
@@ -1734,10 +1732,10 @@ public class MooClientScreen extends Screen {
                 }
 
                 if (com.mooclient.module.modules.ScoreboardModule.isScoreboardEnabled()) {
-                    int x = com.mooclient.module.modules.ScoreboardModule.posX;
-                    int y = com.mooclient.module.modules.ScoreboardModule.posY;
                     int w = com.mooclient.module.modules.ScoreboardModule.width;
                     int h = com.mooclient.module.modules.ScoreboardModule.height;
+                    int x = MooHudPositionHelper.calculateRenderX(com.mooclient.module.modules.ScoreboardModule.posX, w, this.width, MooHudPositionHelper.HudAnchorX.RIGHT, 6);
+                    int y = MooHudPositionHelper.calculateRenderY(com.mooclient.module.modules.ScoreboardModule.posY, h, this.height, MooHudPositionHelper.HudAnchorY.CENTER, 0);
                     if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
                         draggingWidget = "SCOREBOARD";
                         dragOffsetX = (int) mouseX - x;
@@ -2613,52 +2611,27 @@ public class MooClientScreen extends Screen {
         if (currentView == View.HUB && draggingWidget != null) {
             int newX = (int) mouseX - dragOffsetX;
             int newY = (int) mouseY - dragOffsetY;
-
-            if (com.mooclient.util.MooClientSettings.isHudSnapping()) {
-                int snapDist = 12;
-                if (Math.abs(newX - 10) < snapDist) newX = 10;
-                if (Math.abs(newY - 10) < snapDist) newY = 10;
-            }
+            boolean snapping = com.mooclient.util.MooClientSettings.isHudSnapping();
 
             if ("FPS".equals(draggingWidget)) {
-                if (com.mooclient.util.MooClientSettings.isHudSnapping()) {
-                    if (Math.abs(newX - (this.width - FpsModule.width - 10)) < 12) newX = this.width - FpsModule.width - 10;
-                    if (Math.abs(newY - (this.height - FpsModule.height - 10)) < 12) newY = this.height - FpsModule.height - 10;
-                }
-                FpsModule.posX = Math.max(2, Math.min(this.width - FpsModule.width - 2, newX));
-                FpsModule.posY = Math.max(2, Math.min(this.height - FpsModule.height - 2, newY));
+                FpsModule.posX = MooHudPositionHelper.snapAndClampX(newX, FpsModule.width, this.width, snapping);
+                FpsModule.posY = MooHudPositionHelper.snapAndClampY(newY, FpsModule.height, this.height, snapping);
                 return true;
             } else if ("SPRINT".equals(draggingWidget)) {
-                if (com.mooclient.util.MooClientSettings.isHudSnapping()) {
-                    if (Math.abs(newX - (this.width - ToggleSprintModule.width - 10)) < 12) newX = this.width - ToggleSprintModule.width - 10;
-                    if (Math.abs(newY - (this.height - ToggleSprintModule.height - 10)) < 12) newY = this.height - ToggleSprintModule.height - 10;
-                }
-                ToggleSprintModule.posX = Math.max(2, Math.min(this.width - ToggleSprintModule.width - 2, newX));
-                ToggleSprintModule.posY = Math.max(2, Math.min(this.height - ToggleSprintModule.height - 2, newY));
+                ToggleSprintModule.posX = MooHudPositionHelper.snapAndClampX(newX, ToggleSprintModule.width, this.width, snapping);
+                ToggleSprintModule.posY = MooHudPositionHelper.snapAndClampY(newY, ToggleSprintModule.height, this.height, snapping);
                 return true;
             } else if ("POTIONS".equals(draggingWidget)) {
-                if (com.mooclient.util.MooClientSettings.isHudSnapping()) {
-                    if (Math.abs(newX - (this.width - PotionEffectsModule.width - 10)) < 12) newX = this.width - PotionEffectsModule.width - 10;
-                    if (Math.abs(newY - (this.height - PotionEffectsModule.height - 10)) < 12) newY = this.height - PotionEffectsModule.height - 10;
-                }
-                PotionEffectsModule.posX = Math.max(2, Math.min(this.width - PotionEffectsModule.width - 2, newX));
-                PotionEffectsModule.posY = Math.max(2, Math.min(this.height - PotionEffectsModule.height - 2, newY));
+                PotionEffectsModule.posX = MooHudPositionHelper.snapAndClampX(newX, PotionEffectsModule.width, this.width, snapping);
+                PotionEffectsModule.posY = MooHudPositionHelper.snapAndClampY(newY, PotionEffectsModule.height, this.height, snapping);
                 return true;
             } else if ("PING".equals(draggingWidget)) {
-                if (com.mooclient.util.MooClientSettings.isHudSnapping()) {
-                    if (Math.abs(newX - (this.width - com.mooclient.module.modules.PingModule.width - 10)) < 12) newX = this.width - com.mooclient.module.modules.PingModule.width - 10;
-                    if (Math.abs(newY - (this.height - com.mooclient.module.modules.PingModule.height - 10)) < 12) newY = this.height - com.mooclient.module.modules.PingModule.height - 10;
-                }
-                com.mooclient.module.modules.PingModule.posX = Math.max(2, Math.min(this.width - com.mooclient.module.modules.PingModule.width - 2, newX));
-                com.mooclient.module.modules.PingModule.posY = Math.max(2, Math.min(this.height - com.mooclient.module.modules.PingModule.height - 2, newY));
+                com.mooclient.module.modules.PingModule.posX = MooHudPositionHelper.snapAndClampX(newX, com.mooclient.module.modules.PingModule.width, this.width, snapping);
+                com.mooclient.module.modules.PingModule.posY = MooHudPositionHelper.snapAndClampY(newY, com.mooclient.module.modules.PingModule.height, this.height, snapping);
                 return true;
             } else if ("SCOREBOARD".equals(draggingWidget)) {
-                if (com.mooclient.util.MooClientSettings.isHudSnapping()) {
-                    if (Math.abs(newX - (this.width - com.mooclient.module.modules.ScoreboardModule.width - 10)) < 12) newX = this.width - com.mooclient.module.modules.ScoreboardModule.width - 10;
-                    if (Math.abs(newY - (this.height - com.mooclient.module.modules.ScoreboardModule.height - 10)) < 12) newY = this.height - com.mooclient.module.modules.ScoreboardModule.height - 10;
-                }
-                com.mooclient.module.modules.ScoreboardModule.posX = Math.max(2, Math.min(this.width - com.mooclient.module.modules.ScoreboardModule.width - 2, newX));
-                com.mooclient.module.modules.ScoreboardModule.posY = Math.max(2, Math.min(this.height - com.mooclient.module.modules.ScoreboardModule.height - 2, newY));
+                com.mooclient.module.modules.ScoreboardModule.posX = MooHudPositionHelper.snapAndClampX(newX, com.mooclient.module.modules.ScoreboardModule.width, this.width, snapping);
+                com.mooclient.module.modules.ScoreboardModule.posY = MooHudPositionHelper.snapAndClampY(newY, com.mooclient.module.modules.ScoreboardModule.height, this.height, snapping);
                 return true;
             }
         }

@@ -5,7 +5,7 @@ const exePath = path.join(__dirname, 'dist', 'win-unpacked', 'Moo Client.exe');
 const icoPath = path.join(__dirname, 'build', 'icon.ico');
 
 const pkg = require('./package.json');
-const ver = pkg.version || '1.6.2';
+const ver = pkg.version || '1.6.3';
 
 async function run() {
     // Step 1: Patch icon and version info

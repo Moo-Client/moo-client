@@ -4,6 +4,7 @@ import com.mooclient.module.modules.FpsModule;
 import com.mooclient.module.modules.PotionEffectsModule;
 import com.mooclient.module.modules.ScoreboardModule;
 import com.mooclient.module.modules.ToggleSprintModule;
+import com.mooclient.util.MooHudPositionHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
@@ -45,6 +46,8 @@ public class InGameHudMixin {
 
         float hudScale = com.mooclient.util.MooClientSettings.getHudScaleFactor();
         boolean customScale = (hudScale != 1.0f);
+        int scaledWidth = context.getScaledWindowWidth();
+        int scaledHeight = context.getScaledWindowHeight();
 
         // 1. FPS Module Rendering
         if (FpsModule.isFpsEnabled()) {
@@ -61,11 +64,13 @@ public class InGameHudMixin {
             }
 
             int textWidth = client.textRenderer.getWidth(fpsText);
-            FpsModule.width = (int) Math.round((textWidth + 6) * hudScale);
-            FpsModule.height = (int) Math.round(12 * hudScale);
+            int boxW = (int) Math.round((textWidth + 6) * hudScale);
+            int boxH = (int) Math.round(12 * hudScale);
+            FpsModule.width = boxW;
+            FpsModule.height = boxH;
 
-            int x = FpsModule.posX;
-            int y = FpsModule.posY;
+            int x = MooHudPositionHelper.calculateRenderX(FpsModule.posX, boxW, scaledWidth, MooHudPositionHelper.HudAnchorX.LEFT, 6);
+            int y = MooHudPositionHelper.calculateRenderY(FpsModule.posY, boxH, scaledHeight, MooHudPositionHelper.HudAnchorY.TOP, 6);
 
             if (customScale) {
                 context.getMatrices().push();
@@ -106,11 +111,13 @@ public class InGameHudMixin {
             }
 
             int textWidth = client.textRenderer.getWidth(sprintText);
-            ToggleSprintModule.width = (int) Math.round((textWidth + 6) * hudScale);
-            ToggleSprintModule.height = (int) Math.round(12 * hudScale);
+            int boxW = (int) Math.round((textWidth + 6) * hudScale);
+            int boxH = (int) Math.round(12 * hudScale);
+            ToggleSprintModule.width = boxW;
+            ToggleSprintModule.height = boxH;
 
-            int x = ToggleSprintModule.posX;
-            int y = ToggleSprintModule.posY;
+            int x = MooHudPositionHelper.calculateRenderX(ToggleSprintModule.posX, boxW, scaledWidth, MooHudPositionHelper.HudAnchorX.LEFT, 6);
+            int y = MooHudPositionHelper.calculateRenderY(ToggleSprintModule.posY, boxH, scaledHeight, MooHudPositionHelper.HudAnchorY.TOP, 20);
 
             if (customScale) {
                 context.getMatrices().push();
@@ -141,23 +148,53 @@ public class InGameHudMixin {
             boolean isMenu = client.currentScreen instanceof com.mooclient.gui.MooClientScreen;
 
             if (!effects.isEmpty() || isMenu) {
-                int startX = PotionEffectsModule.posX;
-                int curY = PotionEffectsModule.posY;
                 PotionEffectsModule.PotionStyle pStyle = PotionEffectsModule.getStyle();
                 boolean bg = PotionEffectsModule.isShowBackground();
                 boolean shadow = PotionEffectsModule.isTextShadow();
                 boolean showIcon = PotionEffectsModule.isShowIcon();
 
                 int maxW = 100;
-                int totalH = 0;
                 int rowH = (pStyle == PotionEffectsModule.PotionStyle.COMPACT) ? 14 : 22;
                 int rowGap = (pStyle == PotionEffectsModule.PotionStyle.COMPACT) ? 3 : 4;
+                int count = effects.isEmpty() ? 3 : effects.size();
+                int totalH = count * rowH + (count - 1) * rowGap;
+
+                // Calculate max width for accurate bounding box
+                if (effects.isEmpty() && isMenu) {
+                    maxW = 110;
+                } else {
+                    for (StatusEffectInstance effect : effects) {
+                        RegistryEntry<StatusEffect> effectEntry = effect.getEffectType();
+                        StatusEffect statusEffect = effectEntry.value();
+                        String name = statusEffect.getName().getString() + PotionEffectsModule.getAmplifierString(effect.getAmplifier());
+                        String duration = PotionEffectsModule.formatDuration(effect);
+                        int itemW;
+                        if (pStyle == PotionEffectsModule.PotionStyle.COMPACT) {
+                            String compactLine = name + " §7" + duration;
+                            itemW = (showIcon ? 18 : 0) + client.textRenderer.getWidth(compactLine) + 8;
+                        } else {
+                            int nameW = client.textRenderer.getWidth(name);
+                            int timeW = client.textRenderer.getWidth(duration);
+                            itemW = (showIcon ? 22 : 0) + Math.max(nameW, timeW) + (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT ? 12 : 6);
+                        }
+                        maxW = Math.max(maxW, itemW);
+                    }
+                }
+
+                int boxW = (int) Math.round((maxW + 4) * hudScale);
+                int boxH = (int) Math.round(Math.max(26, totalH) * hudScale);
+                PotionEffectsModule.width = boxW;
+                PotionEffectsModule.height = boxH;
+
+                int startX = MooHudPositionHelper.calculateRenderX(PotionEffectsModule.posX, boxW, scaledWidth, MooHudPositionHelper.HudAnchorX.LEFT, 6);
+                int startY = MooHudPositionHelper.calculateRenderY(PotionEffectsModule.posY, boxH, scaledHeight, MooHudPositionHelper.HudAnchorY.TOP, 50);
+                int curY = startY;
 
                 if (customScale) {
                     context.getMatrices().push();
-                    context.getMatrices().translate(startX, curY, 0);
+                    context.getMatrices().translate(startX, startY, 0);
                     context.getMatrices().scale(hudScale, hudScale, 1.0f);
-                    context.getMatrices().translate(-startX, -curY, 0);
+                    context.getMatrices().translate(-startX, -startY, 0);
                 }
 
                 if (effects.isEmpty() && isMenu) {
@@ -186,7 +223,6 @@ public class InGameHudMixin {
                             int timeW = client.textRenderer.getWidth(time);
                             itemW = (showIcon ? 22 : 0) + Math.max(nameW, timeW) + (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT ? 12 : 6);
                         }
-                        maxW = Math.max(maxW, itemW);
 
                         if (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT) {
                             context.fill(startX - 2, curY - 2, startX + itemW, curY + rowH, 0x77000000);
@@ -224,7 +260,6 @@ public class InGameHudMixin {
                         }
 
                         curY += rowH + rowGap;
-                        totalH += rowH + rowGap;
                     }
                 } else {
                     for (StatusEffectInstance effect : effects) {
@@ -243,7 +278,6 @@ public class InGameHudMixin {
                             int timeW = client.textRenderer.getWidth(duration);
                             itemW = (showIcon ? 22 : 0) + Math.max(nameW, timeW) + (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT ? 12 : 6);
                         }
-                        maxW = Math.max(maxW, itemW);
 
                         if (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT) {
                             context.fill(startX - 2, curY - 2, startX + itemW, curY + rowH, 0x77000000);
@@ -281,16 +315,12 @@ public class InGameHudMixin {
                         }
 
                         curY += rowH + rowGap;
-                        totalH += rowH + rowGap;
                     }
                 }
 
                 if (customScale) {
                     context.getMatrices().pop();
                 }
-
-                PotionEffectsModule.width = (int) Math.round((maxW + 4) * hudScale);
-                PotionEffectsModule.height = (int) Math.round(Math.max(26, totalH) * hudScale);
             }
         }
 
@@ -309,11 +339,13 @@ public class InGameHudMixin {
             }
 
             int textWidth = client.textRenderer.getWidth(pingText);
-            com.mooclient.module.modules.PingModule.width = (int) Math.round((textWidth + 6) * hudScale);
-            com.mooclient.module.modules.PingModule.height = (int) Math.round(12 * hudScale);
+            int boxW = (int) Math.round((textWidth + 6) * hudScale);
+            int boxH = (int) Math.round(12 * hudScale);
+            com.mooclient.module.modules.PingModule.width = boxW;
+            com.mooclient.module.modules.PingModule.height = boxH;
 
-            int x = com.mooclient.module.modules.PingModule.posX;
-            int y = com.mooclient.module.modules.PingModule.posY;
+            int x = MooHudPositionHelper.calculateRenderX(com.mooclient.module.modules.PingModule.posX, boxW, scaledWidth, MooHudPositionHelper.HudAnchorX.LEFT, 6);
+            int y = MooHudPositionHelper.calculateRenderY(com.mooclient.module.modules.PingModule.posY, boxH, scaledHeight, MooHudPositionHelper.HudAnchorY.TOP, 34);
 
             if (customScale) {
                 context.getMatrices().push();
@@ -406,22 +438,16 @@ public class InGameHudMixin {
         int scaledWidth = context.getScaledWindowWidth();
         int scaledHeight = context.getScaledWindowHeight();
 
-        int startX;
-        int startY;
-
-        if (ScoreboardModule.posX < 0 || ScoreboardModule.posY < 0) {
-            startX = scaledWidth - totalWidth - 6;
-            startY = scaledHeight / 2 - totalHeight / 2;
-        } else {
-            startX = ScoreboardModule.posX;
-            startY = ScoreboardModule.posY;
-        }
-
         float hudScale = com.mooclient.util.MooClientSettings.getHudScaleFactor();
         boolean customScale = (hudScale != 1.0f);
 
-        ScoreboardModule.width = (int) Math.round((totalWidth + 4) * hudScale);
-        ScoreboardModule.height = (int) Math.round((totalHeight + 3) * hudScale);
+        int boxW = (int) Math.round((totalWidth + 4) * hudScale);
+        int boxH = (int) Math.round((totalHeight + 3) * hudScale);
+        ScoreboardModule.width = boxW;
+        ScoreboardModule.height = boxH;
+
+        int startX = MooHudPositionHelper.calculateRenderX(ScoreboardModule.posX, boxW, scaledWidth, MooHudPositionHelper.HudAnchorX.RIGHT, 6);
+        int startY = MooHudPositionHelper.calculateRenderY(ScoreboardModule.posY, boxH, scaledHeight, MooHudPositionHelper.HudAnchorY.CENTER, 0);
 
         if (customScale) {
             context.getMatrices().push();

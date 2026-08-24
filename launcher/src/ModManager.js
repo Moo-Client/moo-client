@@ -58,12 +58,27 @@ class ModManager {
             const pkg = require('../package.json');
             const defaultVer = pkg.version || '1.6.2';
             const bundledPath = path.join(__dirname, '..', 'assets', 'moo-client.jar');
+            const devBuildPath = path.join(__dirname, '..', '..', 'build', 'libs', `moo-client-${defaultVer}.jar`);
 
             this.ensureDir(this.offlineDir);
 
-            if (fs.existsSync(bundledPath)) {
-                if (!fs.existsSync(this.coreModPath)) {
-                    fs.copyFileSync(bundledPath, this.coreModPath);
+            let sourceJar = null;
+            if (fs.existsSync(devBuildPath)) {
+                sourceJar = devBuildPath;
+            } else if (fs.existsSync(bundledPath)) {
+                sourceJar = bundledPath;
+            }
+
+            if (sourceJar) {
+                const srcStats = fs.statSync(sourceJar);
+                const needsCopy = !fs.existsSync(this.coreModPath) || 
+                    fs.statSync(this.coreModPath).size !== srcStats.size || 
+                    fs.statSync(this.coreModPath).mtimeMs < srcStats.mtimeMs;
+                if (needsCopy) {
+                    fs.copyFileSync(sourceJar, this.coreModPath);
+                    if (sourceJar !== bundledPath && fs.existsSync(path.dirname(bundledPath))) {
+                        try { fs.copyFileSync(sourceJar, bundledPath); } catch (e) {}
+                    }
                     fs.writeFileSync(this.localVersionPath, JSON.stringify({
                         version: defaultVer,
                         minecraft: '1.21.4',
