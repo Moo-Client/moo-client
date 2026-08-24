@@ -201,25 +201,29 @@ namespace MooClient.Bootstrapper
                 g.DrawString("MOO CLIENT", titleFont, titleBrush, titleX, 10);
                 SizeF titleSize = g.MeasureString("MOO CLIENT", titleFont);
 
-                // Dynamic badge "INSTALLER" with rounded pill background
-                int badgeX = (int)(titleX + titleSize.Width + 6);
-                int badgeY = 12;
+                // Dynamic badge "INSTALLER" with perfectly centered padding and border
+                int badgeX = (int)(titleX + titleSize.Width + 4);
                 using (Font badgeFont = new Font("Segoe UI", 7.5f, FontStyle.Bold))
                 {
                     SizeF badgeSize = g.MeasureString("INSTALLER", badgeFont);
-                    int badgeW = (int)badgeSize.Width + 10;
-                    int badgeH = 16;
+                    int padX = 7;
+                    int padY = 2;
+                    int badgeW = (int)Math.Ceiling(badgeSize.Width) + padX * 2;
+                    int badgeH = (int)Math.Ceiling(badgeSize.Height) + padY * 2;
+                    int badgeY = 11;
+                    Rectangle badgeRect = new Rectangle(badgeX, badgeY, badgeW, badgeH);
 
                     using (Brush bgBrush = new SolidBrush(Color.FromArgb(35, 34, 197, 94)))
-                    using (Pen borderPen = new Pen(Color.FromArgb(80, 74, 222, 128), 1f))
+                    using (Pen borderPen = new Pen(Color.FromArgb(90, 74, 222, 128), 1f))
                     {
-                        g.FillRectangle(bgBrush, badgeX, badgeY, badgeW, badgeH);
-                        g.DrawRectangle(borderPen, badgeX, badgeY, badgeW, badgeH);
+                        g.FillRectangle(bgBrush, badgeRect);
+                        g.DrawRectangle(borderPen, badgeRect);
                     }
 
+                    using (StringFormat sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
                     using (Brush badgeBrush = new SolidBrush(ColorAccentLight))
                     {
-                        g.DrawString("INSTALLER", badgeFont, badgeBrush, badgeX + 5, badgeY + 1);
+                        g.DrawString("INSTALLER", badgeFont, badgeBrush, badgeRect, sf);
                     }
                 }
             }
