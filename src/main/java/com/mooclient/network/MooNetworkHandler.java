@@ -2,7 +2,6 @@ package com.mooclient.network;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.mooclient.MooClient;
 import com.mooclient.util.MooUserManager;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.MinecraftClient;

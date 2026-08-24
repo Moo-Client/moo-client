@@ -48,7 +48,7 @@ public class InGameHudMixin {
             return;
         }
 
-        float hudScale = com.mooclient.util.MooClientSettings.getHudScaleFactor();
+        float hudScale = MooClientSettings.getHudScaleFactor();
         boolean customScale = (hudScale != 1.0f);
         int scaledWidth = context.getScaledWindowWidth();
         int scaledHeight = context.getScaledWindowHeight();
@@ -511,7 +511,7 @@ public class InGameHudMixin {
         int scaledWidth = context.getScaledWindowWidth();
         int scaledHeight = context.getScaledWindowHeight();
 
-        float hudScale = com.mooclient.util.MooClientSettings.getHudScaleFactor();
+        float hudScale = MooClientSettings.getHudScaleFactor();
         boolean customScale = (hudScale != 1.0f);
 
         int boxW = Math.round((totalWidth + 4) * hudScale);

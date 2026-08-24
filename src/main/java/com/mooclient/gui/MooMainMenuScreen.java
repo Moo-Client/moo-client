@@ -56,7 +56,6 @@ public class MooMainMenuScreen extends Screen {
 
     // Account Switcher State
     private boolean accountsPopupOpen = false;
-    private long refreshFeedbackTime = 0;
 
     public MooMainMenuScreen() {
         super(Text.literal("Moo Client Main Menu"));

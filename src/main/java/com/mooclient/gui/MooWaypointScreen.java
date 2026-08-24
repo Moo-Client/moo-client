@@ -521,7 +521,6 @@ public class MooWaypointScreen extends Screen {
             int leftY = panelY + headerH + 10;
 
             int rightW = panelW - leftW - 38;
-            int rightH = leftH;
             int rightX = leftX + leftW + 12;
             int rightY = leftY;
 
@@ -888,7 +887,7 @@ public class MooWaypointScreen extends Screen {
         int leftW = 320;
         int leftX = panelX + 14;
 
-        if (mouseX >= leftX && mouseX <= leftX + leftW) {
+        if (mouseX >= leftX && mouseX <= leftX + leftW && mouseY >= panelY && mouseY <= panelY + panelH) {
             scrollY -= verticalAmount * 18.0;
             return true;
         }

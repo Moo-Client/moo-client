@@ -8,7 +8,6 @@ import com.google.gson.JsonObject;
 import com.mooclient.mixin.MinecraftClientAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.session.Session;
-import net.minecraft.util.Util;
 
 import java.io.File;
 import java.io.FileReader;
@@ -55,7 +54,7 @@ public class MooAccountManager {
 
         public String getName() { return name; }
         public String getUuid() { return uuid; }
-        public String getType() { return "microsoft"; }
+        public String getType() { return type != null ? type : "microsoft"; }
         public String getAccessToken() { return accessToken; }
         public String getClientToken() { return clientToken; }
         public String getXuid() { return xuid; }

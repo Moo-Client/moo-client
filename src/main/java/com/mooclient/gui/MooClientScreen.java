@@ -711,6 +711,7 @@ public class MooClientScreen extends Screen {
             int thumbH = Math.max(22, (int) ((float) visibleAreaH / (visibleAreaH + maxScroll) * scrollTrackH));
             int thumbY = scrollTrackY + (int) ((scrollY / (float) maxScroll) * (scrollTrackH - thumbH));
             context.fill(scrollTrackX, scrollTrackY, scrollTrackX + 3, scrollTrackY + scrollTrackH, 0x33000000);
+            context.fill(scrollTrackX, thumbY, scrollTrackX + 3, thumbY + thumbH, 0x88FFFFFF);
         }
     }
 
@@ -1534,33 +1535,6 @@ public class MooClientScreen extends Screen {
         drawOptionRow(context, rowX, curY, rowW, rowH, MooLanguage.get("global_shadow_label"));
         drawOptionToggle(context, rowX + rowW - 44, curY + 8, mouseX, mouseY,
                 com.mooclient.util.MooClientSettings.isGlobalTextShadow());
-    }
-
-    private void renderScaleSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
-            int selectedOrdinal) {
-        String[] labels = new String[] { "85%", "100%", "115%" };
-        int[] widths = new int[] { 64, 66, 64 };
-        int gap = 4;
-        int curX = startX;
-        int h = 22;
-
-        for (int i = 0; i < labels.length; i++) {
-            int w = widths[i];
-            boolean selected = (i == selectedOrdinal);
-            boolean hover = mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h;
-
-            int bg = selected ? com.mooclient.util.MooClientSettings.getAccentColor()
-                    : (hover ? 0xCC252535 : 0x66141420);
-            int border = selected ? com.mooclient.util.MooClientSettings.getAccentHoverColor()
-                    : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
-            int textColor = selected ? 0xFF0A2514 : (hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
-
-            context.fill(curX, y, curX + w, y + h, bg);
-            drawBorder(context, curX, y, w, h, border);
-            drawCenteredText(context, labels[i], curX + w / 2, y + 7, textColor);
-
-            curX += w + gap;
-        }
     }
 
     private void renderGuiSettingsTab(DrawContext context, int panelX, int contentY, int panelW, int mouseX,

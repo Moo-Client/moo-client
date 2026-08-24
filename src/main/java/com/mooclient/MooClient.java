@@ -26,6 +26,10 @@ public class MooClient implements ClientModInitializer {
 
     private static MooClient instance;
 
+    public static MooClient getInstance() {
+        return instance;
+    }
+
     /** Keybinding: Right Shift opens the client menu */
     private static KeyBinding menuKeyBinding;
     private static boolean sprintKeyWasDown = false;
