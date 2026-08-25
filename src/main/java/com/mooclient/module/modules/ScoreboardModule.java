@@ -8,7 +8,7 @@ import com.mooclient.module.Module;
  */
 public class ScoreboardModule extends Module {
 
-    private static boolean enabled = false;
+    private static boolean enabled = true;
     private static boolean textShadow = true;
     private static boolean showBackground = true;
     private static boolean showScores = false; // false = hide numbers on right, true = show numbers
@@ -25,7 +25,7 @@ public class ScoreboardModule extends Module {
     public static int height = 80;
 
     public ScoreboardModule() {
-        super("Scoreboard", "Dostosuj i przesuwaj tablicę wyników (Scoreboard)", Category.HUD, false);
+        super("Scoreboard", "Dostosuj i przesuwaj tablicę wyników (Scoreboard)", Category.HUD, true);
     }
 
     @Override
