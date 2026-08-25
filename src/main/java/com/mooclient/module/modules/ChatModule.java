@@ -11,7 +11,7 @@ import net.minecraft.util.math.MathHelper;
  */
 public class ChatModule extends Module {
 
-    private static boolean enabled = true;
+    private static boolean enabled = false;
     private static boolean transparentBackground = false;
     private static boolean unlimitedChat = true;
     private static boolean smoothChat = true;
@@ -21,7 +21,7 @@ public class ChatModule extends Module {
     private static float animOffset = 0.0f;
 
     public ChatModule() {
-        super("Chat", "Ulepszenia czatu: przezroczystość, cień tekstu, nielimitowana historia, animacja", Category.RENDER, true);
+        super("Chat", "Ulepszenia czatu: przezroczystość, cień tekstu, nielimitowana historia, animacja", Category.RENDER, false);
     }
 
     @Override

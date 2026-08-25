@@ -34,7 +34,7 @@ public class NametagsModule extends Module {
         }
     }
 
-    private static boolean enabled = true;
+    private static boolean enabled = false;
     private static boolean showLogo = true;
     private static boolean showPing = true;
     private static boolean showSelfPing = false; // Default false as requested
@@ -43,7 +43,7 @@ public class NametagsModule extends Module {
     private static boolean textShadow = true;
 
     public NametagsModule() {
-        super("Nametags", "Wyświetla nicki, logo i kolorowy ping nad graczami", Category.RENDER, true);
+        super("Nametags", "Wyświetla nicki, logo i kolorowy ping nad graczami", Category.RENDER, false);
     }
 
     @Override

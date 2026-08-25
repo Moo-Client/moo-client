@@ -49,7 +49,7 @@ public class ZoomModule extends Module {
         }
     }
 
-    private static boolean enabled = true;
+    private static boolean enabled = false;
     private static boolean active = false;
     private static ZoomFactor factor = ZoomFactor.X4;
     private static ActivationMode mode = ActivationMode.HOLD;
@@ -65,7 +65,7 @@ public class ZoomModule extends Module {
     private static float lastZoom = 1.0f;
 
     public ZoomModule() {
-        super("Zoom", "Przybliżenie widoku z płynnym powiększeniem", Category.RENDER, true);
+        super("Zoom", "Przybliżenie widoku z płynnym powiększeniem", Category.RENDER, false);
     }
 
     @Override

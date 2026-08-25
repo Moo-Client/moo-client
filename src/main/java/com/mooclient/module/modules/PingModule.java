@@ -25,7 +25,7 @@ public class PingModule extends Module {
         }
     }
 
-    private static boolean enabled = true;
+    private static boolean enabled = false;
     private static PingStyle style = PingStyle.MOO_CLIENT;
     private static boolean showBackground = true;
     private static boolean textShadow = true;
@@ -43,7 +43,7 @@ public class PingModule extends Module {
     public static int height = 12;
 
     public PingModule() {
-        super("Ping", "Wyświetla aktualny ping na ekranie", Category.HUD, true);
+        super("Ping", "Wyświetla aktualny ping na ekranie", Category.HUD, false);
     }
 
     @Override

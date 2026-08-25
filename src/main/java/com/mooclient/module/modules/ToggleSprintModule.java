@@ -24,8 +24,8 @@ public class ToggleSprintModule extends Module {
         }
     }
 
-    private static boolean enabled = true;
-    private static boolean active = true; // In-game runtime toggle state
+    private static boolean enabled = false;
+    private static boolean active = false; // In-game runtime toggle state
     private static SprintStyle style = SprintStyle.MOO_CLIENT;
     private static boolean showBackground = true;
     private static boolean textShadow = true;
@@ -46,8 +46,8 @@ public class ToggleSprintModule extends Module {
     public static int height = 12;
 
     public ToggleSprintModule() {
-        super("Sprint", "Automatyczny ciągły bieg gracza", Category.HUD, true);
-        active = true;
+        super("Sprint", "Automatyczny ciągły bieg gracza", Category.HUD, false);
+        active = false;
     }
 
     @Override

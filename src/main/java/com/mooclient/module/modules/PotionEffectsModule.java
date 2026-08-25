@@ -25,7 +25,7 @@ public class PotionEffectsModule extends Module {
         }
     }
 
-    private static boolean enabled = true;
+    private static boolean enabled = false;
     // Draggable coordinates & anchor
     public static com.mooclient.util.MooHudPositionHelper.WidgetPosition position =
             new com.mooclient.util.MooHudPositionHelper.WidgetPosition(
@@ -43,7 +43,7 @@ public class PotionEffectsModule extends Module {
     private static boolean showIcon = true;
 
     public PotionEffectsModule() {
-        super("Potion Effects", "Wyświetla aktywne efekty mikstur i czas", Category.HUD, true);
+        super("Potion Effects", "Wyświetla aktywne efekty mikstur i czas", Category.HUD, false);
     }
 
     @Override

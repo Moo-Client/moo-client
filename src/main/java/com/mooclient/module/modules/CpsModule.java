@@ -42,7 +42,7 @@ public class CpsModule extends Module {
         }
     }
 
-    private static boolean enabled = true;
+    private static boolean enabled = false;
     private static CpsDisplayMode displayMode = CpsDisplayMode.BOTH;
     private static CpsStyle style = CpsStyle.MOO_CLIENT;
     private static boolean showBackground = true;
@@ -65,7 +65,7 @@ public class CpsModule extends Module {
     private static final List<Long> rightClicks = new ArrayList<>();
 
     public CpsModule() {
-        super("CPS", "Wyświetla liczbę kliknięć na sekundę (CPS) dla LPM i PPM", Category.HUD, true);
+        super("CPS", "Wyświetla liczbę kliknięć na sekundę (CPS) dla LPM i PPM", Category.HUD, false);
     }
 
     @Override

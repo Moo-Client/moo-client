@@ -47,7 +47,7 @@ public class MacroModule extends Module {
         public void setWasPressed(boolean wasPressed) { this.wasPressed = wasPressed; }
     }
 
-    private static boolean enabled = true;
+    private static boolean enabled = false;
     private static final List<MacroEntry> macros = new ArrayList<>();
 
     static {

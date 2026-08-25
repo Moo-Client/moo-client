@@ -26,7 +26,7 @@ public class FreelookModule extends Module {
         }
     }
 
-    private static boolean enabled = true;
+    private static boolean enabled = false;
     private static boolean active = false;
     private static ActivationMode mode = ActivationMode.HOLD;
     private static boolean invertPitch = false;
@@ -41,7 +41,7 @@ public class FreelookModule extends Module {
     private static Perspective previousPerspective = Perspective.FIRST_PERSON;
 
     public FreelookModule() {
-        super("Freelook", "Swobodny widok 360° kamery", Category.RENDER, true);
+        super("Freelook", "Swobodny widok 360° kamery", Category.RENDER, false);
     }
 
     @Override

@@ -23,7 +23,7 @@ public class FpsModule extends Module {
         }
     }
 
-    private static boolean enabled = true;
+    private static boolean enabled = false;
     private static FpsStyle style = FpsStyle.MOO_CLIENT;
     private static boolean showBackground = true;
     private static boolean textShadow = true;
@@ -41,7 +41,7 @@ public class FpsModule extends Module {
     public static int height = 12;
 
     public FpsModule() {
-        super("FPS", "Wyświetla licznik FPS na ekranie", Category.HUD, true);
+        super("FPS", "Wyświetla licznik FPS na ekranie", Category.HUD, false);
     }
 
     @Override

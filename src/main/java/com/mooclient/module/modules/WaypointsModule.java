@@ -8,7 +8,7 @@ import org.lwjgl.glfw.GLFW;
  */
 public class WaypointsModule extends Module {
 
-    private static boolean enabled = true;
+    private static boolean enabled = false;
     private static boolean showDistance = true;
     private static boolean showBeacons = true;
     private static boolean showBackground = true;
@@ -23,7 +23,7 @@ public class WaypointsModule extends Module {
     private static String keyName = "B";
 
     public WaypointsModule() {
-        super("Waypoints", "Punkty nawigacyjne w świecie i radar celów", Category.RENDER, true);
+        super("Waypoints", "Punkty nawigacyjne w świecie i radar celów", Category.RENDER, false);
     }
 
     @Override
