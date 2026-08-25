@@ -116,13 +116,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         console.warn(`Bootstrapper not found at ${bootstrapperPath}`);
     }
 
-    // 4. Upload NSIS Web Package (7z package downloaded by bootstrapper)
-    let nsis7zPath = path.join(__dirname, 'dist', 'nsis-web', `moo-client-launcher-${VERSION}-x64.nsis.7z`);
-    if (fs.existsSync(nsis7zPath)) {
-        await uploadAsset(release.upload_url, token, nsis7zPath, `moo-client-launcher-${VERSION}-x64.nsis.7z`, 'application/octet-stream');
-    }
-
-    // 5. Upload Standalone Installer EXE (if exists)
+    // 4. Upload Standalone Installer EXE (if exists)
     let exePath = path.join(__dirname, 'dist', `Moo Client Setup ${VERSION}.exe`);
     if (!fs.existsSync(exePath)) {
         exePath = path.join(__dirname, 'build-out', `Moo Client Setup ${VERSION}.exe`);
