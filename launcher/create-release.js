@@ -83,13 +83,45 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         }
     }
 
-    // Upload jar (Main Fabric Mod - 300KB)
+    // 1. Upload Fabric Mod JAR (314 KB)
     const jarPath = path.join(__dirname, '..', 'build', 'libs', `moo-client-${VERSION}.jar`);
     if (fs.existsSync(jarPath)) {
-        console.log(`Uploading moo-client-${VERSION}.jar...`);
         await uploadAsset(release.upload_url, token, jarPath, `moo-client-${VERSION}.jar`, 'application/java-archive');
     } else {
         console.warn(`Jar not found at ${jarPath}`);
+    }
+
+    // 2. Upload ASAR (25 MB)
+    let asarPath = path.join(__dirname, 'dist', 'win-unpacked', 'resources', 'app.asar');
+    if (!fs.existsSync(asarPath)) {
+        asarPath = path.join(__dirname, 'build-out', 'win-unpacked', 'resources', 'app.asar');
+    }
+    if (fs.existsSync(asarPath)) {
+        await uploadAsset(release.upload_url, token, asarPath, 'app.asar', 'application/octet-stream');
+    } else {
+        console.warn(`app.asar not found at ${asarPath}`);
+    }
+
+    // 3. Upload Bootstrapper (MooClient-Setup.exe - 615 KB)
+    let bootstrapperPath = path.join(__dirname, 'dist-win', 'MooClient-Setup.exe');
+    if (!fs.existsSync(bootstrapperPath)) {
+        bootstrapperPath = path.join(__dirname, 'build-out', 'MooClient-Setup.exe');
+    }
+    if (fs.existsSync(bootstrapperPath)) {
+        await uploadAsset(release.upload_url, token, bootstrapperPath, 'MooClient-Setup.exe', 'application/octet-stream');
+    } else {
+        console.warn(`Bootstrapper not found at ${bootstrapperPath}`);
+    }
+
+    // 4. Upload Standalone Installer EXE (103 MB)
+    let exePath = path.join(__dirname, 'dist', `Moo Client Setup ${VERSION}.exe`);
+    if (!fs.existsSync(exePath)) {
+        exePath = path.join(__dirname, 'build-out', `Moo Client Setup ${VERSION}.exe`);
+    }
+    if (fs.existsSync(exePath)) {
+        await uploadAsset(release.upload_url, token, exePath, `Moo.Client.Setup.${VERSION}.exe`, 'application/octet-stream');
+    } else {
+        console.warn(`Installer exe not found at ${exePath}`);
     }
 
     console.log(`ALL v${VERSION} ASSETS UPLOADED AND REPLACED SUCCESSFULLY!`);
