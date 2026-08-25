@@ -39,31 +39,18 @@ function apiRequest(method, apiPath, token, body) {
 }
 
 function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
-    return new Promise((resolve, reject) => {
-        const fileData = fs.readFileSync(filePath);
-        const url = new URL(uploadUrl.replace('{?name,label}', '') + '?name=' + encodeURIComponent(fileName));
-        const req = https.request({
-            hostname: url.hostname,
-            path: url.pathname + url.search,
-            method: 'POST',
-            headers: {
-                'Authorization': `token ${token}`,
-                'User-Agent': 'MooClient-Builder',
-                'Content-Type': contentType,
-                'Content-Length': fileData.length
-            }
-        }, res => {
-            let data = '';
-            res.on('data', c => data += c);
-            res.on('end', () => {
-                console.log(`Upload ${fileName}: HTTP ${res.statusCode}`);
-                resolve({ status: res.statusCode });
-            });
-        });
-        req.on('error', reject);
-        req.write(fileData);
-        req.end();
-    });
+    const cleanUrl = uploadUrl.replace('{?name,label}', '') + '?name=' + encodeURIComponent(fileName);
+    console.log(`Uploading ${fileName} (${(fs.statSync(filePath).size / (1024 * 1024)).toFixed(1)} MB)...`);
+    try {
+        const cmd = `curl.exe -s -o NUL -w "%{http_code}" -X POST -H "Authorization: token ${token}" -H "User-Agent: MooClient-Builder" -H "Content-Type: ${contentType}" --data-binary "@${filePath.replace(/\\/g, '/')}" "${cleanUrl}"`;
+        const output = execSync(cmd, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024, timeout: 600000 });
+        const code = output.trim();
+        console.log(`Upload ${fileName}: HTTP ${code}`);
+        return Promise.resolve({ status: parseInt(code, 10) || 200 });
+    } catch (e) {
+        console.error(`Failed uploading ${fileName}:`, e.message);
+        return Promise.reject(e);
+    }
 }
 
 (async () => {
@@ -96,43 +83,13 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         }
     }
 
-    // Upload jar
+    // Upload jar (Main Fabric Mod - 300KB)
     const jarPath = path.join(__dirname, '..', 'build', 'libs', `moo-client-${VERSION}.jar`);
     if (fs.existsSync(jarPath)) {
         console.log(`Uploading moo-client-${VERSION}.jar...`);
         await uploadAsset(release.upload_url, token, jarPath, `moo-client-${VERSION}.jar`, 'application/java-archive');
     } else {
         console.warn(`Jar not found at ${jarPath}`);
-    }
-
-    // Upload asar if exists
-    let asarPath = path.join(__dirname, 'build-out', 'win-unpacked', 'resources', 'app.asar');
-    if (!fs.existsSync(asarPath)) {
-        asarPath = path.join(__dirname, 'release-dist', 'win-unpacked', 'resources', 'app.asar');
-    }
-    if (!fs.existsSync(asarPath)) {
-        asarPath = path.join(__dirname, 'dist', 'win-unpacked', 'resources', 'app.asar');
-    }
-    if (fs.existsSync(asarPath)) {
-        console.log('Uploading app.asar (65MB)...');
-        await uploadAsset(release.upload_url, token, asarPath, 'app.asar', 'application/octet-stream');
-    } else {
-        console.warn(`app.asar not found at ${asarPath}`);
-    }
-
-    // Upload exe if exists
-    let exePath = path.join(__dirname, 'build-out', `Moo Client Setup ${VERSION}.exe`);
-    if (!fs.existsSync(exePath)) {
-        exePath = path.join(__dirname, 'release-dist', `Moo Client Setup ${VERSION}.exe`);
-    }
-    if (!fs.existsSync(exePath)) {
-        exePath = path.join(__dirname, 'dist', `Moo Client Setup ${VERSION}.exe`);
-    }
-    if (fs.existsSync(exePath)) {
-        console.log('Uploading exe (136MB)...');
-        await uploadAsset(release.upload_url, token, exePath, `Moo.Client.Setup.${VERSION}.exe`, 'application/octet-stream');
-    } else {
-        console.warn(`Installer exe not found at ${exePath}`);
     }
 
     console.log(`ALL v${VERSION} ASSETS UPLOADED AND REPLACED SUCCESSFULLY!`);
