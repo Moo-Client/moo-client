@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.6.4';
+const VERSION = '1.6.5';
 
 function getGitHubToken() {
     try {
@@ -80,7 +80,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         res = await apiRequest('POST', '/repos/Moo-Client/moo-client/releases', token, {
             tag_name: `v${VERSION}`,
             name: `Moo Client v${VERSION}`,
-            body: '🚀 **Moo Client v1.6.4 (CPS Module & Smart Snapping)**\n\n✓ Dodano nowy moduł CPS (Clicks Per Second - LPM, PPM lub oba) z czasem rzeczywistym\n✓ Wdrożono Smart Snapping & Alignment Guidelines (inteligentne linie pomocnicze w edytorze HUD)\n✓ Naprawiono responsywne pozycjonowanie modułów przy zmianie rozmiaru okna gry\n✓ Spolszczono style wyglądu (Prosty, Nawiasy, Kompaktowy) i tryby aktywacji',
+            body: '🚀 **Moo Client v1.6.5**\n\n✓ Wyciszenie naliczania kliknięć CPS w otwartych menu i GUI\n✓ Ulepszone magnetyczne dociąganie widgetów HUD (krawędzie, osie, kaskada z równymi odstępami)\n✓ Opcja ukrywania nazwy "CPS" (wyświetlanie samej liczby)\n✓ Domyślnie wyłączone moduły przy pierwszym uruchomieniu gry (z zachowaniem aktywnego Scoreboardu)\n✓ Zaktualizowano wersję Fabric mod do 1.6.5',
             draft: false,
             prerelease: false
         });
