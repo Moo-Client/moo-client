@@ -181,11 +181,11 @@ public class CpsModule extends Module {
         }
 
         if (style == CpsStyle.BRACKETS) {
-            return "[ " + countText + " CPS ]";
+            return showPrefix ? "[ " + countText + " CPS ]" : "[ " + countText + " ]";
         } else if (showPrefix) {
             return "CPS: " + countText;
         } else {
-            return countText + " CPS";
+            return countText;
         }
     }
 }

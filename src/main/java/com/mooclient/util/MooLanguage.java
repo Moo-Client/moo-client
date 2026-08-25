@@ -44,7 +44,7 @@ public class MooLanguage {
                 case "cps_buttons_label" -> "Wyświetlane przyciski";
                 case "fps_prefix_label" -> "Pokazuj przedrostek 'FPS:'";
                 case "ping_prefix_label" -> "Pokazuj przedrostek 'Ping:'";
-                case "cps_prefix_label" -> "Pokazuj przedrostek 'CPS:'";
+                case "cps_prefix_label" -> "Pokazuj nazwę 'CPS'";
                 case "scoreboard_desc" -> "Dostosuj pozycję, tło, cienie i cyfry tablicy wyników";
                 case "scoreboard_opt_title" -> "SCOREBOARD";
                 case "scoreboard_opt_subtitle" ->
@@ -158,7 +158,7 @@ public class MooLanguage {
                 case "cps_buttons_label" -> "Displayed Buttons";
                 case "fps_prefix_label" -> "Show 'FPS:' Prefix";
                 case "ping_prefix_label" -> "Show 'Ping:' Prefix";
-                case "cps_prefix_label" -> "Show 'CPS:' Prefix";
+                case "cps_prefix_label" -> "Show 'CPS' Name";
                 case "scoreboard_desc" -> "Customize scoreboard position, background, shadows and scores";
                 case "scoreboard_opt_title" -> "SCOREBOARD";
                 case "scoreboard_opt_subtitle" -> "Reposition scoreboard, toggle text shadow, background and scores.";

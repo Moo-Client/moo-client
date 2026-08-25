@@ -10,6 +10,7 @@ import com.mooclient.module.modules.PotionEffectsModule;
 import com.mooclient.module.modules.ScoreboardModule;
 import com.mooclient.module.modules.ToggleSprintModule;
 import com.mooclient.util.MooClientSettings;
+import com.mooclient.util.MooConfig;
 import com.mooclient.util.MooHudPositionHelper;
 import com.mooclient.util.MooHudPositionHelper.GuideLine;
 import com.mooclient.util.MooHudPositionHelper.WidgetRect;
@@ -211,6 +212,10 @@ public class MooClientScreen extends Screen {
         if (CpsModule.isCpsEnabled()) {
             int leftCps = CpsModule.getLeftCps();
             int rightCps = CpsModule.getRightCps();
+            if (leftCps == 0 && rightCps == 0) {
+                leftCps = 12;
+                rightCps = 14;
+            }
             String cpsText = CpsModule.getFormattedText(leftCps, rightCps);
             int textWidth = this.textRenderer.getWidth(cpsText);
             int boxW = Math.round((textWidth + 6) * hudScale);
@@ -3101,6 +3106,9 @@ public class MooClientScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (draggingWidget != null) {
+            MooConfig.save();
+        }
         draggingWidget = null;
         draggingSlider = -1;
         if (activeGuideLines != null) {

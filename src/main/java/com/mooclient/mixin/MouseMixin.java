@@ -51,7 +51,7 @@ public class MouseMixin {
 
     @Inject(method = "onMouseButton", at = @At("HEAD"))
     private void mooClient$onMouseButton(long window, int button, int action, int mods, CallbackInfo ci) {
-        if (action == org.lwjgl.glfw.GLFW.GLFW_PRESS) {
+        if (action == org.lwjgl.glfw.GLFW.GLFW_PRESS && this.client.currentScreen == null && this.client.player != null) {
             if (button == org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 com.mooclient.module.modules.CpsModule.registerLeftClick();
             } else if (button == org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_RIGHT) {

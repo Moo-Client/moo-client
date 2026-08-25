@@ -145,22 +145,25 @@ public class MooHudPositionHelper {
         List<GuideLine> lines = new ArrayList<>();
 
         if (snapping) {
-            int snapDist = 7;
-            int guideColor = (accentColor & 0x00FFFFFF) != 0 ? (0xDD000000 | (accentColor & 0x00FFFFFF)) : 0xDD55FF55;
-            int centerGuideColor = 0xDD55FFFF;
-            int edgeGuideColor = 0x88FFFFFF;
+            int snapDist = 10;
+            int guideColor = (accentColor & 0x00FFFFFF) != 0 ? (0xFF000000 | (accentColor & 0x00FFFFFF)) : 0xFF55FF55;
+            int centerGuideColor = 0xFF38BDF8;
+            int edgeGuideColor = 0xAAFFFFFF;
 
             // --- Horizontal Snapping ---
             int bestX = x;
             int bestXDiff = snapDist + 1;
             GuideLine bestXLine = null;
 
-            // 1. Screen Left Margin (10px)
-            int leftDiff = Math.abs(x - 10);
-            if (leftDiff <= snapDist && leftDiff < bestXDiff) {
-                bestXDiff = leftDiff;
-                bestX = 10;
-                bestXLine = new GuideLine(10, 0, 10, screenHeight, edgeGuideColor);
+            // 1. Screen Left Margins (6px default, 10px standard)
+            int[] leftMargins = new int[] { 6, 10 };
+            for (int margin : leftMargins) {
+                int leftDiff = Math.abs(x - margin);
+                if (leftDiff <= snapDist && leftDiff < bestXDiff) {
+                    bestXDiff = leftDiff;
+                    bestX = margin;
+                    bestXLine = new GuideLine(margin, 0, margin, screenHeight, edgeGuideColor);
+                }
             }
 
             // 2. Screen Horizontal Center
@@ -172,25 +175,29 @@ public class MooHudPositionHelper {
                 bestXLine = new GuideLine(screenWidth / 2, 0, screenWidth / 2, screenHeight, centerGuideColor);
             }
 
-            // 3. Screen Right Margin (10px)
-            int screenRightX = screenWidth - widgetWidth - 10;
-            int rightDiff = Math.abs(x - screenRightX);
-            if (rightDiff <= snapDist && rightDiff < bestXDiff) {
-                bestXDiff = rightDiff;
-                bestX = screenRightX;
-                bestXLine = new GuideLine(screenWidth - 10, 0, screenWidth - 10, screenHeight, edgeGuideColor);
+            // 3. Screen Right Margins (6px default, 10px standard)
+            int[] rightMargins = new int[] { 6, 10 };
+            for (int margin : rightMargins) {
+                int screenRightX = screenWidth - widgetWidth - margin;
+                int rightDiff = Math.abs(x - screenRightX);
+                if (rightDiff <= snapDist && rightDiff < bestXDiff) {
+                    bestXDiff = rightDiff;
+                    bestX = screenRightX;
+                    bestXLine = new GuideLine(screenWidth - margin, 0, screenWidth - margin, screenHeight, edgeGuideColor);
+                }
             }
 
-            // 4. Snap to Other Active Widgets (Left, Right, Center, Side-by-Side)
+            // 4. Snap to Other Active Widgets
             if (others != null) {
                 for (WidgetRect o : others) {
+                    int minY = Math.min(y, o.y) - 8;
+                    int maxY = Math.max(y + widgetHeight, o.y + o.height) + 8;
+
                     // Left to Left
                     int lDiff = Math.abs(x - o.x);
                     if (lDiff <= snapDist && lDiff < bestXDiff) {
                         bestXDiff = lDiff;
                         bestX = o.x;
-                        int minY = Math.min(y, o.y) - 4;
-                        int maxY = Math.max(y + widgetHeight, o.y + o.height) + 4;
                         bestXLine = new GuideLine(o.x, minY, o.x, maxY, guideColor);
                     }
 
@@ -200,8 +207,6 @@ public class MooHudPositionHelper {
                     if (rDiff <= snapDist && rDiff < bestXDiff) {
                         bestXDiff = rDiff;
                         bestX = rTarget;
-                        int minY = Math.min(y, o.y) - 4;
-                        int maxY = Math.max(y + widgetHeight, o.y + o.height) + 4;
                         bestXLine = new GuideLine(o.x + o.width, minY, o.x + o.width, maxY, guideColor);
                     }
 
@@ -212,31 +217,28 @@ public class MooHudPositionHelper {
                         bestXDiff = cDiff;
                         bestX = cTarget;
                         int cX = o.x + o.width / 2;
-                        int minY = Math.min(y, o.y) - 4;
-                        int maxY = Math.max(y + widgetHeight, o.y + o.height) + 4;
                         bestXLine = new GuideLine(cX, minY, cX, maxY, guideColor);
                     }
 
-                    // Side by side: Right of other (with 4px gap)
-                    int sideRightTarget = o.x + o.width + 4;
-                    int srDiff = Math.abs(x - sideRightTarget);
-                    if (srDiff <= snapDist && srDiff < bestXDiff) {
-                        bestXDiff = srDiff;
-                        bestX = sideRightTarget;
-                        int minY = Math.min(y, o.y) - 2;
-                        int maxY = Math.max(y + widgetHeight, o.y + o.height) + 2;
-                        bestXLine = new GuideLine(o.x + o.width + 2, minY, o.x + o.width + 2, maxY, guideColor);
-                    }
+                    // Side by side: Right of other widget (gaps: 0px, 2px, 4px, 6px)
+                    int[] sideGaps = new int[] { 0, 2, 4, 6 };
+                    for (int gap : sideGaps) {
+                        int sideRightTarget = o.x + o.width + gap;
+                        int srDiff = Math.abs(x - sideRightTarget);
+                        if (srDiff <= snapDist && srDiff < bestXDiff) {
+                            bestXDiff = srDiff;
+                            bestX = sideRightTarget;
+                            bestXLine = new GuideLine(o.x + o.width + gap / 2, minY, o.x + o.width + gap / 2, maxY, guideColor);
+                        }
 
-                    // Side by side: Left of other (with 4px gap)
-                    int sideLeftTarget = o.x - widgetWidth - 4;
-                    int slDiff = Math.abs(x - sideLeftTarget);
-                    if (slDiff <= snapDist && slDiff < bestXDiff) {
-                        bestXDiff = slDiff;
-                        bestX = sideLeftTarget;
-                        int minY = Math.min(y, o.y) - 2;
-                        int maxY = Math.max(y + widgetHeight, o.y + o.height) + 2;
-                        bestXLine = new GuideLine(o.x - 2, minY, o.x - 2, maxY, guideColor);
+                        // Side by side: Left of other widget (gaps: 0px, 2px, 4px, 6px)
+                        int sideLeftTarget = o.x - widgetWidth - gap;
+                        int slDiff = Math.abs(x - sideLeftTarget);
+                        if (slDiff <= snapDist && slDiff < bestXDiff) {
+                            bestXDiff = slDiff;
+                            bestX = sideLeftTarget;
+                            bestXLine = new GuideLine(o.x - gap / 2, minY, o.x - gap / 2, maxY, guideColor);
+                        }
                     }
                 }
             }
@@ -251,12 +253,15 @@ public class MooHudPositionHelper {
             int bestYDiff = snapDist + 1;
             GuideLine bestYLine = null;
 
-            // 1. Screen Top Margin (10px)
-            int topDiff = Math.abs(y - 10);
-            if (topDiff <= snapDist && topDiff < bestYDiff) {
-                bestYDiff = topDiff;
-                bestY = 10;
-                bestYLine = new GuideLine(0, 10, screenWidth, 10, edgeGuideColor);
+            // 1. Screen Top Margins (6px default, 10px standard)
+            int[] topMargins = new int[] { 6, 10 };
+            for (int margin : topMargins) {
+                int topDiff = Math.abs(y - margin);
+                if (topDiff <= snapDist && topDiff < bestYDiff) {
+                    bestYDiff = topDiff;
+                    bestY = margin;
+                    bestYLine = new GuideLine(0, margin, screenWidth, margin, edgeGuideColor);
+                }
             }
 
             // 2. Screen Vertical Center
@@ -268,25 +273,29 @@ public class MooHudPositionHelper {
                 bestYLine = new GuideLine(0, screenHeight / 2, screenWidth, screenHeight / 2, centerGuideColor);
             }
 
-            // 3. Screen Bottom Margin (10px)
-            int screenBottomY = screenHeight - widgetHeight - 10;
-            int bottomDiff = Math.abs(y - screenBottomY);
-            if (bottomDiff <= snapDist && bottomDiff < bestYDiff) {
-                bestYDiff = bottomDiff;
-                bestY = screenBottomY;
-                bestYLine = new GuideLine(0, screenHeight - 10, screenWidth, screenHeight - 10, edgeGuideColor);
+            // 3. Screen Bottom Margins (6px default, 10px standard)
+            int[] bottomMargins = new int[] { 6, 10 };
+            for (int margin : bottomMargins) {
+                int screenBottomY = screenHeight - widgetHeight - margin;
+                int bottomDiff = Math.abs(y - screenBottomY);
+                if (bottomDiff <= snapDist && bottomDiff < bestYDiff) {
+                    bestYDiff = bottomDiff;
+                    bestY = screenBottomY;
+                    bestYLine = new GuideLine(0, screenHeight - margin, screenWidth, screenHeight - margin, edgeGuideColor);
+                }
             }
 
             // 4. Snap to Other Active Widgets (Top, Bottom, Center, Stacked Under/Above)
             if (others != null) {
                 for (WidgetRect o : others) {
+                    int minX = Math.min(x, o.x) - 8;
+                    int maxX = Math.max(x + widgetWidth, o.x + o.width) + 8;
+
                     // Top to Top
                     int tDiff = Math.abs(y - o.y);
                     if (tDiff <= snapDist && tDiff < bestYDiff) {
                         bestYDiff = tDiff;
                         bestY = o.y;
-                        int minX = Math.min(x, o.x) - 4;
-                        int maxX = Math.max(x + widgetWidth, o.x + o.width) + 4;
                         bestYLine = new GuideLine(minX, o.y, maxX, o.y, guideColor);
                     }
 
@@ -296,8 +305,6 @@ public class MooHudPositionHelper {
                     if (bDiff <= snapDist && bDiff < bestYDiff) {
                         bestYDiff = bDiff;
                         bestY = bTarget;
-                        int minX = Math.min(x, o.x) - 4;
-                        int maxX = Math.max(x + widgetWidth, o.x + o.width) + 4;
                         bestYLine = new GuideLine(minX, o.y + o.height, maxX, o.y + o.height, guideColor);
                     }
 
@@ -308,31 +315,28 @@ public class MooHudPositionHelper {
                         bestYDiff = cDiff;
                         bestY = cTarget;
                         int cY = o.y + o.height / 2;
-                        int minX = Math.min(x, o.x) - 4;
-                        int maxX = Math.max(x + widgetWidth, o.x + o.width) + 4;
                         bestYLine = new GuideLine(minX, cY, maxX, cY, guideColor);
                     }
 
-                    // Stacked: directly below other widget (with 4px gap)
-                    int stackBelowTarget = o.y + o.height + 4;
-                    int sbDiff = Math.abs(y - stackBelowTarget);
-                    if (sbDiff <= snapDist && sbDiff < bestYDiff) {
-                        bestYDiff = sbDiff;
-                        bestY = stackBelowTarget;
-                        int minX = Math.min(x, o.x) - 2;
-                        int maxX = Math.max(x + widgetWidth, o.x + o.width) + 2;
-                        bestYLine = new GuideLine(minX, o.y + o.height + 2, maxX, o.y + o.height + 2, guideColor);
-                    }
+                    // Stacked: directly below other widget (gaps: 0px, 2px, 4px, 6px)
+                    int[] stackGaps = new int[] { 0, 2, 4, 6 };
+                    for (int gap : stackGaps) {
+                        int stackBelowTarget = o.y + o.height + gap;
+                        int sbDiff = Math.abs(y - stackBelowTarget);
+                        if (sbDiff <= snapDist && sbDiff < bestYDiff) {
+                            bestYDiff = sbDiff;
+                            bestY = stackBelowTarget;
+                            bestYLine = new GuideLine(minX, o.y + o.height + gap / 2, maxX, o.y + o.height + gap / 2, guideColor);
+                        }
 
-                    // Stacked: directly above other widget (with 4px gap)
-                    int stackAboveTarget = o.y - widgetHeight - 4;
-                    int saDiff = Math.abs(y - stackAboveTarget);
-                    if (saDiff <= snapDist && saDiff < bestYDiff) {
-                        bestYDiff = saDiff;
-                        bestY = stackAboveTarget;
-                        int minX = Math.min(x, o.x) - 2;
-                        int maxX = Math.max(x + widgetWidth, o.x + o.width) + 2;
-                        bestYLine = new GuideLine(minX, o.y - 2, maxX, o.y - 2, guideColor);
+                        // Stacked: directly above other widget (gaps: 0px, 2px, 4px, 6px)
+                        int stackAboveTarget = o.y - widgetHeight - gap;
+                        int saDiff = Math.abs(y - stackAboveTarget);
+                        if (saDiff <= snapDist && saDiff < bestYDiff) {
+                            bestYDiff = saDiff;
+                            bestY = stackAboveTarget;
+                            bestYLine = new GuideLine(minX, o.y - gap / 2, maxX, o.y - gap / 2, guideColor);
+                        }
                     }
                 }
             }
