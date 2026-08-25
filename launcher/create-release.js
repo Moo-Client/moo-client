@@ -102,8 +102,11 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         console.warn(`app.asar not found at ${asarPath}`);
     }
 
-    // 3. Upload Bootstrapper (MooClient-Setup.exe - 615 KB)
-    let bootstrapperPath = path.join(__dirname, 'dist-win', 'MooClient-Setup.exe');
+    // 3. Upload Bootstrapper (MooClient-Setup.exe)
+    let bootstrapperPath = path.join(__dirname, 'dist', 'nsis-web', 'MooClient-Setup.exe');
+    if (!fs.existsSync(bootstrapperPath)) {
+        bootstrapperPath = path.join(__dirname, 'dist-win', 'MooClient-Setup.exe');
+    }
     if (!fs.existsSync(bootstrapperPath)) {
         bootstrapperPath = path.join(__dirname, 'build-out', 'MooClient-Setup.exe');
     }
@@ -113,15 +116,19 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         console.warn(`Bootstrapper not found at ${bootstrapperPath}`);
     }
 
-    // 4. Upload Standalone Installer EXE (103 MB)
+    // 4. Upload NSIS Web Package (7z package downloaded by bootstrapper)
+    let nsis7zPath = path.join(__dirname, 'dist', 'nsis-web', `moo-client-launcher-${VERSION}-x64.nsis.7z`);
+    if (fs.existsSync(nsis7zPath)) {
+        await uploadAsset(release.upload_url, token, nsis7zPath, `moo-client-launcher-${VERSION}-x64.nsis.7z`, 'application/octet-stream');
+    }
+
+    // 5. Upload Standalone Installer EXE (if exists)
     let exePath = path.join(__dirname, 'dist', `Moo Client Setup ${VERSION}.exe`);
     if (!fs.existsSync(exePath)) {
         exePath = path.join(__dirname, 'build-out', `Moo Client Setup ${VERSION}.exe`);
     }
     if (fs.existsSync(exePath)) {
         await uploadAsset(release.upload_url, token, exePath, `Moo.Client.Setup.${VERSION}.exe`, 'application/octet-stream');
-    } else {
-        console.warn(`Installer exe not found at ${exePath}`);
     }
 
     console.log(`ALL v${VERSION} ASSETS UPLOADED AND REPLACED SUCCESSFULLY!`);

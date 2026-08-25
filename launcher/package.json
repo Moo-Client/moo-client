@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
-    "build": "electron-builder --dir && node patch-icon.js && electron-builder --win nsis --prepackaged dist/win-unpacked",
+    "build": "electron-builder --dir && node patch-icon.js && electron-builder --win nsis-web --prepackaged dist/win-unpacked",
     "publish": "electron-builder --win --publish always"
   },
   "author": "MooTeam",
@@ -37,7 +37,7 @@
     "win": {
       "target": [
         {
-          "target": "nsis",
+          "target": "nsis-web",
           "arch": [
             "x64"
           ]
@@ -47,9 +47,25 @@
       "signAndEditExecutable": false,
       "sign": null
     },
+    "nsisWeb": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "runAfterFinish": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Moo Client",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "uninstallDisplayName": "Moo Client ${version}",
+      "allowElevation": true,
+      "perMachine": false,
+      "artifactName": "MooClient-Setup.exe"
+    },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
+      "runAfterFinish": true,
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
       "shortcutName": "Moo Client",
