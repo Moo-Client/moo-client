@@ -20,26 +20,27 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Dynamic Access Manager for Moo Client Emotes and Cosmetics.
- * Fetches roles and permissions directly from an external REST API / Database,
- * with non-blocking async requests, memory caching, and safe offline fallbacks.
- * Zero hardcoded UUIDs.
+ * Connects directly to Supabase REST API to fetch real-time user roles and emote permissions.
+ * Safe non-blocking async execution, memory caching, zero hardcoded UUIDs.
  */
 public class EmoteAccessManager {
 
-    /**
-     * Base URL for the user permissions API.
-     * Can be overridden via system property -Dmooclient.api.users="https://your-api.com/users/"
-     * or via environment variable MOOCLIENT_USERS_API.
-     */
+    private static final String DEFAULT_SUPABASE_URL = "https://godjpceymapadkmqjrpj.supabase.co/rest/v1/users";
+    private static final String DEFAULT_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvZGpwY2V5bWFwYWRrbXFqcnBqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwMjYwMTIsImV4cCI6MjEwMzYwMjAxMn0.VY52MMlGLdJsCMzh981JLzQkUFkbX7-YGZ0E2TY-weo";
+
     private static String apiEndpoint;
+    private static String apiKey;
 
     static {
-        String envEndpoint = System.getenv("MOOCLIENT_USERS_API");
-        if (envEndpoint != null && !envEndpoint.trim().isEmpty()) {
-            apiEndpoint = envEndpoint.trim();
-        } else {
-            apiEndpoint = System.getProperty("mooclient.api.users", "https://api.mooclient.com/users/");
-        }
+        String envEndpoint = System.getenv("MOOCLIENT_SUPABASE_URL");
+        apiEndpoint = (envEndpoint != null && !envEndpoint.trim().isEmpty())
+                ? envEndpoint.trim()
+                : System.getProperty("mooclient.supabase.url", DEFAULT_SUPABASE_URL);
+
+        String envKey = System.getenv("MOOCLIENT_SUPABASE_KEY");
+        apiKey = (envKey != null && !envKey.trim().isEmpty())
+                ? envKey.trim()
+                : System.getProperty("mooclient.supabase.key", DEFAULT_SUPABASE_KEY);
     }
 
     public static class UserPermission {
@@ -89,14 +90,13 @@ public class EmoteAccessManager {
         }
     }
 
-    public static void setApiEndpoint(String endpoint) {
+    public static void setApiEndpoint(String endpoint, String key) {
         if (endpoint != null && !endpoint.trim().isEmpty()) {
             apiEndpoint = endpoint.trim();
         }
-    }
-
-    public static String getApiEndpoint() {
-        return apiEndpoint;
+        if (key != null && !key.trim().isEmpty()) {
+            apiKey = key.trim();
+        }
     }
 
     /**
@@ -118,13 +118,18 @@ public class EmoteAccessManager {
         CompletableFuture.runAsync(() -> {
             try {
                 String uuidStr = uuid.toString();
-                String targetUrl = apiEndpoint.endsWith("/") ? (apiEndpoint + uuidStr) : (apiEndpoint + "/" + uuidStr);
+                // Supabase REST query format: ?uuid=eq.<UUID>&select=role,all_emotes
+                String targetUrl = apiEndpoint + "?uuid=eq." + uuidStr + "&select=role,all_emotes";
 
                 URL url = URI.create(targetUrl).toURL();
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
                 conn.setRequestProperty("User-Agent", "MooClient/1.7.0");
                 conn.setRequestProperty("Accept", "application/json");
+                if (apiKey != null && !apiKey.isEmpty()) {
+                    conn.setRequestProperty("apikey", apiKey);
+                    conn.setRequestProperty("Authorization", "Bearer " + apiKey);
+                }
                 conn.setConnectTimeout(4000);
                 conn.setReadTimeout(4000);
 
@@ -138,7 +143,6 @@ public class EmoteAccessManager {
                         if (element.isJsonObject()) {
                             obj = element.getAsJsonObject();
                         } else if (element.isJsonArray() && element.getAsJsonArray().size() > 0) {
-                            // Support Supabase / REST array response e.g. [{ "role": "tester", "all_emotes": true }]
                             JsonElement first = element.getAsJsonArray().get(0);
                             if (first.isJsonObject()) {
                                 obj = first.getAsJsonObject();
@@ -159,18 +163,16 @@ public class EmoteAccessManager {
 
                             PERMISSION_CACHE.put(uuid, new UserPermission(role, allEmotes));
                         } else {
+                            // Player not found in database -> standard user
                             PERMISSION_CACHE.put(uuid, UserPermission.DEFAULT_USER);
                         }
                     }
                 } else if (responseCode == 404) {
-                    // Standard user not in special database
                     PERMISSION_CACHE.put(uuid, UserPermission.DEFAULT_USER);
                 } else {
-                    // Temporary network or server error, retain safe default
                     PERMISSION_CACHE.putIfAbsent(uuid, UserPermission.DEFAULT_USER);
                 }
             } catch (Exception ignored) {
-                // Safe default on connection drop / offline mode
                 PERMISSION_CACHE.putIfAbsent(uuid, UserPermission.DEFAULT_USER);
             } finally {
                 PENDING_REQUESTS.remove(uuid);
@@ -265,7 +267,7 @@ public class EmoteAccessManager {
             return true;
         }
 
-        // Unlocked via all_emotes permission from API or developer/tester role
+        // Unlocked via all_emotes permission from Supabase or developer/tester role
         UserPermission perm = getLocalPlayerPermission();
         if (perm.hasAllEmotes()) {
             return true;
