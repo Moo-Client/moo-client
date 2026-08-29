@@ -1682,15 +1682,6 @@ public class MooClientScreen extends Screen {
         drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("mode_label"));
         renderModeSelector(context, rowX + rowW - 206, rowY + 5, mouseX, mouseY,
                 com.mooclient.module.modules.EmotesModule.getMode().ordinal());
-
-        // Row 4: Info Card
-        rowY += rowH + 8;
-        int cardH = 26;
-        context.fill(rowX, rowY, rowX + rowW, rowY + cardH, 0x33101018);
-        drawBorder(context, rowX, rowY, rowW, cardH, 0x22FFFFFF);
-        context.drawTextWithShadow(this.textRenderer, 
-                MooLanguage.current == MooLanguage.PL ? "🌐 Pełna synchronizacja multiplayer w czasie rzeczywistym między graczami Moo Client." : "🌐 Real-time multiplayer synchronization across all Moo Client users.",
-                rowX + 10, rowY + 9, 0xFF55FFFF);
     }
 
     private void drawOptionRow(DrawContext context, int x, int y, int w, int h, String title) {
