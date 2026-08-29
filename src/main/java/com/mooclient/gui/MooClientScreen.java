@@ -1277,13 +1277,24 @@ public class MooClientScreen extends Screen {
             drawBorder(context, btnX1, btnY1, btnW, btnH, listening1 ? 0xFF55FFFF : (btnHover1 ? 0xAAFFFFFF : 0x44FFFFFF));
             drawCenteredText(context, keyText1, btnX1 + btnW / 2, btnY1 + 7, listening1 ? 0xFFFFFF55 : 0xFF55FFFF);
 
-            // Row 3: Activation Mode (Hold vs Toggle for Hands Up)
+            // Row 3: Open Emote Wheel Editor Button
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, "Układ koła emotek");
+            int editBtnW = 140;
+            int editBtnX = rowX + rowW - editBtnW - 10;
+            int editBtnY = rowY + 6;
+            boolean editHover = mouseX >= editBtnX && mouseX <= editBtnX + editBtnW && mouseY >= editBtnY && mouseY <= editBtnY + btnH;
+            context.fill(editBtnX, editBtnY, editBtnX + editBtnW, editBtnY + btnH, editHover ? 0xCC2A2A40 : 0x88181824);
+            drawBorder(context, editBtnX, editBtnY, editBtnW, btnH, editHover ? 0xFF55FFFF : 0x44FFFFFF);
+            drawCenteredText(context, "⚙ Otwórz edytor", editBtnX + editBtnW / 2, editBtnY + 7, editHover ? 0xFFFFFFFF : 0xFFD0D0E0);
+
+            // Row 4: Activation Mode (Hold vs Toggle for Hands Up)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("mode_label"));
             renderModeSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY,
                     com.mooclient.module.modules.EmotesModule.getMode().ordinal());
 
-            // Row 4: Enable / Disable toggle
+            // Row 5: Enable / Disable toggle
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("enabled"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
@@ -2884,7 +2895,21 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 3: Mode Selector (Hold vs Toggle)
+                    // Row 3: Open Emote Wheel Editor Button
+                    rowY += rowH + 6;
+                    int editBtnW = 140;
+                    int editBtnX = rowX + rowW - editBtnW - 10;
+                    int editBtnY = rowY + 6;
+                    if (mouseX >= editBtnX && mouseX <= editBtnX + editBtnW && mouseY >= editBtnY && mouseY <= editBtnY + btnH) {
+                        playClickSound();
+                        this.listeningForKeybind = false;
+                        if (this.client != null) {
+                            this.client.setScreen(new EmoteWheelEditScreen(this));
+                        }
+                        return true;
+                    }
+
+                    // Row 4: Mode Selector (Hold vs Toggle)
                     rowY += rowH + 6;
                     int modeClick = getModeSelectorClick(rowX + rowW - 206, rowY + 6, (int) mouseX, (int) mouseY);
                     if (modeClick >= 0) {
@@ -2896,7 +2921,7 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 4: Enable Toggle
+                    // Row 5: Enable Toggle
                     rowY += rowH + 6;
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {

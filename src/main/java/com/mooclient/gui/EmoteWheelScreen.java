@@ -1,6 +1,8 @@
 package com.mooclient.gui;
 
 import com.mooclient.module.modules.EmotesModule;
+import com.mooclient.util.EmoteAccessManager;
+import com.mooclient.util.EmoteWheelConfig;
 import com.mooclient.util.MooClientSettings;
 import com.mooclient.util.MooLanguage;
 import net.minecraft.client.gui.DrawContext;
@@ -10,25 +12,18 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 /**
- * Radial Emote Wheel with curved wedge sectors,
- * glowing accent highlight, central Moo Client logo, and pure ASCII/Unicode-safe typography.
+ * 12-Slot Pixel-Art Emote Wheel matching user reference design 1:1,
+ * with clean steel-blue outlines, #1..#12 clock slots, and prominent emote titles.
  */
 public class EmoteWheelScreen extends Screen {
 
     private static final Identifier MOO_LOGO = Identifier.of("mooclient", "textures/gui/icon.png");
+    private static final Identifier LOCK_ICON = Identifier.of("mooclient", "textures/gui/emotes/lock.png");
 
-    private int selectedSlot = -1; // 0 = Backflip (Right), 1 = Frontflip (Left)
+    private int selectedSlot = -1;
     private int triggerKeyCode;
     private boolean isMouseTrigger;
-
-    private static final int SEGMENTS_COUNT = 2;
-    // Segment centers: Top-Right (-35°), Top-Left (-145°)
-    private static final double[] SEGMENT_ANGLES = new double[] { -35.0, -145.0 };
 
     public EmoteWheelScreen(int triggerKeyCode) {
         this(triggerKeyCode, false);
@@ -41,13 +36,18 @@ public class EmoteWheelScreen extends Screen {
     }
 
     @Override
+    protected void init() {
+        super.init();
+        EmoteWheelConfig.load();
+    }
+
+    @Override
     public boolean shouldPause() {
         return false;
     }
 
     @Override
     public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
-        // Subtle dark cinematic vignette
         context.fill(0, 0, this.width, this.height, 0x66000000);
     }
 
@@ -61,277 +61,233 @@ public class EmoteWheelScreen extends Screen {
         int cx = this.width / 2;
         int cy = this.height / 2;
 
+        // Top Title
+        String mainTitle = MooLanguage.get("emotes_wheel_title");
+        int titleW = this.textRenderer.getWidth(mainTitle);
+        context.drawTextWithShadow(this.textRenderer, mainTitle, cx - (titleW / 2), cy - 160, 0xFFFFFFFF);
+
         // Calculate mouse angle & distance
         double dx = mouseX - cx;
         double dy = mouseY - cy;
         double dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (dist > 25) {
+        selectedSlot = -1;
+        if (dist > 32 && dist < 155) {
             double rawAngle = Math.toDegrees(Math.atan2(dy, dx)); // -180 to 180
-            // Map angle to 2 sectors (Right: Salto w tył, Left: Salto w przód)
-            if (rawAngle >= -90 && rawAngle < 90) {
-                selectedSlot = 0; // Top-Right: Salto w tył
-            } else {
-                selectedSlot = 1; // Top-Left: Salto w przód
+            int slot = Math.floorMod((int) Math.round((rawAngle + 90.0) / 30.0), 12);
+            if (EmoteWheelConfig.getSlot(slot) != null) {
+                selectedSlot = slot;
             }
-        } else {
-            selectedSlot = -1;
         }
 
-        // --- 1. Render Wedge Petals ---
-        for (int i = 0; i < SEGMENTS_COUNT; i++) {
+        float rIn = 52.0f;
+        float rOut = 138.0f;
+        int themeBlue = 0xFF6A8EAE;
+        int themeBlueHighlight = 0xFF8EAFCE;
+
+        // --- 1. Base Dark Ring Fill ---
+        drawDonutFill(context, cx, cy, rIn, rOut, 0xD0111318);
+
+        // --- 2. Render 12 Radial Petals ---
+        for (int i = 0; i < 12; i++) {
             boolean isSelected = (i == selectedSlot);
-            boolean isUnlocked = com.mooclient.util.EmoteAccessManager.hasAccess(i);
-            double centerDeg = SEGMENT_ANGLES[i];
-            double spanDeg = 92.0;
-            double gapDeg = 8.0;
+            String emoteId = EmoteWheelConfig.getSlot(i);
+            boolean hasEmote = (emoteId != null);
 
-            double startDeg = centerDeg - (spanDeg / 2.0) + (gapDeg / 2.0);
-            double endDeg = centerDeg + (spanDeg / 2.0) - (gapDeg / 2.0);
+            EmoteWheelConfig.EmoteDefinition def = hasEmote ? EmoteWheelConfig.getDefinition(emoteId) : null;
+            boolean isUnlocked = def != null && def.isUnlocked();
 
-            float rIn = isSelected ? 48.0f : 52.0f;
-            float rOut = isSelected ? 122.0f : 112.0f;
+            double centerDeg = -90.0 + i * 30.0;
+            double spanDeg = 28.5;
+            double startDeg = centerDeg - (spanDeg / 2.0);
+            double endDeg = centerDeg + (spanDeg / 2.0);
 
-            int accent = MooClientSettings.getAccentColor();
-            // Glowing colors (or red/locked tint if not unlocked)
-            int fillColor;
-            int borderColor;
-            if (isUnlocked) {
-                fillColor = isSelected ? (accent & 0x00FFFFFF | 0xDD000000) : 0xD012121A;
-                borderColor = isSelected ? 0xFFFFFFFF : 0x44777799;
-            } else {
-                fillColor = isSelected ? 0xDD2A1418 : 0xB0180E10;
-                borderColor = isSelected ? 0xFFFF5555 : 0x44663333;
+            // Highlight Active / Hovered Petal
+            if (isSelected && hasEmote) {
+                int fillColor = isUnlocked ? 0x992C4862 : 0x99482C32;
+                int borderColor = isUnlocked ? themeBlueHighlight : 0xFFFF5555;
+                drawCurvedWedge(context, cx, cy, rIn, rOut, startDeg, endDeg, fillColor, borderColor, true);
             }
-
-            drawCurvedWedge(context, cx, cy, rIn, rOut, startDeg, endDeg, fillColor, borderColor, isSelected);
-
-            // Text & Labels on each petal (Safe ASCII / Clean Polish / English)
-            String label = getSlotLabel(i);
-            String iconSymbol = isUnlocked ? getSlotSymbol(i) : "[L]";
 
             double midAngleRad = Math.toRadians(centerDeg);
-            float rMid = (rIn + rOut) / 2.0f;
-            int textX = (int) (cx + Math.cos(midAngleRad) * rMid);
-            int textY = (int) (cy + Math.sin(midAngleRad) * rMid);
 
-            int textColor = isUnlocked ? (isSelected ? 0xFFFFFFFF : 0xFFD0D0E0) : 0xFFAA7777;
+            // Slot number tag (#1, #2...) near inner ring
+            int snRadius = (int) (rIn + 12);
+            int snX = (int) (cx + Math.cos(midAngleRad) * snRadius);
+            int snY = (int) (cy + Math.sin(midAngleRad) * snRadius);
+            String slotNum = "#" + (i + 1);
+            int snW = this.textRenderer.getWidth(slotNum);
+            context.drawTextWithShadow(this.textRenderer, slotNum, snX - (snW / 2), snY - 4, isSelected ? 0xFFFFFFFF : 0xFFA0B4C8);
 
-            // Draw Symbol & Label centered
-            int symbolW = this.textRenderer.getWidth(iconSymbol);
-            int labelW = this.textRenderer.getWidth(label);
+            if (hasEmote && def != null) {
+                // Render 2D Pixel-Art Icon
+                int iconRadius = (int) (rIn + 42);
+                int iconCenterX = (int) (cx + Math.cos(midAngleRad) * iconRadius);
+                int iconCenterY = (int) (cy + Math.sin(midAngleRad) * iconRadius);
+                int iconSize = isSelected ? 34 : 30;
 
-            int symbolColor = isUnlocked ? (isSelected ? 0xFF55FFFF : 0xFFAAAAAA) : (isSelected ? 0xFFFF5555 : 0xFF885555);
-            context.drawTextWithShadow(this.textRenderer, iconSymbol, textX - (symbolW / 2), textY - 8, symbolColor);
-            context.drawTextWithShadow(this.textRenderer, label, textX - (labelW / 2), textY + 3, textColor);
+                if (def.icon() != null) {
+                    int ix = iconCenterX - (iconSize / 2);
+                    int iy = iconCenterY - (iconSize / 2);
+                    context.drawTexture(RenderLayer::getGuiTextured, def.icon(), ix, iy, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
+                }
+
+                // Render Emote Name in All-Caps
+                int nameRadius = (int) (rIn + 68);
+                int nameCenterX = (int) (cx + Math.cos(midAngleRad) * nameRadius);
+                int nameCenterY = (int) (cy + Math.sin(midAngleRad) * nameRadius);
+                String displayName = def.getDisplayName().toUpperCase();
+                int dnW = this.textRenderer.getWidth(displayName);
+                context.drawTextWithShadow(this.textRenderer, displayName, nameCenterX - (dnW / 2), nameCenterY - 4, 0xFFFFFFFF);
+
+                // Lock badge overlay
+                if (!isUnlocked) {
+                    int lockSize = 12;
+                    int lockX = iconCenterX + (iconSize / 2) - 6;
+                    int lockY = iconCenterY - (iconSize / 2) - 2;
+                    context.drawTexture(RenderLayer::getGuiTextured, LOCK_ICON, lockX, lockY, 0.0f, 0.0f, lockSize, lockSize, lockSize, lockSize);
+                }
+            } else {
+                // Subtle '+' for empty slots matching reference layout
+                int plusRadius = (int) (rIn + 26);
+                int plusX = (int) (cx + Math.cos(midAngleRad) * plusRadius);
+                int plusY = (int) (cy + Math.sin(midAngleRad) * plusRadius);
+                context.drawTextWithShadow(this.textRenderer, "+", plusX - 3, plusY - 4, 0x667A9EBE);
+            }
         }
 
-        // --- 2. Central Disc with LARGE Moo Client Logo ---
-        int centerRadius = 40;
-        int centerBg = 0xFA0E0E14;
-        int centerBorder = 0x44FFFFFF; // Subtle dark base border
+        // --- 3. Crisp Concentric Boundary Circles ---
+        drawCircleOutline(context, cx, cy, (int) rOut, themeBlue);
+        drawCircleOutline(context, cx, cy, (int) rIn, themeBlue);
 
-        drawCircleFill(context, cx, cy, centerRadius, centerBg);
-        drawCircleOutline(context, cx, cy, centerRadius, centerBorder);
+        // --- 4. Central Disc with Moo Cow Logo ---
+        int centerRadius = 46;
+        drawCircleFill(context, cx, cy, centerRadius, 0xFA0E0E14);
+        drawCircleOutline(context, cx, cy, centerRadius, themeBlue);
 
-        // Directional Glow: Highlight ONLY the arc in the direction of the selected item
-        if (selectedSlot >= 0) {
-            double centerDeg = SEGMENT_ANGLES[selectedSlot];
-            double startDeg = centerDeg - 38.0;
-            double endDeg = centerDeg + 38.0;
-            boolean isUnlocked = com.mooclient.util.EmoteAccessManager.hasAccess(selectedSlot);
-            int glowColor = isUnlocked ? MooClientSettings.getAccentColor() : 0xFFFF5555;
-            drawArcOutline(context, cx, cy, centerRadius, startDeg, endDeg, glowColor);
-            drawArcOutline(context, cx, cy, centerRadius + 1, startDeg, endDeg, glowColor);
-        }
-
-        // Large Cow Logo (52x52)
-        int logoSize = 52;
+        int logoSize = 48;
         context.drawTexture(RenderLayer::getGuiTextured, MOO_LOGO, cx - logoSize / 2, cy - logoSize / 2, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
 
-        // Dynamic Role Badge in top center (from API)
-        String playerRole = com.mooclient.util.EmoteAccessManager.getLocalPlayerRole();
-        if (playerRole != null && !playerRole.isEmpty() && !playerRole.equalsIgnoreCase("user") && !playerRole.equalsIgnoreCase("none")) {
-            String badgeText;
-            int badgeColor;
+        // Top-Right "Edit Wheel" Button
+        int editBtnX = this.width - 130;
+        int editBtnY = 16;
+        int editBtnW = 114;
+        int editBtnH = 22;
+        boolean editHover = mouseX >= editBtnX && mouseX <= editBtnX + editBtnW && mouseY >= editBtnY && mouseY <= editBtnY + editBtnH;
 
-            switch (playerRole.toLowerCase()) {
-                case "developer", "dev" -> {
-                    badgeText = "[ " + MooLanguage.get("emotes_dev_badge") + " ]";
-                    badgeColor = 0xFF55FFFF; // Cyan
-                }
-                case "tester" -> {
-                    badgeText = "[ " + MooLanguage.get("emotes_tester_badge") + " ]";
-                    badgeColor = 0xFFFFAA00; // Amber / Gold
-                }
-                case "admin" -> {
-                    badgeText = "[ ADMIN ]";
-                    badgeColor = 0xFFFF5555; // Red
-                }
-                case "vip" -> {
-                    badgeText = "[ VIP ]";
-                    badgeColor = 0xFF55FF55; // Green
-                }
-                default -> {
-                    badgeText = "[ " + playerRole.toUpperCase() + " ]";
-                    badgeColor = MooClientSettings.getAccentColor();
-                }
-            }
+        int editBg = editHover ? 0xDD28283C : 0xAA181824;
+        int editBorder = editHover ? MooClientSettings.getAccentColor() : 0x558888AA;
+        context.fill(editBtnX, editBtnY, editBtnX + editBtnW, editBtnY + editBtnH, editBg);
+        drawRectOutline(context, editBtnX, editBtnY, editBtnW, editBtnH, editBorder);
 
-            int bw = this.textRenderer.getWidth(badgeText);
-            context.drawTextWithShadow(this.textRenderer, badgeText, cx - (bw / 2), cy - 140, badgeColor);
-        }
-
-        // --- 3. Center Title Callout ---
-        String selectedTitle = getSelectedTitle();
-        if (selectedTitle != null && !selectedTitle.isEmpty()) {
-            int titleY = cy + 130;
-            int textW = this.textRenderer.getWidth(selectedTitle);
-            int pillPadding = 12;
-            int pillX = cx - (textW / 2) - pillPadding;
-            int pillW = textW + (pillPadding * 2);
-            int pillH = 20;
-
-            boolean isUnlocked = selectedSlot < 0 || com.mooclient.util.EmoteAccessManager.hasAccess(selectedSlot);
-            int boxBorder = isUnlocked ? MooClientSettings.getAccentColor() : 0xFFFF5555;
-
-            context.fill(pillX, titleY, pillX + pillW, titleY + pillH, 0xEE14141E);
-            drawRectOutline(context, pillX, titleY, pillW, pillH, boxBorder);
-            context.drawTextWithShadow(this.textRenderer, selectedTitle, cx - (textW / 2), titleY + 6, isUnlocked ? 0xFFFFFFFF : 0xFFFF7777);
-        }
-
-        // Bottom usage hint
-        String hint = MooLanguage.get("emotes_wheel_hint");
-        int hintW = this.textRenderer.getWidth(hint);
-        context.drawTextWithShadow(this.textRenderer, hint, cx - (hintW / 2), this.height - 30, 0xFFA0A0AB);
+        String editBtnText = MooLanguage.get("emotes_edit_wheel_btn");
+        int ebW = this.textRenderer.getWidth(editBtnText);
+        context.drawTextWithShadow(this.textRenderer, editBtnText, editBtnX + (editBtnW - ebW) / 2, editBtnY + 7, editHover ? 0xFFFFFFFF : 0xFFD0D0E0);
 
         super.render(context, mouseX, mouseY, delta);
     }
 
-    private String getSlotLabel(int slot) {
-        return switch (slot) {
-            case 0 -> MooLanguage.get("emotes_wheel_backflip");
-            case 1 -> MooLanguage.get("emotes_wheel_frontflip");
-            default -> "";
-        };
-    }
-
-    private String getSlotSymbol(int slot) {
-        return switch (slot) {
-            case 0 -> "<<";  // Backflip
-            case 1 -> ">>";  // Frontflip
-            default -> "";
-        };
-    }
-
-    private String getSelectedTitle() {
-        if (selectedSlot < 0) return null;
-        if (!com.mooclient.util.EmoteAccessManager.hasAccess(selectedSlot)) {
-            return "> " + MooLanguage.get("emotes_store_required").toUpperCase() + " <";
-        }
-        return switch (selectedSlot) {
-            case 0 -> "> " + MooLanguage.get("emotes_wheel_backflip").toUpperCase() + " <";
-            case 1 -> "> " + MooLanguage.get("emotes_wheel_frontflip").toUpperCase() + " <";
-            default -> null;
-        };
-    }
-
-    private static final int MAX_STEPS = 16;
-    private final int[] outerX = new int[MAX_STEPS + 1];
-    private final int[] outerY = new int[MAX_STEPS + 1];
-    private final int[] innerX = new int[MAX_STEPS + 1];
-    private final int[] innerY = new int[MAX_STEPS + 1];
-
-    /**
-     * Renders a curved radial sector with zero-allocation math for peak FPS.
-     */
-    private void drawCurvedWedge(DrawContext context, int cx, int cy, float rIn, float rOut, double startDeg, double endDeg, int fillColor, int borderColor, boolean isSelected) {
-        int steps = 12;
-        double stepSize = (endDeg - startDeg) / steps;
-
-        for (int i = 0; i <= steps; i++) {
-            double rad = Math.toRadians(startDeg + i * stepSize);
-            double cos = Math.cos(rad);
-            double sin = Math.sin(rad);
-            outerX[i] = (int) (cx + cos * rOut);
-            outerY[i] = (int) (cy + sin * rOut);
-            innerX[i] = (int) (cx + cos * rIn);
-            innerY[i] = (int) (cy + sin * rIn);
-        }
-
-        // Fill sub-quads without creating garbage collection objects
-        for (int i = 0; i < steps; i++) {
-            fillQuad(context, outerX[i], outerY[i], outerX[i + 1], outerY[i + 1], innerX[i + 1], innerY[i + 1], innerX[i], innerY[i], fillColor);
-        }
-
-        // Draw boundary outlines
-        for (int i = 0; i < steps; i++) {
-            drawLine(context, outerX[i], outerY[i], outerX[i + 1], outerY[i + 1], borderColor);
-            drawLine(context, innerX[i], innerY[i], innerX[i + 1], innerY[i + 1], borderColor);
-        }
-        // Side straight lines
-        drawLine(context, innerX[0], innerY[0], outerX[0], outerY[0], borderColor);
-        drawLine(context, innerX[steps], innerY[steps], outerX[steps], outerY[steps], borderColor);
-
-        // Active pointer notch in center
-        if (isSelected) {
-            double midRad = Math.toRadians((startDeg + endDeg) / 2.0);
-            int tipX = (int) (cx + Math.cos(midRad) * (rIn - 6));
-            int tipY = (int) (cy + Math.sin(midRad) * (rIn - 6));
-            int b1X = (int) (cx + Math.cos(midRad - 0.08) * rIn);
-            int b1Y = (int) (cy + Math.sin(midRad - 0.08) * rIn);
-            int b2X = (int) (cx + Math.cos(midRad + 0.08) * rIn);
-            int b2Y = (int) (cy + Math.sin(midRad + 0.08) * rIn);
-
-            fillQuad(context, tipX, tipY, b1X, b1Y, b2X, b2Y, tipX, tipY, borderColor);
-            drawLine(context, b1X, b1Y, tipX, tipY, 0xFFFFFFFF);
-            drawLine(context, b2X, b2Y, tipX, tipY, 0xFFFFFFFF);
-        }
-    }
-
-    private void fillQuad(DrawContext context, int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4, int color) {
-        int minY = Math.min(Math.min(y1, y2), Math.min(y3, y4));
-        int maxY = Math.max(Math.max(y1, y2), Math.max(y3, y4));
-
-        int e0x1 = x1, e0y1 = y1, e0x2 = x2, e0y2 = y2;
-        int e1x1 = x2, e1y1 = y2, e1x2 = x3, e1y2 = y3;
-        int e2x1 = x3, e2y1 = y3, e2x2 = x4, e2y2 = y4;
-        int e3x1 = x4, e3y1 = y4, e3x2 = x1, e3y2 = y1;
+    private void drawDonutFill(DrawContext context, int cx, int cy, float rIn, float rOut, int color) {
+        int minY = (int) Math.floor(cy - rOut);
+        int maxY = (int) Math.ceil(cy + rOut);
+        float rInSq = rIn * rIn;
+        float rOutSq = rOut * rOut;
 
         for (int y = minY; y <= maxY; y++) {
-            int minX = Integer.MAX_VALUE;
-            int maxX = Integer.MIN_VALUE;
-            int count = 0;
+            int dy = y - cy;
+            int dySq = dy * dy;
+            if (dySq > rOutSq) continue;
 
-            if ((e0y1 <= y && e0y2 > y) || (e0y2 <= y && e0y1 > y)) {
-                int x = e0x1 + (y - e0y1) * (e0x2 - e0x1) / (e0y2 - e0y1);
-                if (x < minX) minX = x;
-                if (x > maxX) maxX = x;
-                count++;
-            }
-            if ((e1y1 <= y && e1y2 > y) || (e1y2 <= y && e1y1 > y)) {
-                int x = e1x1 + (y - e1y1) * (e1x2 - e1x1) / (e1y2 - e1y1);
-                if (x < minX) minX = x;
-                if (x > maxX) maxX = x;
-                count++;
-            }
-            if ((e2y1 <= y && e2y2 > y) || (e2y2 <= y && e2y1 > y)) {
-                int x = e2x1 + (y - e2y1) * (e2x2 - e2x1) / (e2y2 - e2y1);
-                if (x < minX) minX = x;
-                if (x > maxX) maxX = x;
-                count++;
-            }
-            if ((e3y1 <= y && e3y2 > y) || (e3y2 <= y && e3y1 > y)) {
-                int x = e3x1 + (y - e3y1) * (e3x2 - e3x1) / (e3y2 - e3y1);
-                if (x < minX) minX = x;
-                if (x > maxX) maxX = x;
-                count++;
-            }
+            int maxDx = (int) Math.sqrt(rOutSq - dySq);
+            int minDx = (dySq < rInSq) ? (int) Math.ceil(Math.sqrt(rInSq - dySq)) : 0;
 
-            if (count >= 2 && minX <= maxX) {
-                context.fill(minX, y, maxX + 1, y + 1, color);
+            if (minDx > 0) {
+                // Left arc span
+                context.fill(cx - maxDx, y, cx - minDx + 1, y + 1, color);
+                // Right arc span
+                context.fill(cx + minDx, y, cx + maxDx + 1, y + 1, color);
+            } else {
+                // Full span across center
+                context.fill(cx - maxDx, y, cx + maxDx + 1, y + 1, color);
             }
         }
+    }
+
+    private void drawCurvedWedge(DrawContext context, int cx, int cy, float rIn, float rOut, double startDeg, double endDeg, int fillColor, int borderColor, boolean isSelected) {
+        int minY = (int) Math.floor(cy - rOut);
+        int maxY = (int) Math.ceil(cy + rOut);
+        float rInSq = rIn * rIn;
+        float rOutSq = rOut * rOut;
+
+        for (int y = minY; y <= maxY; y++) {
+            int dy = y - cy;
+            int dySq = dy * dy;
+            if (dySq > rOutSq) continue;
+
+            int maxDx = (int) Math.sqrt(rOutSq - dySq);
+            int spanStart = -1;
+
+            for (int dx = -maxDx; dx <= maxDx; dx++) {
+                int dSq = dx * dx + dySq;
+                if (dSq >= rInSq && dSq <= rOutSq) {
+                    double angle = Math.toDegrees(Math.atan2(dy, dx));
+                    if (isAngleBetween(angle, startDeg, endDeg)) {
+                        if (spanStart == -1) {
+                            spanStart = cx + dx;
+                        }
+                    } else {
+                        if (spanStart != -1) {
+                            context.fill(spanStart, y, cx + dx, y + 1, fillColor);
+                            spanStart = -1;
+                        }
+                    }
+                } else {
+                    if (spanStart != -1) {
+                        context.fill(spanStart, y, cx + dx, y + 1, fillColor);
+                        spanStart = -1;
+                    }
+                }
+            }
+            if (spanStart != -1) {
+                context.fill(spanStart, y, cx + maxDx + 1, y + 1, fillColor);
+            }
+        }
+
+        // Draw crisp border outlines
+        drawArcOutline(context, cx, cy, (int) rOut, startDeg, endDeg, borderColor);
+        drawArcOutline(context, cx, cy, (int) rIn, startDeg, endDeg, borderColor);
+
+        double startRad = Math.toRadians(startDeg);
+        int sx1 = (int) Math.round(cx + Math.cos(startRad) * rIn);
+        int sy1 = (int) Math.round(cy + Math.sin(startRad) * rIn);
+        int sx2 = (int) Math.round(cx + Math.cos(startRad) * rOut);
+        int sy2 = (int) Math.round(cy + Math.sin(startRad) * rOut);
+        drawLine(context, sx1, sy1, sx2, sy2, borderColor);
+
+        double endRad = Math.toRadians(endDeg);
+        int ex1 = (int) Math.round(cx + Math.cos(endRad) * rIn);
+        int ey1 = (int) Math.round(cy + Math.sin(endRad) * rIn);
+        int ex2 = (int) Math.round(cx + Math.cos(endRad) * rOut);
+        int ey2 = (int) Math.round(cy + Math.sin(endRad) * rOut);
+        drawLine(context, ex1, ey1, ex2, ey2, borderColor);
+    }
+
+    private static boolean isAngleBetween(double angle, double start, double end) {
+        double nStart = normalizeDeg(start);
+        double nEnd = normalizeDeg(end);
+        double nAngle = normalizeDeg(angle);
+
+        if (nStart <= nEnd) {
+            return nAngle >= nStart && nAngle <= nEnd;
+        } else {
+            return nAngle >= nStart || nAngle <= nEnd;
+        }
+    }
+
+    private static double normalizeDeg(double deg) {
+        deg = deg % 360.0;
+        if (deg < 0) deg += 360.0;
+        return deg;
     }
 
     private void drawLine(DrawContext context, int x1, int y1, int x2, int y2, int color) {
@@ -366,7 +322,7 @@ public class EmoteWheelScreen extends Screen {
     }
 
     private void drawCircleOutline(DrawContext context, int cx, int cy, int radius, int color) {
-        int segments = 36;
+        int segments = 48;
         double step = (2 * Math.PI) / segments;
         for (int i = 0; i < segments; i++) {
             double a1 = i * step;
@@ -380,15 +336,17 @@ public class EmoteWheelScreen extends Screen {
     }
 
     private void drawArcOutline(DrawContext context, int cx, int cy, int radius, double startDeg, double endDeg, int color) {
-        int segments = 16;
-        double step = (endDeg - startDeg) / segments;
+        int segments = 24;
+        double totalSpan = normalizeDeg(endDeg - startDeg);
+        if (totalSpan <= 0) totalSpan += 360.0;
+        double step = totalSpan / segments;
         for (int i = 0; i < segments; i++) {
             double a1 = Math.toRadians(startDeg + i * step);
             double a2 = Math.toRadians(startDeg + (i + 1) * step);
-            int x1 = (int) (cx + Math.cos(a1) * radius);
-            int y1 = (int) (cy + Math.sin(a1) * radius);
-            int x2 = (int) (cx + Math.cos(a2) * radius);
-            int y2 = (int) (cy + Math.sin(a2) * radius);
+            int x1 = (int) Math.round(cx + Math.cos(a1) * radius);
+            int y1 = (int) Math.round(cy + Math.sin(a1) * radius);
+            int x2 = (int) Math.round(cx + Math.cos(a2) * radius);
+            int y2 = (int) Math.round(cy + Math.sin(a2) * radius);
             drawLine(context, x1, y1, x2, y2, color);
         }
     }
@@ -401,22 +359,35 @@ public class EmoteWheelScreen extends Screen {
     }
 
     private void executeAction() {
-        if (!com.mooclient.util.EmoteAccessManager.hasAccess(selectedSlot)) {
+        if (selectedSlot < 0) return;
+        EmoteWheelConfig.EmoteDefinition def = EmoteWheelConfig.getSlotDefinition(selectedSlot);
+        if (def == null) return;
+
+        if (!def.isUnlocked()) {
             if (this.client != null && this.client.player != null) {
                 this.client.player.sendMessage(Text.literal("§c[Moo Client] " + MooLanguage.get("emotes_store_required")), true);
             }
             return;
         }
 
-        switch (selectedSlot) {
-            case 0 -> EmotesModule.triggerBackflipFromWheel();
-            case 1 -> EmotesModule.triggerFrontflipFromWheel();
+        if (def.triggerAction() != null) {
+            def.triggerAction().run();
         }
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
+            // Check "Edit Wheel" button
+            int editBtnX = this.width - 130;
+            int editBtnY = 16;
+            if (mouseX >= editBtnX && mouseX <= editBtnX + 114 && mouseY >= editBtnY && mouseY <= editBtnY + 22) {
+                if (this.client != null) {
+                    this.client.setScreen(new EmoteWheelEditScreen(this));
+                }
+                return true;
+            }
+
             if (selectedSlot >= 0) {
                 executeAction();
             }

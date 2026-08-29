@@ -21,7 +21,7 @@ public class MooClient implements ClientModInitializer {
 
     public static final String MOD_ID = "mooclient";
     public static final String MOD_NAME = "Moo Client";
-    public static final String VERSION = "1.7.0_2";
+    public static final String VERSION = "1.8.0";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
 
     private static MooClient instance;
@@ -205,7 +205,11 @@ public class MooClient implements ClientModInitializer {
                     boolean isMouse = com.mooclient.module.modules.EmotesModule.isWheelMouseButton();
                     boolean isKeyDown = isInputPressed(window, wheelKeyCode, isMouse);
                     if (isKeyDown && !wheelKeyWasDown) {
-                        client.setScreen(new com.mooclient.gui.EmoteWheelScreen(wheelKeyCode, isMouse));
+                        if (com.mooclient.module.modules.EmotesModule.hasActiveLoopingEmote()) {
+                            com.mooclient.module.modules.EmotesModule.stopEmotesFromWheel();
+                        } else {
+                            client.setScreen(new com.mooclient.gui.EmoteWheelScreen(wheelKeyCode, isMouse));
+                        }
                     }
                     wheelKeyWasDown = isKeyDown;
                 }

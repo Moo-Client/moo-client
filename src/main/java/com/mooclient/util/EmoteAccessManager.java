@@ -74,10 +74,14 @@ public class EmoteAccessManager {
     private static final long CACHE_TTL_MS = 5 * 60 * 1000L; // 5 minutes cache TTL
 
     public enum EmoteId {
+        NONE(true),       // Free for all players
+        FREE(true),       // Free for all players
         HANDS_UP(true),   // Free for all players
         STOP(true),       // Free for all players
         FRONTFLIP(false), // Store / Developer / Tester / all_emotes
-        BACKFLIP(false);  // Store / Developer / Tester / all_emotes
+        BACKFLIP(false),  // Store / Developer / Tester / all_emotes
+        MEDITATION(false),// Store / Developer / Tester / all_emotes
+        FACEPALM(false);  // Store / Developer / Tester / all_emotes
 
         private final boolean isFree;
 

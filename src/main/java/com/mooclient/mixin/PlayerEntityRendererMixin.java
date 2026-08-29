@@ -45,21 +45,29 @@ public class PlayerEntityRendererMixin {
         if (state == null || !EmotesModule.isEmotesEnabled()) return;
 
         PlayerEmoteState emoteState = EmotesModule.getPlayerState(state.id);
-        if (emoteState != null && emoteState.isFlipping()) {
+        if (emoteState != null) {
             MinecraftClient client = MinecraftClient.getInstance();
             float delta = client.getRenderTickCounter().getTickDelta(true);
-            float flipAngle = emoteState.getFlipRotationDegrees(delta);
-            float jumpHeight = emoteState.getFlipJumpHeight(delta);
 
-            if (Math.abs(flipAngle) > 0.001F || jumpHeight > 0.001F) {
-                // Czysto wizualny wyskok postaci w górę (MatrixStack translate bez zmiany hitboxa)
-                matrices.translate(0.0F, jumpHeight, 0.0F);
-                // Przesuwamy punkt obrotu na środek sylwetki gracza (~0.9m wysokości)
-                matrices.translate(0.0F, 0.9F, 0.0F);
-                // Płynna rotacja wokół osi X (pitch)
-                matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(flipAngle));
-                // Przesunięcie punktu obrotu z powrotem
-                matrices.translate(0.0F, -0.9F, 0.0F);
+            if (emoteState.currentEmote == EmotesModule.EmoteType.MEDITATION) {
+                float medBlend = emoteState.getMeditationBlend(delta);
+                if (medBlend > 0.001F) {
+                    matrices.translate(0.0F, 0.55F * medBlend, 0.0F);
+                }
+            } else if (emoteState.isFlipping()) {
+                float flipAngle = emoteState.getFlipRotationDegrees(delta);
+                float jumpHeight = emoteState.getFlipJumpHeight(delta);
+
+                if (Math.abs(flipAngle) > 0.001F || jumpHeight > 0.001F) {
+                    // Czysto wizualny wyskok postaci w górę (MatrixStack translate bez zmiany hitboxa)
+                    matrices.translate(0.0F, jumpHeight, 0.0F);
+                    // Przesuwamy punkt obrotu na środek sylwetki gracza (~0.9m wysokości)
+                    matrices.translate(0.0F, 0.9F, 0.0F);
+                    // Płynna rotacja wokół osi X (pitch)
+                    matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(flipAngle));
+                    // Przesunięcie punktu obrotu z powrotem
+                    matrices.translate(0.0F, -0.9F, 0.0F);
+                }
             }
         }
     }

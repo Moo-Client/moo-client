@@ -103,5 +103,154 @@ public abstract class PlayerEntityModelMixin extends BipedEntityModel<PlayerEnti
             this.rightPants.resetTransform();
             this.jacket.resetTransform();
         }
+
+        // --- 3. 12 Pixel-Art Emotes Animation Poses ---
+        if (emoteState.currentEmote != EmotesModule.EmoteType.NONE) {
+            float p = emoteState.getInterpolatedEmoteProgress(tickDelta);
+            float blend = (float) Math.sin(p * Math.PI);
+
+            switch (emoteState.currentEmote) {
+                case WAVE -> {
+                    float waveAngle = (float) (Math.sin(p * 22.0) * 0.45F);
+                    this.rightArm.pitch = MathHelper.lerp(blend, this.rightArm.pitch, -2.85F);
+                    this.rightArm.yaw = MathHelper.lerp(blend, this.rightArm.yaw, 0.0F);
+                    this.rightArm.roll = MathHelper.lerp(blend, this.rightArm.roll, waveAngle);
+                }
+                case DANCE -> {
+                    float danceSway = (float) (Math.sin(p * 18.0) * 0.35F);
+                    float armSwing = (float) (Math.sin(p * 18.0) * 0.65F);
+                    this.body.yaw = MathHelper.lerp(blend, this.body.yaw, danceSway);
+                    this.rightArm.pitch = MathHelper.lerp(blend, this.rightArm.pitch, armSwing);
+                    this.leftArm.pitch = MathHelper.lerp(blend, this.leftArm.pitch, -armSwing);
+                    this.head.yaw = MathHelper.lerp(blend, this.head.yaw, -danceSway * 0.5F);
+                }
+                case POINT -> {
+                    this.rightArm.pitch = MathHelper.lerp(blend, this.rightArm.pitch, -1.55F);
+                    this.rightArm.yaw = MathHelper.lerp(blend, this.rightArm.yaw, -0.35F);
+                    this.rightArm.roll = MathHelper.lerp(blend, this.rightArm.roll, 0.0F);
+                }
+                case BRAVO -> {
+                    this.rightArm.pitch = MathHelper.lerp(blend, this.rightArm.pitch, -1.25F);
+                    this.rightArm.yaw = MathHelper.lerp(blend, this.rightArm.yaw, -0.30F);
+                    this.rightArm.roll = MathHelper.lerp(blend, this.rightArm.roll, -0.20F);
+                }
+                case CRAWL -> {
+                    this.body.pitch = MathHelper.lerp(blend, this.body.pitch, 1.45F);
+                    this.head.pitch = MathHelper.lerp(blend, this.head.pitch, -0.85F);
+                    float crawlLeg = (float) (Math.sin(p * 15.0) * 0.6F);
+                    this.rightLeg.pitch = MathHelper.lerp(blend, this.rightLeg.pitch, crawlLeg);
+                    this.leftLeg.pitch = MathHelper.lerp(blend, this.leftLeg.pitch, -crawlLeg);
+                    this.rightArm.pitch = MathHelper.lerp(blend, this.rightArm.pitch, -1.4F + crawlLeg * 0.5F);
+                    this.leftArm.pitch = MathHelper.lerp(blend, this.leftArm.pitch, -1.4F - crawlLeg * 0.5F);
+                }
+                case VICTORY -> {
+                    this.rightArm.pitch = MathHelper.lerp(blend, this.rightArm.pitch, -2.95F);
+                    this.rightArm.yaw = MathHelper.lerp(blend, this.rightArm.yaw, 0.0F);
+                    this.head.pitch = MathHelper.lerp(blend, this.head.pitch, -0.35F);
+                }
+                case THINK -> {
+                    this.rightArm.pitch = MathHelper.lerp(blend, this.rightArm.pitch, -1.40F);
+                    this.rightArm.yaw = MathHelper.lerp(blend, this.rightArm.yaw, -0.65F);
+                    this.head.pitch = MathHelper.lerp(blend, this.head.pitch, 0.25F);
+                    this.head.roll = MathHelper.lerp(blend, this.head.roll, 0.15F);
+                }
+                case CLAP -> {
+                    float clapCycle = (float) Math.abs(Math.sin(p * 26.0));
+                    this.rightArm.pitch = MathHelper.lerp(blend, this.rightArm.pitch, -1.30F);
+                    this.rightArm.yaw = MathHelper.lerp(blend, this.rightArm.yaw, -0.40F - clapCycle * 0.25F);
+                    this.leftArm.pitch = MathHelper.lerp(blend, this.leftArm.pitch, -1.30F);
+                    this.leftArm.yaw = MathHelper.lerp(blend, this.leftArm.yaw, 0.40F + clapCycle * 0.25F);
+                }
+                case SALUTE -> {
+                    this.rightArm.pitch = MathHelper.lerp(blend, this.rightArm.pitch, -1.50F);
+                    this.rightArm.yaw = MathHelper.lerp(blend, this.rightArm.yaw, -0.70F);
+                    this.rightArm.roll = MathHelper.lerp(blend, this.rightArm.roll, 0.50F);
+                }
+                case LAUGH -> {
+                    float laughShake = (float) (Math.sin(p * 32.0) * 0.15F);
+                    this.head.pitch = MathHelper.lerp(blend, this.head.pitch, -0.30F + laughShake);
+                    this.body.pitch = MathHelper.lerp(blend, this.body.pitch, laughShake * 0.5F);
+                }
+                case SAD -> {
+                    this.head.pitch = MathHelper.lerp(blend, this.head.pitch, 0.55F);
+                    this.rightArm.pitch = MathHelper.lerp(blend, this.rightArm.pitch, 0.25F);
+                    this.leftArm.pitch = MathHelper.lerp(blend, this.leftArm.pitch, 0.25F);
+                }
+                case ANGRY -> {
+                    float angryShake = (float) (Math.sin(p * 35.0) * 0.12F);
+                    this.head.yaw = MathHelper.lerp(blend, this.head.yaw, angryShake);
+                    this.rightArm.pitch = MathHelper.lerp(blend, this.rightArm.pitch, -0.75F);
+                    this.leftArm.pitch = MathHelper.lerp(blend, this.leftArm.pitch, -0.75F);
+                }
+                case MEDITATION -> {
+                    float medBlend = emoteState.getMeditationBlend(tickDelta);
+                    if (medBlend > 0.001F) {
+                        float t = (emoteState.emoteDurationTicks + tickDelta) * 0.08F;
+                        float breathe = (float) (Math.sin(t) * 0.05F);
+
+                        this.rightLeg.pitch = MathHelper.lerp(medBlend, this.rightLeg.pitch, -1.40F);
+                        this.rightLeg.yaw = MathHelper.lerp(medBlend, this.rightLeg.yaw, -0.65F);
+                        this.rightLeg.roll = MathHelper.lerp(medBlend, this.rightLeg.roll, 0.25F);
+
+                        this.leftLeg.pitch = MathHelper.lerp(medBlend, this.leftLeg.pitch, -1.40F);
+                        this.leftLeg.yaw = MathHelper.lerp(medBlend, this.leftLeg.yaw, 0.65F);
+                        this.leftLeg.roll = MathHelper.lerp(medBlend, this.leftLeg.roll, -0.25F);
+
+                        this.rightArm.pitch = MathHelper.lerp(medBlend, this.rightArm.pitch, -0.75F);
+                        this.rightArm.yaw = MathHelper.lerp(medBlend, this.rightArm.yaw, -0.40F);
+                        this.rightArm.roll = MathHelper.lerp(medBlend, this.rightArm.roll, 0.45F);
+
+                        this.leftArm.pitch = MathHelper.lerp(medBlend, this.leftArm.pitch, -0.75F);
+                        this.leftArm.yaw = MathHelper.lerp(medBlend, this.leftArm.yaw, 0.40F);
+                        this.leftArm.roll = MathHelper.lerp(medBlend, this.leftArm.roll, -0.45F);
+
+                        this.body.pitch = MathHelper.lerp(medBlend, this.body.pitch, -0.05F);
+                        this.head.pitch = MathHelper.lerp(medBlend, this.head.pitch, -0.15F + breathe);
+                    }
+                }
+                case FRIENDLY_WAVE -> {
+                    float waveAngle = (float) (Math.sin(p * 28.0) * 0.55F);
+                    this.rightArm.pitch = MathHelper.lerp(blend, this.rightArm.pitch, -2.80F);
+                    this.rightArm.yaw = MathHelper.lerp(blend, this.rightArm.yaw, 0.0F);
+                    this.rightArm.roll = MathHelper.lerp(blend, this.rightArm.roll, waveAngle);
+                    this.head.roll = MathHelper.lerp(blend, this.head.roll, 0.18F);
+                }
+                case ARM_WAVE -> {
+                    // Continuous horizontal arm wave flowing from left arm through torso to right arm
+                    float t = (emoteState.emoteDurationTicks + tickDelta) * 0.18F;
+
+                    // Left Arm: Horizontal spread + flowing sine
+                    float waveL = (float) Math.sin(t);
+                    this.leftArm.roll = -1.55F + (float) Math.sin(t + 0.5) * 0.25F;
+                    this.leftArm.pitch = waveL * 0.35F;
+                    this.leftArm.yaw = (float) Math.cos(t) * 0.15F;
+
+                    // Torso & Belly: delayed phase wave passing across
+                    this.body.roll = (float) Math.sin(t - 1.0) * 0.12F;
+                    this.body.yaw = (float) Math.sin(t - 1.0) * 0.14F;
+                    this.head.roll = (float) Math.sin(t - 1.0) * 0.10F;
+
+                    // Right Arm: Horizontal spread + delayed flowing sine
+                    float waveR = (float) Math.sin(t - 2.0);
+                    this.rightArm.roll = 1.55F + (float) Math.sin(t - 1.5) * 0.25F;
+                    this.rightArm.pitch = waveR * 0.35F;
+                    this.rightArm.yaw = (float) Math.cos(t - 2.0) * 0.15F;
+                }
+                case FACEPALM -> {
+                    this.rightArm.pitch = MathHelper.lerp(blend, this.rightArm.pitch, -1.85F);
+                    this.rightArm.yaw = MathHelper.lerp(blend, this.rightArm.yaw, -0.65F);
+                    this.rightArm.roll = MathHelper.lerp(blend, this.rightArm.roll, 0.45F);
+                    this.head.pitch = MathHelper.lerp(blend, this.head.pitch, 0.45F);
+                    this.head.yaw = MathHelper.lerp(blend, this.head.yaw, (float) Math.sin(p * 20.0) * 0.08F);
+                }
+                default -> {}
+            }
+
+            this.rightSleeve.resetTransform();
+            this.leftSleeve.resetTransform();
+            this.leftPants.resetTransform();
+            this.rightPants.resetTransform();
+            this.jacket.resetTransform();
+        }
     }
 }

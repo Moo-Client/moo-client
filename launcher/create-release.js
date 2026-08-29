@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.7.0_2';
+const VERSION = '1.8.0';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -71,7 +71,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         res = await apiRequest('POST', '/repos/Moo-Client/moo-client/releases', token, {
             tag_name: `v${VERSION}`,
             name: `Moo Client v${VERSION}`,
-            body: '🚀 **Moo Client v1.7.0_1**\n\n✓ **Dynamiczny system uprawnień i ról API** (usunięto hardcoded UUID z kodu)\n✓ **Odwrócono pozycje salt w kole emotek** (Salto w przód / tył)\n✓ **Usunięto niepotrzebne napisy z zakładki Emotek**\n✓ **Pełna synchronizacja multiplayer w czasie rzeczywistym**',
+            body: '🚀 **Moo Client v1.8.0**\n\n✓ **Nowy interaktywny edytor 12-slotowego koła emotek (Drag & Drop)**\n✓ **Przewijanie scrollem biblioteki emotek**\n✓ **Nowe animacje postaci 3D:** Medytacja (poza lotosu), Przyjazne machanie, Facepalm\n✓ **Ciągła medytacja w pętli** z anulowaniem klawiszem koła (`B`)\n✓ **Usunięto wymuszanie perspektywy F5 przy saltach**\n✓ **Zabezpieczenie emotek w systemie uprawnień i sklepu (Supabase REST API)**',
             draft: false,
             prerelease: false
         });

@@ -33,6 +33,29 @@ public class EmotesModule extends Module {
         BACK
     }
 
+    public enum EmoteType {
+        NONE,
+        HANDS_UP,
+        FRONTFLIP,
+        BACKFLIP,
+        WAVE,
+        DANCE,
+        LAUGH,
+        SAD,
+        POINT,
+        BRAVO,
+        CRAWL,
+        VICTORY,
+        ANGRY,
+        THINK,
+        CLAP,
+        SALUTE,
+        MEDITATION,
+        FRIENDLY_WAVE,
+        ARM_WAVE,
+        FACEPALM
+    }
+
     private static boolean enabled = true;
 
     // --- Local & Multiplayer States ---
@@ -79,11 +102,7 @@ public class EmotesModule extends Module {
 
     public static void onTick() {
         // Tick local player state
-        boolean wasFlipping = localPlayerState.isFlipping();
         localPlayerState.onTick();
-        if (wasFlipping && !localPlayerState.isFlipping()) {
-            restorePerspective();
-        }
 
         // Tick all remote player states
         if (!playerStates.isEmpty()) {
@@ -235,18 +254,38 @@ public class EmotesModule extends Module {
     }
 
     public static void triggerFrontflipFromWheel() {
-        forceF5Perspective();
         triggerFrontflip();
     }
 
     public static void triggerBackflipFromWheel() {
-        forceF5Perspective();
         triggerBackflip();
     }
 
+    public static void triggerGenericEmote(EmoteType type) {
+        if (!enabled || type == null) return;
+        forceF5Perspective();
+        localPlayerState.triggerEmote(type);
+    }
+
+    public static void triggerHandsUpFromWheel() {
+        toggleHandsUp();
+    }
+
     public static void stopEmotesFromWheel() {
-        setHandsUp(false);
+        localPlayerState.stopEmotes();
         restorePerspective();
+    }
+
+    public static boolean isMeditating() {
+        return enabled && localPlayerState.currentEmote == EmoteType.MEDITATION;
+    }
+
+    public static boolean isArmWaving() {
+        return enabled && localPlayerState.currentEmote == EmoteType.ARM_WAVE;
+    }
+
+    public static boolean hasActiveLoopingEmote() {
+        return isMeditating() || isArmWaving() || isHandsUp();
     }
 
     public static boolean isFlipping() {

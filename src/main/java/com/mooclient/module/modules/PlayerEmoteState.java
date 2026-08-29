@@ -4,7 +4,7 @@ import net.minecraft.util.math.MathHelper;
 import java.util.UUID;
 
 /**
- * State and interpolation tracker for an individual player's emotes and acrobatics.
+ * State and interpolation tracker for an individual player's emotes, gestures, and acrobatics.
  * Used for both local player and remote players across multiplayer servers.
  */
 public class PlayerEmoteState {
@@ -21,6 +21,12 @@ public class PlayerEmoteState {
     public static final int TOTAL_FLIP_TICKS = 15;
     public float flipCurrentProgress = 0.0f;
     public float flipLastProgress = 0.0f;
+
+    public EmotesModule.EmoteType currentEmote = EmotesModule.EmoteType.NONE;
+    public int emoteDurationTicks = 0;
+    public int emoteTotalTicks = 60;
+    public float emoteProgress = 0.0f;
+    public float emoteLastProgress = 0.0f;
 
     public PlayerEmoteState(UUID uuid) {
         this.uuid = uuid;
@@ -56,12 +62,50 @@ public class PlayerEmoteState {
         this.flipLastProgress = 0.0f;
     }
 
+    public void triggerEmote(EmotesModule.EmoteType emote) {
+        if (emote == null || emote == EmotesModule.EmoteType.NONE) {
+            stopEmotes();
+            return;
+        }
+        if (emote == EmotesModule.EmoteType.FRONTFLIP) {
+            triggerFrontflip();
+            return;
+        }
+        if (emote == EmotesModule.EmoteType.BACKFLIP) {
+            triggerBackflip();
+            return;
+        }
+        if (emote == EmotesModule.EmoteType.HANDS_UP) {
+            triggerHandsUp(!isHandsUp);
+            return;
+        }
+        if (emote == EmotesModule.EmoteType.MEDITATION || emote == EmotesModule.EmoteType.ARM_WAVE) {
+            // Infinite / Looping emote until cancelled by pressing wheel key again
+            this.currentEmote = emote;
+            this.emoteDurationTicks = 0;
+            this.emoteTotalTicks = -1;
+            this.emoteProgress = 1.0f;
+            this.emoteLastProgress = 1.0f;
+            return;
+        }
+
+        this.currentEmote = emote;
+        this.emoteDurationTicks = 0;
+        this.emoteTotalTicks = (emote == EmotesModule.EmoteType.DANCE || emote == EmotesModule.EmoteType.CRAWL) ? 120 : 70;
+        this.emoteProgress = 0.0f;
+        this.emoteLastProgress = 0.0f;
+    }
+
     public void stopEmotes() {
         this.isHandsUp = false;
         this.flipDirection = EmotesModule.FlipDirection.NONE;
         this.flipTicks = 0;
         this.flipCurrentProgress = 0.0f;
         this.flipLastProgress = 0.0f;
+        this.currentEmote = EmotesModule.EmoteType.NONE;
+        this.emoteDurationTicks = 0;
+        this.emoteProgress = 0.0f;
+        this.emoteLastProgress = 0.0f;
     }
 
     public void onTick() {
@@ -87,6 +131,26 @@ public class PlayerEmoteState {
                 flipLastProgress = 0.0f;
             }
         }
+
+        // Generic Emote progress tick
+        if (currentEmote != EmotesModule.EmoteType.NONE) {
+            if (currentEmote == EmotesModule.EmoteType.MEDITATION || currentEmote == EmotesModule.EmoteType.ARM_WAVE) {
+                emoteDurationTicks++;
+                emoteProgress = 1.0f;
+                emoteLastProgress = 1.0f;
+                // Stays active infinitely until stopped!
+            } else {
+                emoteLastProgress = emoteProgress;
+                emoteDurationTicks++;
+                emoteProgress = (float) emoteDurationTicks / (float) emoteTotalTicks;
+                if (emoteDurationTicks >= emoteTotalTicks) {
+                    currentEmote = EmotesModule.EmoteType.NONE;
+                    emoteDurationTicks = 0;
+                    emoteProgress = 0.0f;
+                    emoteLastProgress = 0.0f;
+                }
+            }
+        }
     }
 
     public float getInterpolatedHandsUpProgress(float tickDelta) {
@@ -97,6 +161,17 @@ public class PlayerEmoteState {
     public float getInterpolatedFlipProgress(float tickDelta) {
         if (flipDirection == EmotesModule.FlipDirection.NONE && flipCurrentProgress == 0.0f) return 0.0f;
         return MathHelper.clamp(MathHelper.lerp(tickDelta, flipLastProgress, flipCurrentProgress), 0.0f, 1.0f);
+    }
+
+    public float getInterpolatedEmoteProgress(float tickDelta) {
+        if (currentEmote == EmotesModule.EmoteType.NONE && emoteProgress == 0.0f) return 0.0f;
+        return MathHelper.clamp(MathHelper.lerp(tickDelta, emoteLastProgress, emoteProgress), 0.0f, 1.0f);
+    }
+
+    public float getMeditationBlend(float tickDelta) {
+        if (currentEmote != EmotesModule.EmoteType.MEDITATION) return 0.0f;
+        float ticks = emoteDurationTicks + tickDelta;
+        return MathHelper.clamp(ticks / 6.0f, 0.0f, 1.0f);
     }
 
     public float getFlipRotationDegrees(float tickDelta) {
@@ -124,6 +199,6 @@ public class PlayerEmoteState {
     }
 
     public boolean isIdle() {
-        return !isHandsUp && handsUpCurrentProgress <= 0.001f && flipDirection == EmotesModule.FlipDirection.NONE && flipCurrentProgress <= 0.001f;
+        return !isHandsUp && handsUpCurrentProgress <= 0.001f && flipDirection == EmotesModule.FlipDirection.NONE && flipCurrentProgress <= 0.001f && currentEmote == EmotesModule.EmoteType.NONE;
     }
 }
