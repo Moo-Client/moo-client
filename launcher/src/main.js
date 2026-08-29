@@ -295,18 +295,20 @@ function setupIPC() {
     });
 
 function getActualLauncherVersion() {
+    let ver = '1.7.0_2';
     try {
         const pkg = require('../package.json');
-        if (pkg && pkg.version) return pkg.version;
+        if (pkg && pkg.version) ver = pkg.version;
     } catch(e) {}
     try {
         const pkgPath = path.join(__dirname, '..', 'package.json');
         if (fs.existsSync(pkgPath)) {
             const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-            if (pkg && pkg.version) return pkg.version;
+            if (pkg && pkg.version) ver = pkg.version;
         }
     } catch(e) {}
-    return app.getVersion();
+    if (!ver) ver = app.getVersion();
+    return String(ver).replace(/-/g, '_');
 }
 
     // --- Moo Client Core Version & Update Check ---

@@ -1704,8 +1704,10 @@ async function checkClientCoreUpdate(showToastIfUpToDate = false) {
         if (res && res.hasUpdate) {
             currentClientUpdateInfo = res;
             pill.classList.add('has-update');
-            label.textContent = `v${res.latestVersion} ${t('update_available_short')}`;
-            pill.title = `${t('update_modal_title')} (v${res.currentVersion} ➔ v${res.latestVersion})`;
+            const latestVer = String(res.latestVersion || '').replace(/-/g, '_');
+            const currentVer = String(res.currentVersion || '').replace(/-/g, '_');
+            label.textContent = `v${latestVer} ${t('update_available_short')}`;
+            pill.title = `${t('update_modal_title')} (v${currentVer} ➔ v${latestVer})`;
 
             // If background auto-update is enabled and this is an automatic background check
             const settings = await window.mooAPI?.getSettings();
@@ -1723,9 +1725,9 @@ async function checkClientCoreUpdate(showToastIfUpToDate = false) {
                         if (updateRes.updated) {
                             currentClientUpdateInfo = null;
                             pill.classList.remove('has-update');
-                            label.textContent = `v${res.latestVersion} (${t('update_up_to_date')})`;
-                            pill.title = `Moo Client v${res.latestVersion} — ${t('update_up_to_date')}`;
-                            showToast(`✨ Moo Client został automatycznie zaktualizowany w tle do v${res.latestVersion}!`, 'success');
+                            label.textContent = `v${latestVer} (${t('update_up_to_date')})`;
+                            pill.title = `Moo Client v${latestVer} — ${t('update_up_to_date')}`;
+                            showToast(`✨ Moo Client został automatycznie zaktualizowany w tle do v${latestVer}!`, 'success');
                             isUpdatingClientCore = false;
                             return;
                         }
@@ -1742,7 +1744,7 @@ async function checkClientCoreUpdate(showToastIfUpToDate = false) {
         } else {
             currentClientUpdateInfo = null;
             pill.classList.remove('has-update');
-            const ver = res?.currentVersion || '1.0.0';
+            const ver = String(res?.currentVersion || '1.7.0_2').replace(/-/g, '_');
             label.textContent = `v${ver} (${t('update_up_to_date')})`;
             pill.title = `Moo Client v${ver} — ${t('update_up_to_date')}`;
 
