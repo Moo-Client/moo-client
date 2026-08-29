@@ -50,6 +50,9 @@ public class MooLanguage {
                 case "emotes_wheel_backflip" -> "Salto w tył";
                 case "emotes_wheel_stop" -> "Zatrzymaj";
                 case "emotes_wheel_hint" -> "Wskaż emotkę myszą i puść klawisz lub kliknij";
+                case "emotes_locked" -> "[SKLEP]";
+                case "emotes_store_required" -> "Wymaga zakupu w sklepie Moo Client";
+                case "emotes_dev_badge" -> "DEV MOO CLIENT";
                 case "keybind_label" -> "Klawisz aktywacji";
                 case "press_key_hint" -> "> WCIŚNIJ KLAWISZ <";
                 case "mode_hold" -> "Przytrzymaj";
@@ -180,6 +183,9 @@ public class MooLanguage {
                 case "emotes_wheel_backflip" -> "Backflip";
                 case "emotes_wheel_stop" -> "Stop";
                 case "emotes_wheel_hint" -> "Hover over emote and release key or click";
+                case "emotes_locked" -> "[STORE]";
+                case "emotes_store_required" -> "Requires Moo Client Store Unlock";
+                case "emotes_dev_badge" -> "DEV MOO CLIENT";
                 case "keybind_label" -> "Activation Keybind";
                 case "press_key_hint" -> "> PRESS ANY KEY <";
                 case "mode_hold" -> "Hold";

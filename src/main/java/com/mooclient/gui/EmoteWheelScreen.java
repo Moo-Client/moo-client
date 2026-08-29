@@ -77,8 +77,10 @@ public class EmoteWheelScreen extends Screen {
         }
 
         // --- 1. Render Warframe Wedge Petals ---
+        // --- 1. Render Warframe Wedge Petals ---
         for (int i = 0; i < SEGMENTS_COUNT; i++) {
             boolean isSelected = (i == selectedSlot);
+            boolean isUnlocked = com.mooclient.util.EmoteAccessManager.hasAccess(i);
             double centerDeg = SEGMENT_ANGLES[i];
             double spanDeg = 90.0;
             double gapDeg = 5.0;
@@ -90,28 +92,36 @@ public class EmoteWheelScreen extends Screen {
             float rOut = isSelected ? 122.0f : 112.0f;
 
             int accent = MooClientSettings.getAccentColor();
-            // Warframe glowing colors
-            int fillColor = isSelected ? (accent & 0x00FFFFFF | 0xDD000000) : 0xD012121A;
-            int borderColor = isSelected ? 0xFFFFFFFF : 0x44777799;
+            // Warframe glowing colors (or red/locked tint if not unlocked)
+            int fillColor;
+            int borderColor;
+            if (isUnlocked) {
+                fillColor = isSelected ? (accent & 0x00FFFFFF | 0xDD000000) : 0xD012121A;
+                borderColor = isSelected ? 0xFFFFFFFF : 0x44777799;
+            } else {
+                fillColor = isSelected ? 0xDD2A1418 : 0xB0180E10;
+                borderColor = isSelected ? 0xFFFF5555 : 0x44663333;
+            }
 
             drawCurvedWedge(context, cx, cy, rIn, rOut, startDeg, endDeg, fillColor, borderColor, isSelected);
 
-            // Text & Labels on each petal (Safe ASCII / Clean Polish / English - NO emoji glyphs)
+            // Text & Labels on each petal (Safe ASCII / Clean Polish / English)
             String label = getSlotLabel(i);
-            String iconSymbol = getSlotSymbol(i);
+            String iconSymbol = isUnlocked ? getSlotSymbol(i) : "[L]";
 
             double midAngleRad = Math.toRadians(centerDeg);
             float rMid = (rIn + rOut) / 2.0f;
             int textX = (int) (cx + Math.cos(midAngleRad) * rMid);
             int textY = (int) (cy + Math.sin(midAngleRad) * rMid);
 
-            int textColor = isSelected ? 0xFFFFFFFF : 0xFFD0D0E0;
+            int textColor = isUnlocked ? (isSelected ? 0xFFFFFFFF : 0xFFD0D0E0) : 0xFFAA7777;
 
             // Draw Symbol & Label centered
             int symbolW = this.textRenderer.getWidth(iconSymbol);
             int labelW = this.textRenderer.getWidth(label);
 
-            context.drawTextWithShadow(this.textRenderer, iconSymbol, textX - (symbolW / 2), textY - 8, isSelected ? 0xFF55FFFF : 0xFFAAAAAA);
+            int symbolColor = isUnlocked ? (isSelected ? 0xFF55FFFF : 0xFFAAAAAA) : (isSelected ? 0xFFFF5555 : 0xFF885555);
+            context.drawTextWithShadow(this.textRenderer, iconSymbol, textX - (symbolW / 2), textY - 8, symbolColor);
             context.drawTextWithShadow(this.textRenderer, label, textX - (labelW / 2), textY + 3, textColor);
         }
 
@@ -128,14 +138,22 @@ public class EmoteWheelScreen extends Screen {
             double centerDeg = SEGMENT_ANGLES[selectedSlot];
             double startDeg = centerDeg - 40.0;
             double endDeg = centerDeg + 40.0;
-            int accent = MooClientSettings.getAccentColor();
-            drawArcOutline(context, cx, cy, centerRadius, startDeg, endDeg, accent);
-            drawArcOutline(context, cx, cy, centerRadius + 1, startDeg, endDeg, accent);
+            boolean isUnlocked = com.mooclient.util.EmoteAccessManager.hasAccess(selectedSlot);
+            int glowColor = isUnlocked ? MooClientSettings.getAccentColor() : 0xFFFF5555;
+            drawArcOutline(context, cx, cy, centerRadius, startDeg, endDeg, glowColor);
+            drawArcOutline(context, cx, cy, centerRadius + 1, startDeg, endDeg, glowColor);
         }
 
         // Large Cow Logo (52x52)
         int logoSize = 52;
         context.drawTexture(RenderLayer::getGuiTextured, MOO_LOGO, cx - logoSize / 2, cy - logoSize / 2, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
+
+        // Developer Mode Badge in top center
+        if (com.mooclient.util.EmoteAccessManager.isLocalPlayerDeveloper()) {
+            String devBadge = "[ " + MooLanguage.get("emotes_dev_badge") + " ]";
+            int dbW = this.textRenderer.getWidth(devBadge);
+            context.drawTextWithShadow(this.textRenderer, devBadge, cx - (dbW / 2), cy - 140, 0xFF55FFFF);
+        }
 
         // --- 3. Warframe Center Title Callout ---
         String selectedTitle = getSelectedTitle();
@@ -147,9 +165,12 @@ public class EmoteWheelScreen extends Screen {
             int pillW = textW + (pillPadding * 2);
             int pillH = 20;
 
+            boolean isUnlocked = selectedSlot < 0 || com.mooclient.util.EmoteAccessManager.hasAccess(selectedSlot);
+            int boxBorder = isUnlocked ? MooClientSettings.getAccentColor() : 0xFFFF5555;
+
             context.fill(pillX, titleY, pillX + pillW, titleY + pillH, 0xEE14141E);
-            drawRectOutline(context, pillX, titleY, pillW, pillH, MooClientSettings.getAccentColor());
-            context.drawTextWithShadow(this.textRenderer, selectedTitle, cx - (textW / 2), titleY + 6, 0xFFFFFFFF);
+            drawRectOutline(context, pillX, titleY, pillW, pillH, boxBorder);
+            context.drawTextWithShadow(this.textRenderer, selectedTitle, cx - (textW / 2), titleY + 6, isUnlocked ? 0xFFFFFFFF : 0xFFFF7777);
         }
 
         // Bottom usage hint
@@ -181,6 +202,10 @@ public class EmoteWheelScreen extends Screen {
     }
 
     private String getSelectedTitle() {
+        if (selectedSlot < 0) return null;
+        if (!com.mooclient.util.EmoteAccessManager.hasAccess(selectedSlot)) {
+            return "> " + MooLanguage.get("emotes_store_required").toUpperCase() + " <";
+        }
         return switch (selectedSlot) {
             case 0 -> "> " + MooLanguage.get("emotes_wheel_hands_up").toUpperCase() + " <";
             case 1 -> "> " + MooLanguage.get("emotes_wheel_frontflip").toUpperCase() + " <";
@@ -355,6 +380,13 @@ public class EmoteWheelScreen extends Screen {
     }
 
     private void executeAction() {
+        if (!com.mooclient.util.EmoteAccessManager.hasAccess(selectedSlot)) {
+            if (this.client != null && this.client.player != null) {
+                this.client.player.sendMessage(Text.literal("§c[Moo Client] " + MooLanguage.get("emotes_store_required")), true);
+            }
+            return;
+        }
+
         switch (selectedSlot) {
             case 0 -> EmotesModule.toggleHandsUp();
             case 1 -> EmotesModule.triggerFrontflip();
