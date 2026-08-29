@@ -3,9 +3,13 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.6.6';
+const VERSION = '1.6.7';
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+const REPO_OWNER = 'Moo-Client';
+const REPO_NAME = 'moo-client';
 
 function getGitHubToken() {
+    if (GITHUB_TOKEN) return GITHUB_TOKEN;
     try {
         const input = 'protocol=https\nhost=github.com\n\n';
         const result = execSync('git credential fill', { input, encoding: 'utf8', timeout: 5000 });
@@ -67,7 +71,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         res = await apiRequest('POST', '/repos/Moo-Client/moo-client/releases', token, {
             tag_name: `v${VERSION}`,
             name: `Moo Client v${VERSION}`,
-            body: '🚀 **Moo Client v1.6.6**\n\n✓ **Autorska animacja podnoszenia rąk (Hands Up Emote)** pod klawiszem `R`\n✓ **Ultra płynna interpolacja klatkowa (Smoothstep Lerp)** dla naturalnego ruchu rąk\n✓ **Dwa tryby aktywacji:** Hold (przytrzymaj) oraz Toggle (przełącz)\n✓ **Pełna integracja z GUI modów:** interaktywna zmiana klawisza i zapis konfiguracji\n✓ **Pełne wsparcie wielojęzyczne:** polski (PL) oraz angielski (EN)\n✓ Zaktualizowano wersję Fabric mod do 1.6.6',
+            body: '🚀 **Moo Client v1.6.7**\n\n✓ **Pełna globalna synchronizacja emotek i salt (Multiplayer Emote Sync)** w czasie rzeczywistym\n✓ **Koło wyboru emotek (Emote Wheel)** w stylu Warframe pod klawiszem `B` z kierunkowym podświetleniem\n✓ **System uprawnień developerów i kategoryzacji sklepowej** (`EmoteAccessManager`)\n✓ **Dedykowany, w pełni bindowalny klawisz rąk w górę (Hands Up)** w GUI pod klawiszem `R`\n✓ **Płynne salta w przód i tył z parabolicznym wyskokiem +1.05m** bez zmiany hitboxa\n✓ **Zoptymalizowany pod kątem FPS, zero-alokacji i pamięci GC**\n✓ Zaktualizowano wersję Fabric mod do 1.6.7',
             draft: false,
             prerelease: false
         });
