@@ -1,7 +1,7 @@
 {
-  "version": "1.6.9.1",
+  "version": "1.6.10",
   "minecraft": "1.21.4",
-  "name": "Moo Client 1.6.9.1 (Hotfix)",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.9.1/moo-client-1.6.9.1.jar",
-  "changelog": "🚀 Moo Client v1.6.9.1 (Hotfix):\n✓ Usunięto niepotrzebne napisy z zakładki Emotek i interfejsu\n✓ Drobne poprawki wizualne w menu Ustawień"
+  "name": "Moo Client 1.6.10",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.10/moo-client-1.6.10.jar",
+  "changelog": "🚀 Moo Client v1.6.10:\n✓ Usunięto niepotrzebne napisy z zakładki Emotek i interfejsu\n✓ Drobne poprawki wizualne w menu Ustawień"
 }

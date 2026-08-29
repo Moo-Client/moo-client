@@ -1,6 +1,6 @@
 {
   "name": "moo-client-launcher",
-  "version": "1.6.9",
+  "version": "1.6.10",
   "description": "Moo Client Launcher — Premium Minecraft Client inspired by Lunar Client",
   "main": "src/main.js",
   "scripts": {
