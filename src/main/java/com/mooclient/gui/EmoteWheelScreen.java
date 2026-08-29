@@ -25,9 +25,9 @@ public class EmoteWheelScreen extends Screen {
     private int selectedSlot = -1; // 0 = Hands Up, 1 = Frontflip, 2 = Stop, 3 = Backflip
     private int triggerKeyCode;
 
-    private static final int SEGMENTS_COUNT = 4;
-    // Segment centers: Top (-90°), Right (0°), Bottom (90°), Left (180°)
-    private static final double[] SEGMENT_ANGLES = new double[] { -90.0, 0.0, 90.0, 180.0 };
+    private static final int SEGMENTS_COUNT = 3;
+    // Segment centers: Top-Right (-45°), Top-Left (-135°), Bottom (90°)
+    private static final double[] SEGMENT_ANGLES = new double[] { -45.0, -135.0, 90.0 };
 
     public EmoteWheelScreen(int triggerKeyCode) {
         super(Text.literal("Emote Wheel"));
@@ -62,28 +62,25 @@ public class EmoteWheelScreen extends Screen {
 
         if (dist > 28) {
             double rawAngle = Math.toDegrees(Math.atan2(dy, dx)); // -180 to 180
-            // Map angle to 4 Warframe sectors:
-            if (rawAngle >= -135 && rawAngle < -45) {
-                selectedSlot = 0; // Top: Hands Up
-            } else if (rawAngle >= -45 && rawAngle < 45) {
-                selectedSlot = 1; // Right: Frontflip
-            } else if (rawAngle >= 45 && rawAngle < 135) {
+            // Map angle to 3 Warframe sectors:
+            if (rawAngle >= -90 && rawAngle < 20) {
+                selectedSlot = 0; // Top-Right: Frontflip
+            } else if (rawAngle >= 20 && rawAngle < 160) {
                 selectedSlot = 2; // Bottom: Stop
             } else {
-                selectedSlot = 3; // Left: Backflip
+                selectedSlot = 1; // Top-Left: Backflip
             }
         } else {
             selectedSlot = -1;
         }
 
         // --- 1. Render Warframe Wedge Petals ---
-        // --- 1. Render Warframe Wedge Petals ---
         for (int i = 0; i < SEGMENTS_COUNT; i++) {
             boolean isSelected = (i == selectedSlot);
             boolean isUnlocked = com.mooclient.util.EmoteAccessManager.hasAccess(i);
             double centerDeg = SEGMENT_ANGLES[i];
-            double spanDeg = 90.0;
-            double gapDeg = 5.0;
+            double spanDeg = 110.0;
+            double gapDeg = 8.0;
 
             double startDeg = centerDeg - (spanDeg / 2.0) + (gapDeg / 2.0);
             double endDeg = centerDeg + (spanDeg / 2.0) - (gapDeg / 2.0);
@@ -136,8 +133,8 @@ public class EmoteWheelScreen extends Screen {
         // Directional Glow: Highlight ONLY the arc in the direction of the selected item
         if (selectedSlot >= 0) {
             double centerDeg = SEGMENT_ANGLES[selectedSlot];
-            double startDeg = centerDeg - 40.0;
-            double endDeg = centerDeg + 40.0;
+            double startDeg = centerDeg - 45.0;
+            double endDeg = centerDeg + 45.0;
             boolean isUnlocked = com.mooclient.util.EmoteAccessManager.hasAccess(selectedSlot);
             int glowColor = isUnlocked ? MooClientSettings.getAccentColor() : 0xFFFF5555;
             drawArcOutline(context, cx, cy, centerRadius, startDeg, endDeg, glowColor);
@@ -183,20 +180,18 @@ public class EmoteWheelScreen extends Screen {
 
     private String getSlotLabel(int slot) {
         return switch (slot) {
-            case 0 -> MooLanguage.get("emotes_wheel_hands_up");
-            case 1 -> MooLanguage.get("emotes_wheel_frontflip");
+            case 0 -> MooLanguage.get("emotes_wheel_frontflip");
+            case 1 -> MooLanguage.get("emotes_wheel_backflip");
             case 2 -> MooLanguage.get("emotes_wheel_stop");
-            case 3 -> MooLanguage.get("emotes_wheel_backflip");
             default -> "";
         };
     }
 
     private String getSlotSymbol(int slot) {
         return switch (slot) {
-            case 0 -> "^ ^"; // Hands Up
-            case 1 -> ">>";  // Frontflip
+            case 0 -> ">>";  // Frontflip
+            case 1 -> "<<";  // Backflip
             case 2 -> "[X]"; // Stop
-            case 3 -> "<<";  // Backflip
             default -> "";
         };
     }
@@ -207,10 +202,9 @@ public class EmoteWheelScreen extends Screen {
             return "> " + MooLanguage.get("emotes_store_required").toUpperCase() + " <";
         }
         return switch (selectedSlot) {
-            case 0 -> "> " + MooLanguage.get("emotes_wheel_hands_up").toUpperCase() + " <";
-            case 1 -> "> " + MooLanguage.get("emotes_wheel_frontflip").toUpperCase() + " <";
+            case 0 -> "> " + MooLanguage.get("emotes_wheel_frontflip").toUpperCase() + " <";
+            case 1 -> "> " + MooLanguage.get("emotes_wheel_backflip").toUpperCase() + " <";
             case 2 -> "> " + MooLanguage.get("emotes_wheel_stop").toUpperCase() + " <";
-            case 3 -> "> " + MooLanguage.get("emotes_wheel_backflip").toUpperCase() + " <";
             default -> null;
         };
     }
@@ -388,10 +382,9 @@ public class EmoteWheelScreen extends Screen {
         }
 
         switch (selectedSlot) {
-            case 0 -> EmotesModule.toggleHandsUp();
-            case 1 -> EmotesModule.triggerFrontflip();
+            case 0 -> EmotesModule.triggerFrontflip();
+            case 1 -> EmotesModule.triggerBackflip();
             case 2 -> EmotesModule.setHandsUp(false);
-            case 3 -> EmotesModule.triggerBackflip();
         }
     }
 

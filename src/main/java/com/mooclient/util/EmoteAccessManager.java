@@ -104,10 +104,9 @@ public class EmoteAccessManager {
 
     public static boolean hasAccess(int slot) {
         return switch (slot) {
-            case 0 -> hasAccess(EmoteId.HANDS_UP);
-            case 1 -> hasAccess(EmoteId.FRONTFLIP);
+            case 0 -> hasAccess(EmoteId.FRONTFLIP);
+            case 1 -> hasAccess(EmoteId.BACKFLIP);
             case 2 -> hasAccess(EmoteId.STOP);
-            case 3 -> hasAccess(EmoteId.BACKFLIP);
             default -> false;
         };
     }

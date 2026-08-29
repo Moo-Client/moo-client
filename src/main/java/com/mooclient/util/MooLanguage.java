@@ -41,6 +41,7 @@ public class MooLanguage {
                 case "emotes_name" -> "Emotki";
                 case "emotes_desc" -> "Animacje postaci (Ręce w górę, Salto w przód i tył)";
                 case "emotes_opt_title" -> "EMOTKI";
+                case "emotes_opt_subtitle" -> "Wykonywanie salt w przód/tył, gesty i podnoszenie rąk.";
                 case "emotes_hands_up_label" -> "Ręce w górę (Hands Up)";
                 case "emotes_frontflip_label" -> "Salto w przód (Frontflip)";
                 case "emotes_backflip_label" -> "Salto w tył (Backflip)";
@@ -174,6 +175,7 @@ public class MooLanguage {
                 case "emotes_name" -> "Emotes";
                 case "emotes_desc" -> "Player animations (Hands Up, Frontflip, Backflip)";
                 case "emotes_opt_title" -> "EMOTES";
+                case "emotes_opt_subtitle" -> "Perform frontflips, backflips, gestures and raise hands.";
                 case "emotes_hands_up_label" -> "Hands Up Keybind";
                 case "emotes_frontflip_label" -> "Frontflip Keybind";
                 case "emotes_backflip_label" -> "Backflip Keybind";

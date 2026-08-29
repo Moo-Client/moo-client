@@ -172,6 +172,20 @@ public class MooClient implements ClientModInitializer {
                     waypointKeyWasDown = isKeyDown;
                 }
 
+                // In-game Hands Up key detection (Default: R key)
+                int handsUpKey = com.mooclient.module.modules.EmotesModule.getKeyCode();
+                if (handsUpKey > 0 && com.mooclient.module.modules.EmotesModule.isEmotesEnabled()) {
+                    boolean isKeyDown = GLFW.glfwGetKey(window, handsUpKey) == GLFW.GLFW_PRESS;
+                    if (com.mooclient.module.modules.EmotesModule.getMode() == com.mooclient.module.modules.EmotesModule.ActivationMode.HOLD) {
+                        com.mooclient.module.modules.EmotesModule.setHandsUp(isKeyDown);
+                    } else { // TOGGLE mode
+                        if (isKeyDown && !emoteKeyWasDown) {
+                            com.mooclient.module.modules.EmotesModule.toggleHandsUp();
+                        }
+                    }
+                    emoteKeyWasDown = isKeyDown;
+                }
+
                 // In-game Emote Radial Wheel trigger (Default: B key)
                 int wheelKeyCode = com.mooclient.module.modules.EmotesModule.getWheelKeyCode();
                 if (wheelKeyCode > 0 && com.mooclient.module.modules.EmotesModule.isEmotesEnabled()) {
