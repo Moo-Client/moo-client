@@ -118,10 +118,20 @@ public class EmoteWheelScreen extends Screen {
         // --- 2. Central Disc with LARGE Moo Client Logo ---
         int centerRadius = 40;
         int centerBg = 0xFA0E0E14;
-        int centerBorder = (selectedSlot >= 0) ? MooClientSettings.getAccentColor() : 0x55FFFFFF;
+        int centerBorder = 0x44FFFFFF; // Subtle dark base border
 
         drawCircleFill(context, cx, cy, centerRadius, centerBg);
         drawCircleOutline(context, cx, cy, centerRadius, centerBorder);
+
+        // Directional Glow: Highlight ONLY the arc in the direction of the selected item
+        if (selectedSlot >= 0) {
+            double centerDeg = SEGMENT_ANGLES[selectedSlot];
+            double startDeg = centerDeg - 40.0;
+            double endDeg = centerDeg + 40.0;
+            int accent = MooClientSettings.getAccentColor();
+            drawArcOutline(context, cx, cy, centerRadius, startDeg, endDeg, accent);
+            drawArcOutline(context, cx, cy, centerRadius + 1, startDeg, endDeg, accent);
+        }
 
         // Large Cow Logo (52x52)
         int logoSize = 52;
@@ -315,6 +325,20 @@ public class EmoteWheelScreen extends Screen {
         for (int i = 0; i < segments; i++) {
             double a1 = i * step;
             double a2 = (i + 1) * step;
+            int x1 = (int) (cx + Math.cos(a1) * radius);
+            int y1 = (int) (cy + Math.sin(a1) * radius);
+            int x2 = (int) (cx + Math.cos(a2) * radius);
+            int y2 = (int) (cy + Math.sin(a2) * radius);
+            drawLine(context, x1, y1, x2, y2, color);
+        }
+    }
+
+    private void drawArcOutline(DrawContext context, int cx, int cy, int radius, double startDeg, double endDeg, int color) {
+        int segments = 16;
+        double step = (endDeg - startDeg) / segments;
+        for (int i = 0; i < segments; i++) {
+            double a1 = Math.toRadians(startDeg + i * step);
+            double a2 = Math.toRadians(startDeg + (i + 1) * step);
             int x1 = (int) (cx + Math.cos(a1) * radius);
             int y1 = (int) (cy + Math.sin(a1) * radius);
             int x2 = (int) (cx + Math.cos(a2) * radius);
