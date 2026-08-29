@@ -64,14 +64,21 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);
     let release;
 
+    const CHANGELOG_BODY = '🚀 **Moo Client v1.8.0**\n\n✓ **Nowy interaktywny edytor 12-slotowego koła emotek (Drag & Drop)**\n✓ **Przewijanie scrollem biblioteki emotek**\n✓ **Nowe animacje postaci 3D:** Medytacja, Przyjazne machanie, Facepalm\n✓ **Usunięto wymuszanie perspektywy F5 przy saltach**';
+
     if (res.status === 200) {
         release = res.data;
         console.log('Found existing release:', release.html_url);
+        await apiRequest('PATCH', `/repos/Moo-Client/moo-client/releases/${release.id}`, token, {
+            name: `Moo Client v${VERSION}`,
+            body: CHANGELOG_BODY
+        });
+        console.log('Updated release body with new changelog!');
     } else {
         res = await apiRequest('POST', '/repos/Moo-Client/moo-client/releases', token, {
             tag_name: `v${VERSION}`,
             name: `Moo Client v${VERSION}`,
-            body: '🚀 **Moo Client v1.8.0**\n\n✓ **Nowy interaktywny edytor 12-slotowego koła emotek (Drag & Drop)**\n✓ **Przewijanie scrollem biblioteki emotek**\n✓ **Nowe animacje postaci 3D:** Medytacja (poza lotosu), Przyjazne machanie, Facepalm\n✓ **Ciągła medytacja w pętli** z anulowaniem klawiszem koła (`B`)\n✓ **Usunięto wymuszanie perspektywy F5 przy saltach**\n✓ **Zabezpieczenie emotek w systemie uprawnień i sklepu (Supabase REST API)**',
+            body: CHANGELOG_BODY,
             draft: false,
             prerelease: false
         });
