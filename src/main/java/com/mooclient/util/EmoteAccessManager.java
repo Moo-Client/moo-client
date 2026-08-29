@@ -286,7 +286,6 @@ public class EmoteAccessManager {
         return switch (slot) {
             case 0 -> hasAccess(EmoteId.BACKFLIP);
             case 1 -> hasAccess(EmoteId.FRONTFLIP);
-            case 2 -> hasAccess(EmoteId.STOP);
             default -> false;
         };
     }

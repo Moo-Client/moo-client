@@ -22,13 +22,13 @@ public class EmoteWheelScreen extends Screen {
 
     private static final Identifier MOO_LOGO = Identifier.of("mooclient", "textures/gui/icon.png");
 
-    private int selectedSlot = -1; // 0 = Frontflip, 1 = Backflip, 2 = Stop
+    private int selectedSlot = -1; // 0 = Backflip (Right), 1 = Frontflip (Left)
     private int triggerKeyCode;
     private boolean isMouseTrigger;
 
-    private static final int SEGMENTS_COUNT = 3;
-    // Segment centers: Top-Right (-45°), Top-Left (-135°), Bottom (90°)
-    private static final double[] SEGMENT_ANGLES = new double[] { -45.0, -135.0, 90.0 };
+    private static final int SEGMENTS_COUNT = 2;
+    // Segment centers: Top-Right (-35°), Top-Left (-145°)
+    private static final double[] SEGMENT_ANGLES = new double[] { -35.0, -145.0 };
 
     public EmoteWheelScreen(int triggerKeyCode) {
         this(triggerKeyCode, false);
@@ -53,7 +53,7 @@ public class EmoteWheelScreen extends Screen {
 
     @Override
     public void renderInGameBackground(DrawContext context) {
-        // Disabled to prevent screen blur
+        // Transparent in-game
     }
 
     @Override
@@ -66,15 +66,13 @@ public class EmoteWheelScreen extends Screen {
         double dy = mouseY - cy;
         double dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (dist > 28) {
+        if (dist > 25) {
             double rawAngle = Math.toDegrees(Math.atan2(dy, dx)); // -180 to 180
-            // Map angle to 3 sectors:
-            if (rawAngle >= -90 && rawAngle < 20) {
-                selectedSlot = 0; // Top-Right: Backflip
-            } else if (rawAngle >= 20 && rawAngle < 160) {
-                selectedSlot = 2; // Bottom: Stop
+            // Map angle to 2 sectors (Right: Salto w tył, Left: Salto w przód)
+            if (rawAngle >= -90 && rawAngle < 90) {
+                selectedSlot = 0; // Top-Right: Salto w tył
             } else {
-                selectedSlot = 1; // Top-Left: Frontflip
+                selectedSlot = 1; // Top-Left: Salto w przód
             }
         } else {
             selectedSlot = -1;
@@ -85,7 +83,7 @@ public class EmoteWheelScreen extends Screen {
             boolean isSelected = (i == selectedSlot);
             boolean isUnlocked = com.mooclient.util.EmoteAccessManager.hasAccess(i);
             double centerDeg = SEGMENT_ANGLES[i];
-            double spanDeg = 110.0;
+            double spanDeg = 92.0;
             double gapDeg = 8.0;
 
             double startDeg = centerDeg - (spanDeg / 2.0) + (gapDeg / 2.0);
@@ -139,8 +137,8 @@ public class EmoteWheelScreen extends Screen {
         // Directional Glow: Highlight ONLY the arc in the direction of the selected item
         if (selectedSlot >= 0) {
             double centerDeg = SEGMENT_ANGLES[selectedSlot];
-            double startDeg = centerDeg - 45.0;
-            double endDeg = centerDeg + 45.0;
+            double startDeg = centerDeg - 38.0;
+            double endDeg = centerDeg + 38.0;
             boolean isUnlocked = com.mooclient.util.EmoteAccessManager.hasAccess(selectedSlot);
             int glowColor = isUnlocked ? MooClientSettings.getAccentColor() : 0xFFFF5555;
             drawArcOutline(context, cx, cy, centerRadius, startDeg, endDeg, glowColor);
@@ -214,7 +212,6 @@ public class EmoteWheelScreen extends Screen {
         return switch (slot) {
             case 0 -> MooLanguage.get("emotes_wheel_backflip");
             case 1 -> MooLanguage.get("emotes_wheel_frontflip");
-            case 2 -> MooLanguage.get("emotes_wheel_stop");
             default -> "";
         };
     }
@@ -223,7 +220,6 @@ public class EmoteWheelScreen extends Screen {
         return switch (slot) {
             case 0 -> "<<";  // Backflip
             case 1 -> ">>";  // Frontflip
-            case 2 -> "[X]"; // Stop
             default -> "";
         };
     }
@@ -236,7 +232,6 @@ public class EmoteWheelScreen extends Screen {
         return switch (selectedSlot) {
             case 0 -> "> " + MooLanguage.get("emotes_wheel_backflip").toUpperCase() + " <";
             case 1 -> "> " + MooLanguage.get("emotes_wheel_frontflip").toUpperCase() + " <";
-            case 2 -> "> " + MooLanguage.get("emotes_wheel_stop").toUpperCase() + " <";
             default -> null;
         };
     }
@@ -414,9 +409,8 @@ public class EmoteWheelScreen extends Screen {
         }
 
         switch (selectedSlot) {
-            case 0 -> EmotesModule.triggerFrontflipFromWheel();
-            case 1 -> EmotesModule.triggerBackflipFromWheel();
-            case 2 -> EmotesModule.stopEmotesFromWheel();
+            case 0 -> EmotesModule.triggerBackflipFromWheel();
+            case 1 -> EmotesModule.triggerFrontflipFromWheel();
         }
     }
 
