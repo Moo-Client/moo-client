@@ -33,8 +33,8 @@ class ModManager {
     static isNewerVersion(remote, local) {
         if (!remote) return false;
         if (!local) return true;
-        const rParts = String(remote).replace(/^v/i, '').split('.').map(n => parseInt(n, 10) || 0);
-        const lParts = String(local).replace(/^v/i, '').split('.').map(n => parseInt(n, 10) || 0);
+        const rParts = String(remote).replace(/^v/i, '').split(/[._-]/).map(n => parseInt(n, 10) || 0);
+        const lParts = String(local).replace(/^v/i, '').split(/[._-]/).map(n => parseInt(n, 10) || 0);
         for (let i = 0; i < Math.max(rParts.length, lParts.length); i++) {
             const r = rParts[i] || 0;
             const l = lParts[i] || 0;
