@@ -201,6 +201,14 @@ public class MooConfig {
             cps.addProperty("posY", com.mooclient.module.modules.CpsModule.posY);
             root.add("cps", cps);
 
+            // Emotes Module
+            JsonObject emotes = new JsonObject();
+            emotes.addProperty("enabled", com.mooclient.module.modules.EmotesModule.isEmotesEnabled());
+            emotes.addProperty("keyCode", com.mooclient.module.modules.EmotesModule.getKeyCode());
+            emotes.addProperty("keyName", com.mooclient.module.modules.EmotesModule.getKeyName());
+            emotes.addProperty("mode", com.mooclient.module.modules.EmotesModule.getMode().name());
+            root.add("emotes", emotes);
+
             // Global Client Settings
             JsonObject settings = new JsonObject();
             settings.addProperty("accentPreset", MooClientSettings.getAccentPreset().name());
@@ -735,6 +743,28 @@ public class MooConfig {
                 }
                 if (cps.has("posY")) {
                     com.mooclient.module.modules.CpsModule.posY = cps.get("posY").getAsInt();
+                }
+            }
+
+            // Emotes Module
+            if (root.has("emotes")) {
+                JsonObject emotes = root.getAsJsonObject("emotes");
+                if (emotes.has("enabled")) {
+                    boolean state = emotes.get("enabled").getAsBoolean();
+                    com.mooclient.module.modules.EmotesModule.setEmotesEnabled(state);
+                    ModuleManager.getInstance().getModule("Emotes").ifPresent(m -> m.setEnabled(state));
+                    ModuleManager.getInstance().getModule("Emotki").ifPresent(m -> m.setEnabled(state));
+                }
+                if (emotes.has("keyCode") && emotes.has("keyName")) {
+                    com.mooclient.module.modules.EmotesModule.setKeybind(emotes.get("keyCode").getAsInt(),
+                            emotes.get("keyName").getAsString());
+                }
+                if (emotes.has("mode")) {
+                    try {
+                        com.mooclient.module.modules.EmotesModule.setMode(
+                                com.mooclient.module.modules.EmotesModule.ActivationMode.valueOf(emotes.get("mode").getAsString()));
+                    } catch (Exception ignored) {
+                    }
                 }
             }
 

@@ -16,6 +16,7 @@
     "CameraMixin",
     "MouseMixin",
     "PlayerEntityRendererMixin",
+    "PlayerEntityModelMixin",
     "EntityRendererMixin",
     "NametagBackgroundMixin",
     "ChatHudMixin",

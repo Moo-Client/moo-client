@@ -1,6 +1,6 @@
 {
-  "version": "1.6.5",
+  "version": "1.6.6",
   "minecraft": "1.21.4",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.5/moo-client-1.6.5.jar",
-  "changelog": "🚀 Moo Client v1.6.5:\n✓ Wyciszenie naliczania CPS w otwartych menu i GUI\n✓ Ulepszone magnetyczne dociąganie widgetów HUD (krawędzie, osie, kaskada z równymi odstępami)\n✓ Opcja ukrywania nazwy 'CPS' (wyświetlanie samej liczby)\n✓ Domyślnie wyłączone moduły przy pierwszym uruchomieniu (z zachowaniem aktywnego Scoreboardu)"
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.6/moo-client-1.6.6.jar",
+  "changelog": "🚀 Moo Client v1.6.6:\n✓ Autorska animacja podnoszenia rąk (Hands Up Emote) pod klawiszem R\n✓ Ultra płynna interpolacja klatkowa (Smoothstep Lerp)\n✓ Tryby aktywacji: Hold (przytrzymaj) oraz Toggle (przełącz)\n✓ Pełna integracja z GUI modów i zlokalizowanymi opcjami (PL & EN)\n✓ Zaktualizowano wersję moda Fabric do 1.6.6"
 }

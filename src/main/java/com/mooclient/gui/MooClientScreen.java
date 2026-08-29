@@ -667,11 +667,15 @@ public class MooClientScreen extends Screen {
                 icon = "📋";
             } else if (module.getName().equalsIgnoreCase("CPS")) {
                 icon = "🖱";
+            } else if (module.getName().equalsIgnoreCase("Emotki") || module.getName().equalsIgnoreCase("Emotes")) {
+                icon = "🙋";
             } else {
                 icon = "⌨";
             }
             drawCenteredText(context, icon, cardX + cardW / 2, cardY + 20, COLOR_TEXT_WHITE);
-            drawCenteredText(context, module.getName(), cardX + cardW / 2, cardY + 44, COLOR_TEXT_WHITE);
+            String cardTitle = (module.getName().equalsIgnoreCase("Emotki") || module.getName().equalsIgnoreCase("Emotes"))
+                    ? MooLanguage.get("emotes_name") : module.getName();
+            drawCenteredText(context, cardTitle, cardX + cardW / 2, cardY + 44, COLOR_TEXT_WHITE);
 
             // OPTIONS Bar
             int optH = 20;
@@ -745,6 +749,8 @@ public class MooClientScreen extends Screen {
             return MooLanguage.get("waypoints_desc");
         if (name.equalsIgnoreCase("Scoreboard"))
             return MooLanguage.get("scoreboard_desc");
+        if (name.equalsIgnoreCase("Emotki") || name.equalsIgnoreCase("Emotes"))
+            return MooLanguage.get("emotes_desc");
         return MooLanguage.get("macro_desc");
     }
 
@@ -808,6 +814,9 @@ public class MooClientScreen extends Screen {
         } else if (modName.equalsIgnoreCase("Scoreboard")) {
             optTitle = MooLanguage.get("scoreboard_opt_title");
             optSubtitle = MooLanguage.get("scoreboard_opt_subtitle");
+        } else if (modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) {
+            optTitle = MooLanguage.get("emotes_opt_title");
+            optSubtitle = MooLanguage.get("emotes_opt_subtitle");
         } else {
             optTitle = MooLanguage.get("gamma_opt_title");
             optSubtitle = MooLanguage.get("gamma_opt_subtitle");
@@ -899,8 +908,8 @@ public class MooClientScreen extends Screen {
 
         } else if (modName.equalsIgnoreCase("Sprint")) {
             // Row 1: Interactive Keybind Selector (Click to change keybind!)
-            drawOptionRow(context, rowX, rowY, rowW, rowH, "Klawisz (Keybind)");
-            String keyText = listeningForKeybind ? "> WCIŚNIJ KLAWISZ <"
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("keybind_label"));
+            String keyText = listeningForKeybind ? MooLanguage.get("press_key_hint")
                     : "[ " + ToggleSprintModule.getKeyName() + " ]";
             int btnW = 140;
             int btnH = 22;
@@ -934,8 +943,8 @@ public class MooClientScreen extends Screen {
 
         } else if (modName.equalsIgnoreCase("Freelook")) {
             // Row 1: Keybind
-            drawOptionRow(context, rowX, rowY, rowW, rowH, "Klawisz (Keybind)");
-            String keyText = listeningForKeybind ? "> WCIŚNIJ KLAWISZ <" : "[ " + FreelookModule.getKeyName() + " ]";
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("keybind_label"));
+            String keyText = listeningForKeybind ? MooLanguage.get("press_key_hint") : "[ " + FreelookModule.getKeyName() + " ]";
             int btnW = 140;
             int btnH = 22;
             int btnX = rowX + rowW - btnW - 10;
@@ -1009,9 +1018,9 @@ public class MooClientScreen extends Screen {
 
         } else if (modName.equalsIgnoreCase("Zoom")) {
             // Row 1: Keybind
-            drawOptionRow(context, rowX, rowY, rowW, rowH, "Klawisz przybliżenia (Key)");
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("keybind_label"));
             String btnText = (this.listeningForKeybind && selectedModule.getName().equalsIgnoreCase("Zoom"))
-                    ? "Naciśnij klawisz..."
+                    ? MooLanguage.get("press_key_hint")
                     : "[" + com.mooclient.module.modules.ZoomModule.getKeyName() + "]";
             int btnW = 140;
             int btnH = 22;
@@ -1135,8 +1144,8 @@ public class MooClientScreen extends Screen {
 
         } else if (modName.equalsIgnoreCase("Waypoints")) {
             // Row 1: Keybind (Interactive Keybind Selector)
-            drawOptionRow(context, rowX, rowY, rowW, rowH, "Klawisz (Keybind)");
-            String keyText = listeningForKeybind ? "> WCIŚNIJ KLAWISZ <"
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("keybind_label"));
+            String keyText = listeningForKeybind ? MooLanguage.get("press_key_hint")
                     : "[ " + com.mooclient.module.modules.WaypointsModule.getKeyName() + " ]";
             int btnW = 140;
             int btnH = 22;
@@ -1237,6 +1246,36 @@ public class MooClientScreen extends Screen {
             drawBorder(context, rBtnX, rBtnY, rBtnW, rBtnH, rHover ? 0xAAFFFFFF : 0x33FFFFFF);
             drawCenteredText(context, MooLanguage.get("reset_pos_btn"), rBtnX + rBtnW / 2, rBtnY + 7,
                     rHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
+
+        } else if (modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) {
+            // Row 1: Keybind (Interactive Keybind Selector - default R)
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("keybind_label"));
+            String keyText = listeningForKeybind ? MooLanguage.get("press_key_hint")
+                    : "[ " + com.mooclient.module.modules.EmotesModule.getKeyName() + " ]";
+            int btnW = 140;
+            int btnH = 22;
+            int btnX = rowX + rowW - btnW - 10;
+            int btnY = rowY + 6;
+            boolean btnHover = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH;
+            int btnBg = listeningForKeybind ? 0xEE334466 : (btnHover ? 0xCC252535 : 0x88181824);
+            int btnBorder = listeningForKeybind ? 0xFF55FFFF : (btnHover ? 0xAAFFFFFF : 0x44FFFFFF);
+            int textColor = listeningForKeybind ? 0xFFFFFF55 : 0xFF55FFFF;
+
+            context.fill(btnX, btnY, btnX + btnW, btnY + btnH, btnBg);
+            drawBorder(context, btnX, btnY, btnW, btnH, btnBorder);
+            drawCenteredText(context, keyText, btnX + btnW / 2, btnY + 7, textColor);
+
+            // Row 2: Activation Mode (Hold vs Toggle)
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("mode_label"));
+            renderModeSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY,
+                    com.mooclient.module.modules.EmotesModule.getMode().ordinal());
+
+            // Row 3: Enable / Disable toggle
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("enabled"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.EmotesModule.isEmotesEnabled());
 
         } else {
             // Gamma Options
@@ -1663,10 +1702,7 @@ public class MooClientScreen extends Screen {
 
     private void renderModeSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
             int selectedOrdinal) {
-        String[] labels = new String[] { "Hold", "Toggle" };
-        if (MooLanguage.current.equals(MooLanguage.PL)) {
-            labels = new String[] { "Przytrzymaj", "Przełącz" };
-        }
+        String[] labels = new String[] { MooLanguage.get("mode_hold"), MooLanguage.get("mode_toggle") };
         int[] widths = new int[] { 100, 100 };
         int gap = 6;
         int curX = startX;
@@ -1958,6 +1994,8 @@ public class MooClientScreen extends Screen {
                 FreelookModule.setKeybind(button, mouseName);
             } else if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Zoom")) {
                 com.mooclient.module.modules.ZoomModule.setKeybind(button, mouseName, true);
+            } else if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Emotki")) {
+                com.mooclient.module.modules.EmotesModule.setKeybind(button, mouseName);
             } else {
                 ToggleSprintModule.setKeybind(button, mouseName);
             }
@@ -2750,6 +2788,45 @@ public class MooClientScreen extends Screen {
                         com.mooclient.util.MooConfig.save();
                         return true;
                     }
+                } else if (modName.equalsIgnoreCase("Emotki")) {
+                    int btnW = 140;
+                    int btnH = 22;
+                    int btnX = rowX + rowW - btnW - 10;
+                    int btnY = rowY + 6;
+
+                    // Row 1: Keybind click
+                    if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
+                        playClickSound();
+                        this.listeningForKeybind = !this.listeningForKeybind;
+                        return true;
+                    }
+
+                    // Row 2: Mode Selector (Hold vs Toggle)
+                    rowY += rowH + 6;
+                    int modeClick = getModeSelectorClick(rowX + rowW - 206, rowY + 6, (int) mouseX, (int) mouseY);
+                    if (modeClick >= 0) {
+                        playClickSound();
+                        this.listeningForKeybind = false;
+                        com.mooclient.module.modules.EmotesModule.setMode(
+                                com.mooclient.module.modules.EmotesModule.ActivationMode.values()[modeClick]);
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 3: Enable Toggle
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        this.listeningForKeybind = false;
+                        boolean newState = !com.mooclient.module.modules.EmotesModule.isEmotesEnabled();
+                        com.mooclient.module.modules.EmotesModule.setEmotesEnabled(newState);
+                        if (selectedModule != null) {
+                            selectedModule.setEnabled(newState);
+                        }
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
                 } else {
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {
@@ -3244,6 +3321,8 @@ public class MooClientScreen extends Screen {
                 com.mooclient.module.modules.ZoomModule.setKeybind(keyCode, keyName);
             } else if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Waypoints")) {
                 com.mooclient.module.modules.WaypointsModule.setKeybind(keyCode, keyName);
+            } else if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Emotki")) {
+                com.mooclient.module.modules.EmotesModule.setKeybind(keyCode, keyName);
             } else {
                 ToggleSprintModule.setKeybind(keyCode, keyName);
             }

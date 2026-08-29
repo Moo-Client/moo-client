@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.6.5';
+const VERSION = '1.6.6';
 
 function getGitHubToken() {
     try {
@@ -67,7 +67,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         res = await apiRequest('POST', '/repos/Moo-Client/moo-client/releases', token, {
             tag_name: `v${VERSION}`,
             name: `Moo Client v${VERSION}`,
-            body: '🚀 **Moo Client v1.6.5**\n\n✓ Wyciszenie naliczania kliknięć CPS w otwartych menu i GUI\n✓ Ulepszone magnetyczne dociąganie widgetów HUD (krawędzie, osie, kaskada z równymi odstępami)\n✓ Opcja ukrywania nazwy "CPS" (wyświetlanie samej liczby)\n✓ Domyślnie wyłączone moduły przy pierwszym uruchomieniu gry (z zachowaniem aktywnego Scoreboardu)\n✓ Zaktualizowano wersję Fabric mod do 1.6.5',
+            body: '🚀 **Moo Client v1.6.6**\n\n✓ **Autorska animacja podnoszenia rąk (Hands Up Emote)** pod klawiszem `R`\n✓ **Ultra płynna interpolacja klatkowa (Smoothstep Lerp)** dla naturalnego ruchu rąk\n✓ **Dwa tryby aktywacji:** Hold (przytrzymaj) oraz Toggle (przełącz)\n✓ **Pełna integracja z GUI modów:** interaktywna zmiana klawisza i zapis konfiguracji\n✓ **Pełne wsparcie wielojęzyczne:** polski (PL) oraz angielski (EN)\n✓ Zaktualizowano wersję Fabric mod do 1.6.6',
             draft: false,
             prerelease: false
         });

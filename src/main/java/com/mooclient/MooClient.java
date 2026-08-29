@@ -21,7 +21,7 @@ public class MooClient implements ClientModInitializer {
 
     public static final String MOD_ID = "mooclient";
     public static final String MOD_NAME = "Moo Client";
-    public static final String VERSION = "1.6.5";
+    public static final String VERSION = "1.6.6";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
 
     private static MooClient instance;
@@ -36,6 +36,7 @@ public class MooClient implements ClientModInitializer {
     private static boolean freelookKeyWasDown = false;
     private static boolean zoomKeyWasDown = false;
     private static boolean waypointKeyWasDown = false;
+    private static boolean emoteKeyWasDown = false;
     private static int tickCounter = 0;
 
     @Override
@@ -93,6 +94,10 @@ public class MooClient implements ClientModInitializer {
                 zoomKeyWasDown = false;
                 sprintKeyWasDown = false;
                 waypointKeyWasDown = false;
+                emoteKeyWasDown = false;
+                if (com.mooclient.module.modules.EmotesModule.getMode() == com.mooclient.module.modules.EmotesModule.ActivationMode.HOLD) {
+                    com.mooclient.module.modules.EmotesModule.setHandsUp(false);
+                }
             }
 
             // In-game Toggle Sprint key detection
@@ -161,12 +166,27 @@ public class MooClient implements ClientModInitializer {
                     waypointKeyWasDown = isKeyDown;
                 }
 
+                // In-game Emotes / Hands Up key detection (Default: R key)
+                int emoteKeyCode = com.mooclient.module.modules.EmotesModule.getKeyCode();
+                if (emoteKeyCode > 0 && com.mooclient.module.modules.EmotesModule.isEmotesEnabled()) {
+                    boolean isKeyDown = GLFW.glfwGetKey(window, emoteKeyCode) == GLFW.GLFW_PRESS;
+                    if (com.mooclient.module.modules.EmotesModule.getMode() == com.mooclient.module.modules.EmotesModule.ActivationMode.HOLD) {
+                        com.mooclient.module.modules.EmotesModule.setHandsUp(isKeyDown);
+                    } else { // TOGGLE mode
+                        if (isKeyDown && !emoteKeyWasDown) {
+                            com.mooclient.module.modules.EmotesModule.toggleHandsUp();
+                        }
+                    }
+                    emoteKeyWasDown = isKeyDown;
+                }
+
                 // In-game Macro execution detection
                 com.mooclient.module.modules.MacroModule.onTick(client);
             }
 
-            // Always tick Zoom animation
+            // Always tick Zoom and Emotes animation
             com.mooclient.module.modules.ZoomModule.onTick();
+            com.mooclient.module.modules.EmotesModule.onTick();
 
             // Update Discord RPC State every ~2 seconds (40 ticks)
             tickCounter++;
