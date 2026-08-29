@@ -1,28 +1,27 @@
 package com.mooclient.module.modules;
 
 import com.mooclient.module.Module;
-import net.minecraft.util.math.MathHelper;
+import com.mooclient.network.MooEmotePayload;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
- * Emotes Module — Player animations (Hands Up, Frontflip, Backflip).
- * In-game rendering only — strictly NO hitbox or physics modifications.
+ * Emotes module for Moo Client.
+ * Supports smooth acrobatic frontflips, backflips, and hands-up animations,
+ * synchronized over the network across all Moo Client players in multiplayer.
  */
 public class EmotesModule extends Module {
 
     public enum ActivationMode {
-        HOLD("Przytrzymaj / Hold"),
-        TOGGLE("Przełącz / Toggle");
-
-        private final String displayName;
-
-        ActivationMode(String displayName) {
-            this.displayName = displayName;
-        }
-
-        public String getDisplayName() {
-            return displayName;
-        }
+        HOLD,
+        TOGGLE
     }
 
     public enum FlipDirection {
@@ -33,26 +32,23 @@ public class EmotesModule extends Module {
 
     private static boolean enabled = true;
 
-    // --- 1. Hands Up Emote ---
-    public static boolean isHandsUp = false;
+    // --- Local & Multiplayer States ---
+    private static final PlayerEmoteState localPlayerState = new PlayerEmoteState(null);
+    private static final Map<UUID, PlayerEmoteState> playerStates = new ConcurrentHashMap<>();
+
+    // --- Keybinds and Mode ---
     private static ActivationMode mode = ActivationMode.TOGGLE;
-    private static float currentProgress = 0.0f;
-    private static float lastProgress = 0.0f;
     private static int keyCode = GLFW.GLFW_KEY_R;
     private static String keyName = "R";
-
-    // --- 2. Frontflip / Backflip Emotes ---
-    private static FlipDirection flipDirection = FlipDirection.NONE;
-    private static int flipTicks = 0;
-    private static final int TOTAL_FLIP_TICKS = 14; // ~0.70s for full fluid rotation
-    private static float flipCurrentProgress = 0.0f;
-    private static float flipLastProgress = 0.0f;
 
     private static int frontflipKeyCode = GLFW.GLFW_KEY_V;
     private static String frontflipKeyName = "V";
 
     private static int backflipKeyCode = GLFW.GLFW_KEY_B;
     private static String backflipKeyName = "B";
+
+    private static int wheelKeyCode = GLFW.GLFW_KEY_B;
+    private static String wheelKeyName = "B";
 
     public EmotesModule() {
         super("Emotes", "Player animations (Hands Up, Frontflip, Backflip)", Category.RENDER, true);
@@ -66,142 +62,152 @@ public class EmotesModule extends Module {
     @Override
     public void onDisable() {
         enabled = false;
-        isHandsUp = false;
-        currentProgress = 0.0f;
-        lastProgress = 0.0f;
-        flipDirection = FlipDirection.NONE;
-        flipTicks = 0;
-        flipCurrentProgress = 0.0f;
-        flipLastProgress = 0.0f;
+        localPlayerState.stopEmotes();
+        sendPayload(MooEmotePayload.TYPE_STOP);
     }
 
     public static void onTick() {
-        // --- Tick Hands Up Animation ---
-        lastProgress = currentProgress;
-        float target = (enabled && isHandsUp) ? 1.0f : 0.0f;
-        currentProgress = MathHelper.lerp(0.35f, currentProgress, target);
-        if (Math.abs(currentProgress - target) < 0.002f) {
-            currentProgress = target;
-        }
+        // Tick local player state
+        localPlayerState.onTick();
 
-        // --- Tick Flip Animation ---
-        flipLastProgress = flipCurrentProgress;
-        if (flipDirection != FlipDirection.NONE) {
-            flipTicks++;
-            flipCurrentProgress = (float) flipTicks / (float) TOTAL_FLIP_TICKS;
-            if (flipTicks >= TOTAL_FLIP_TICKS) {
-                flipDirection = FlipDirection.NONE;
-                flipTicks = 0;
-                flipCurrentProgress = 0.0f;
-                flipLastProgress = 0.0f;
+        // Tick all remote player states
+        if (!playerStates.isEmpty()) {
+            playerStates.entrySet().removeIf(entry -> {
+                PlayerEmoteState state = entry.getValue();
+                state.onTick();
+                return state.isIdle();
+            });
+        }
+    }
+
+    // ==========================================
+    // Multiplayer State Retrieval
+    // ==========================================
+
+    public static PlayerEmoteState getLocalPlayerState() {
+        return localPlayerState;
+    }
+
+    public static PlayerEmoteState getPlayerState(UUID uuid) {
+        if (uuid == null) return null;
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player != null && uuid.equals(client.player.getUuid())) {
+            return localPlayerState;
+        }
+        return playerStates.get(uuid);
+    }
+
+    public static PlayerEmoteState getOrCreateRemoteState(UUID uuid) {
+        if (uuid == null) return null;
+        return playerStates.computeIfAbsent(uuid, PlayerEmoteState::new);
+    }
+
+    public static PlayerEmoteState getPlayerState(int entityId) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player != null && client.player.getId() == entityId) {
+            return localPlayerState;
+        }
+        if (client.world != null) {
+            Entity entity = client.world.getEntityById(entityId);
+            if (entity instanceof PlayerEntity player) {
+                return getPlayerState(player.getUuid());
             }
         }
+        return null;
     }
 
     // ==========================================
-    // Hands Up Interpolation & Getters
+    // Network Packet Sender
     // ==========================================
 
-    /**
-     * Zwraca wygładzony postęp animacji podnoszenia rąk od 0.0 do 1.0 (Smoothstep).
-     */
-    public static float getInterpolatedProgress(float tickDelta) {
-        float raw = MathHelper.lerp(tickDelta, lastProgress, currentProgress);
-        raw = MathHelper.clamp(raw, 0.0f, 1.0f);
-        return raw * raw * (3.0f - 2.0f * raw);
+    private static void sendPayload(byte emoteType) {
+        try {
+            MinecraftClient client = MinecraftClient.getInstance();
+            if (client.player != null) {
+                UUID uuid = client.player.getUuid();
+                if (uuid != null) {
+                    // 1. Universal Real-Time Broadcast via MQTT Broker
+                    com.mooclient.network.MooNetworkHandler.sendEmoteBroadcast(uuid, emoteType);
+
+                    // 2. Fabric Plugin Channel Broadcast (for Fabric/Proxy companion channels)
+                    if (client.getNetworkHandler() != null && ClientPlayNetworking.canSend(MooEmotePayload.ID)) {
+                        ClientPlayNetworking.send(new MooEmotePayload(uuid, emoteType));
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+            // Safe fallback if networking is not available
+        }
     }
 
-    public static boolean isHandsUp() {
-        return enabled && isHandsUp;
+    public static void handleIncomingPayload(UUID uuid, byte emoteType) {
+        if (uuid == null) return;
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player != null && uuid.equals(client.player.getUuid())) {
+            return; // Ignore echo of own packet
+        }
+
+        PlayerEmoteState state = getOrCreateRemoteState(uuid);
+        if (state == null) return;
+
+        switch (emoteType) {
+            case MooEmotePayload.TYPE_HANDS_UP_START -> state.triggerHandsUp(true);
+            case MooEmotePayload.TYPE_HANDS_UP_STOP -> state.triggerHandsUp(false);
+            case MooEmotePayload.TYPE_FRONTFLIP -> state.triggerFrontflip();
+            case MooEmotePayload.TYPE_BACKFLIP -> state.triggerBackflip();
+            case MooEmotePayload.TYPE_STOP -> state.stopEmotes();
+        }
     }
+
+    // ==========================================
+    // Local Action Triggers
+    // ==========================================
 
     public static void setHandsUp(boolean state) {
-        isHandsUp = state;
+        if (!enabled && state) return;
+        localPlayerState.triggerHandsUp(state);
+        sendPayload(state ? MooEmotePayload.TYPE_HANDS_UP_START : MooEmotePayload.TYPE_HANDS_UP_STOP);
     }
 
     public static void toggleHandsUp() {
         if (!enabled) return;
-        isHandsUp = !isHandsUp;
+        setHandsUp(!localPlayerState.isHandsUp);
     }
 
-    // ==========================================
-    // Flip (Salto) Action Triggers & Calculations
-    // ==========================================
+    public static boolean isHandsUp() {
+        return enabled && localPlayerState.isHandsUp;
+    }
 
     public static void triggerFrontflip() {
-        if (!enabled || flipDirection != FlipDirection.NONE) return;
-        flipDirection = FlipDirection.FRONT;
-        flipTicks = 0;
-        flipCurrentProgress = 0.0f;
-        flipLastProgress = 0.0f;
+        if (!enabled) return;
+        localPlayerState.triggerFrontflip();
+        sendPayload(MooEmotePayload.TYPE_FRONTFLIP);
     }
 
     public static void triggerBackflip() {
-        if (!enabled || flipDirection != FlipDirection.NONE) return;
-        flipDirection = FlipDirection.BACK;
-        flipTicks = 0;
-        flipCurrentProgress = 0.0f;
-        flipLastProgress = 0.0f;
+        if (!enabled) return;
+        localPlayerState.triggerBackflip();
+        sendPayload(MooEmotePayload.TYPE_BACKFLIP);
     }
 
     public static boolean isFlipping() {
-        return enabled && flipDirection != FlipDirection.NONE;
+        return enabled && localPlayerState.isFlipping();
     }
 
-    public static FlipDirection getFlipDirection() {
-        return flipDirection;
+    public static float getInterpolatedProgress(float tickDelta) {
+        return localPlayerState.getInterpolatedHandsUpProgress(tickDelta);
     }
 
-    /**
-     * Zwraca interpolowany postęp salta od 0.0 do 1.0 dla bieżącej klatki.
-     */
-    public static float getInterpolatedFlipProgress(float tickDelta) {
-        if (flipDirection == FlipDirection.NONE && flipCurrentProgress == 0.0f) {
-            return 0.0f;
-        }
-        float raw = MathHelper.lerp(tickDelta, flipLastProgress, flipCurrentProgress);
-        return MathHelper.clamp(raw, 0.0f, 1.0f);
-    }
-
-    /**
-     * Zwraca kąt obrotu wokół osi X (w stopniach) dla całego ciała postaci (od 0 do ±360).
-     * Wykorzystuje płynną krzywą Cosinusoidalną dla miękkiego wybicia i lądowania.
-     */
     public static float getFlipRotationDegrees(float tickDelta) {
-        float p = getInterpolatedFlipProgress(tickDelta);
-        if (p <= 0.0001f || flipDirection == FlipDirection.NONE) {
-            return 0.0f;
-        }
-        // Krzywa Cosinusowa (0.0 -> 1.0)
-        float eased = (float) (0.5 - 0.5 * Math.cos(p * Math.PI));
-        float total = (flipDirection == FlipDirection.FRONT) ? 360.0f : -360.0f;
-        return eased * total;
+        return localPlayerState.getFlipRotationDegrees(tickDelta);
     }
 
-    /**
-     * Zwraca wysokość wyskoku (w metrach) dla bieżącej klatki salta.
-     * Czysto wizualny łuk paraboliczny bez wpływu na hitbox.
-     */
     public static float getFlipJumpHeight(float tickDelta) {
-        float p = getInterpolatedFlipProgress(tickDelta);
-        if (p <= 0.0001f || p >= 0.9999f || flipDirection == FlipDirection.NONE) {
-            return 0.0f;
-        }
-        // Paraboliczny łuk wyskoku (szczyt 1.05m w połowie obrotu)
-        float maxJumpHeight = 1.05f;
-        return (float) (Math.sin(p * Math.PI) * maxJumpHeight);
+        return localPlayerState.getFlipJumpHeight(tickDelta);
     }
 
-    /**
-     * Zwraca współczynnik zwinięcia ciała (tuck factor: 0.0 -> 1.0 w szczycie -> 0.0 przy lądowaniu).
-     */
     public static float getFlipTuckFactor(float tickDelta) {
-        float p = getInterpolatedFlipProgress(tickDelta);
-        if (p <= 0.0001f || p >= 0.9999f || flipDirection == FlipDirection.NONE) {
-            return 0.0f;
-        }
-        // Szczyt zwinięcia następuje w połowie salta (sinus)
-        return (float) Math.sin(p * Math.PI);
+        return localPlayerState.getFlipTuckFactor(tickDelta);
     }
 
     // ==========================================
@@ -215,8 +221,8 @@ public class EmotesModule extends Module {
     public static void setEmotesEnabled(boolean state) {
         enabled = state;
         if (!state) {
-            isHandsUp = false;
-            flipDirection = FlipDirection.NONE;
+            localPlayerState.stopEmotes();
+            sendPayload(MooEmotePayload.TYPE_STOP);
         }
     }
 
@@ -233,7 +239,6 @@ public class EmotesModule extends Module {
         mode = values[(mode.ordinal() + 1) % values.length];
     }
 
-    // Hands Up Keybind
     public static int getKeyCode() {
         return keyCode;
     }
@@ -247,7 +252,6 @@ public class EmotesModule extends Module {
         keyName = name;
     }
 
-    // Frontflip Keybind
     public static int getFrontflipKeyCode() {
         return frontflipKeyCode;
     }
@@ -261,7 +265,6 @@ public class EmotesModule extends Module {
         frontflipKeyName = name;
     }
 
-    // Backflip Keybind
     public static int getBackflipKeyCode() {
         return backflipKeyCode;
     }
@@ -274,10 +277,6 @@ public class EmotesModule extends Module {
         backflipKeyCode = key;
         backflipKeyName = name;
     }
-
-    // Emote Radial Wheel Keybind (Default: B)
-    private static int wheelKeyCode = GLFW.GLFW_KEY_B;
-    private static String wheelKeyName = "B";
 
     public static int getWheelKeyCode() {
         return wheelKeyCode;

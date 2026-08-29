@@ -1,6 +1,7 @@
 package com.mooclient.mixin;
 
 import com.mooclient.module.modules.EmotesModule;
+import com.mooclient.module.modules.PlayerEmoteState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
@@ -38,15 +39,20 @@ public abstract class PlayerEntityModelMixin extends BipedEntityModel<PlayerEnti
 
     @Inject(method = "setAngles(Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;)V", at = @At("TAIL"))
     private void mooClient$onSetAngles(PlayerEntityRenderState state, CallbackInfo ci) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player == null || state.id != client.player.getId()) {
+        if (state == null || !EmotesModule.isEmotesEnabled()) {
             return;
         }
 
+        PlayerEmoteState emoteState = EmotesModule.getPlayerState(state.id);
+        if (emoteState == null) {
+            return;
+        }
+
+        MinecraftClient client = MinecraftClient.getInstance();
         float tickDelta = client.getRenderTickCounter().getTickDelta(true);
 
         // --- 1. Hands Up Animation ---
-        float handsUpProgress = EmotesModule.getInterpolatedProgress(tickDelta);
+        float handsUpProgress = emoteState.getInterpolatedHandsUpProgress(tickDelta);
         if (handsUpProgress > 0.001F) {
             float targetPitch = -(float) Math.PI;
             float targetYaw = 0.0F;
@@ -65,7 +71,7 @@ public abstract class PlayerEntityModelMixin extends BipedEntityModel<PlayerEnti
         }
 
         // --- 2. Flip (Salto) Tuck Body Pose ---
-        float tuckFactor = EmotesModule.getFlipTuckFactor(tickDelta);
+        float tuckFactor = emoteState.getFlipTuckFactor(tickDelta);
         if (tuckFactor > 0.001F) {
             // Pozycja zwarta akrobaty: kolana podciągnięte, ręce przy kolanach, głowa przygięta
             float targetLegPitch = -1.25F;
@@ -99,4 +105,3 @@ public abstract class PlayerEntityModelMixin extends BipedEntityModel<PlayerEnti
         }
     }
 }
-

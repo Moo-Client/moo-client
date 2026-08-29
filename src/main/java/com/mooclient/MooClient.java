@@ -59,6 +59,20 @@ public class MooClient implements ClientModInitializer {
         // Initialize Moo Client Network & Discovery Handler
         com.mooclient.network.MooNetworkHandler.init();
 
+        // Register Custom Network Payloads for Emotes
+        try {
+            net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.playS2C().register(com.mooclient.network.MooEmotePayload.ID, com.mooclient.network.MooEmotePayload.CODEC);
+            net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.playC2S().register(com.mooclient.network.MooEmotePayload.ID, com.mooclient.network.MooEmotePayload.CODEC);
+
+            net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(com.mooclient.network.MooEmotePayload.ID, (payload, context) -> {
+                context.client().execute(() -> {
+                    com.mooclient.module.modules.EmotesModule.handleIncomingPayload(payload.playerUuid(), payload.emoteType());
+                });
+            });
+        } catch (Throwable t) {
+            LOGGER.warn("Fabric custom payload registration: {}", t.getMessage());
+        }
+
         // Initialize In-World Waypoint Renderer
         com.mooclient.waypoint.WaypointRenderer.init();
 

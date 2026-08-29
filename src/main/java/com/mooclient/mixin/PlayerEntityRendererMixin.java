@@ -2,6 +2,7 @@ package com.mooclient.mixin;
 
 import com.mooclient.module.modules.EmotesModule;
 import com.mooclient.module.modules.NametagsModule;
+import com.mooclient.module.modules.PlayerEmoteState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
@@ -41,11 +42,14 @@ public class PlayerEntityRendererMixin {
         at = @At("TAIL")
     )
     private void mooClient$applyFlipRotation(PlayerEntityRenderState state, MatrixStack matrices, float bodyYaw, float baseTickDelta, CallbackInfo ci) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player != null && state.id == client.player.getId() && EmotesModule.isFlipping()) {
+        if (state == null || !EmotesModule.isEmotesEnabled()) return;
+
+        PlayerEmoteState emoteState = EmotesModule.getPlayerState(state.id);
+        if (emoteState != null && emoteState.isFlipping()) {
+            MinecraftClient client = MinecraftClient.getInstance();
             float delta = client.getRenderTickCounter().getTickDelta(true);
-            float flipAngle = EmotesModule.getFlipRotationDegrees(delta);
-            float jumpHeight = EmotesModule.getFlipJumpHeight(delta);
+            float flipAngle = emoteState.getFlipRotationDegrees(delta);
+            float jumpHeight = emoteState.getFlipJumpHeight(delta);
 
             if (Math.abs(flipAngle) > 0.001F || jumpHeight > 0.001F) {
                 // Czysto wizualny wyskok postaci w górę (MatrixStack translate bez zmiany hitboxa)
@@ -60,4 +64,3 @@ public class PlayerEntityRendererMixin {
         }
     }
 }
-

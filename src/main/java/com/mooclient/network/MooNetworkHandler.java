@@ -2,6 +2,7 @@ package com.mooclient.network;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mooclient.module.modules.EmotesModule;
 import com.mooclient.util.MooUserManager;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.MinecraftClient;
@@ -18,14 +19,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Ultra-fast, real-time bi-directional player discovery via HiveMQ MQTT Broker.
- * Zero lag, zero rate limits, instantaneous synchronization for all Moo Client players.
+ * Ultra-fast, real-time bi-directional player discovery & emote sync via HiveMQ MQTT Broker.
+ * Zero lag, zero rate limits, instantaneous synchronization for all Moo Client players
+ * across ANY Minecraft server (Vanilla, Spigot, Paper, Hypixel, etc.).
  */
 public class MooNetworkHandler {
 
     private static final String BROKER_HOST = "broker.hivemq.com";
     private static final int BROKER_PORT = 1883;
-    private static final String TOPIC = "mooclient/presence_v3";
+    private static final String TOPIC_PRESENCE = "mooclient/presence_v3";
+    private static final String TOPIC_EMOTES = "mooclient/emotes_v3";
+    private static final String TOPIC_WILDCARD = "mooclient/#";
 
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread t = new Thread(r, "MooClient-MQTT");
@@ -99,8 +103,8 @@ public class MooNetworkHandler {
                     throw new IllegalStateException("CONNACK rejected");
                 }
 
-                // 2. Send SUBSCRIBE to TOPIC
-                byte[] topicBytes = TOPIC.getBytes(StandardCharsets.UTF_8);
+                // 2. Send SUBSCRIBE to wildcard topic (mooclient/#)
+                byte[] topicBytes = TOPIC_WILDCARD.getBytes(StandardCharsets.UTF_8);
                 ByteArrayOutputStream subPacket = new ByteArrayOutputStream();
                 subPacket.write(0x82); // SUBSCRIBE
                 subPacket.write(2 + 2 + topicBytes.length + 1); // remainLen
@@ -115,7 +119,7 @@ public class MooNetworkHandler {
                 CONNECTED.set(true);
                 CONNECTING.set(false);
 
-                // Broadcast immediately after connection
+                // Broadcast presence immediately after connection
                 sendPresence();
 
                 // 3. Listener loop
@@ -131,12 +135,19 @@ public class MooNetworkHandler {
                             int packetRemain = buffer[i + 1] & 0xFF;
                             if (i + 2 + packetRemain <= len) {
                                 int topicLen = ((buffer[i + 2] & 0xFF) << 8) | (buffer[i + 3] & 0xFF);
-                                int payloadStart = i + 4 + topicLen;
-                                int payloadLen = (i + 2 + packetRemain) - payloadStart;
+                                if (i + 4 + topicLen <= len) {
+                                    String topic = new String(buffer, i + 4, topicLen, StandardCharsets.UTF_8);
+                                    int payloadStart = i + 4 + topicLen;
+                                    int payloadLen = (i + 2 + packetRemain) - payloadStart;
 
-                                if (payloadLen > 0 && payloadStart + payloadLen <= len) {
-                                    String jsonStr = new String(buffer, payloadStart, payloadLen, StandardCharsets.UTF_8);
-                                    handleIncomingPresence(jsonStr);
+                                    if (payloadLen > 0 && payloadStart + payloadLen <= len) {
+                                        String jsonStr = new String(buffer, payloadStart, payloadLen, StandardCharsets.UTF_8);
+                                        if (topic.contains("emotes")) {
+                                            handleIncomingEmote(jsonStr);
+                                        } else {
+                                            handleIncomingPresence(jsonStr);
+                                        }
+                                    }
                                 }
                                 i += 1 + packetRemain;
                             }
@@ -173,6 +184,22 @@ public class MooNetworkHandler {
         } catch (Exception ignored) {}
     }
 
+    private static void handleIncomingEmote(String jsonStr) {
+        try {
+            if (jsonStr == null || jsonStr.trim().isEmpty()) return;
+            JsonObject obj = JsonParser.parseString(jsonStr).getAsJsonObject();
+
+            if (obj.has("uuid") && obj.has("e")) {
+                String idStr = obj.get("uuid").getAsString();
+                byte emoteType = obj.get("e").getAsByte();
+                if (!idStr.isEmpty()) {
+                    UUID uuid = UUID.fromString(idStr);
+                    EmotesModule.handleIncomingPayload(uuid, emoteType);
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
     public static void sendPresence() {
         try {
             MinecraftClient client = MinecraftClient.getInstance();
@@ -202,8 +229,38 @@ public class MooNetworkHandler {
             payload.addProperty("uuid", uuid != null ? uuid.toString() : "");
             payload.addProperty("t", System.currentTimeMillis());
 
-            byte[] topicBytes = TOPIC.getBytes(StandardCharsets.UTF_8);
-            byte[] payloadBytes = payload.toString().getBytes(StandardCharsets.UTF_8);
+            publishMqtt(TOPIC_PRESENCE, payload.toString());
+        } catch (Exception e) {
+            CONNECTED.set(false);
+            ensureConnection();
+        }
+    }
+
+    public static void sendEmoteBroadcast(UUID uuid, byte emoteType) {
+        if (uuid == null) return;
+        EXECUTOR.execute(() -> {
+            try {
+                if (!CONNECTED.get() || out == null) {
+                    ensureConnection();
+                    return;
+                }
+
+                JsonObject payload = new JsonObject();
+                payload.addProperty("uuid", uuid.toString());
+                payload.addProperty("e", emoteType);
+                payload.addProperty("t", System.currentTimeMillis());
+
+                publishMqtt(TOPIC_EMOTES, payload.toString());
+            } catch (Exception ignored) {}
+        });
+    }
+
+    private static synchronized void publishMqtt(String topic, String payloadStr) {
+        try {
+            if (out == null || !CONNECTED.get()) return;
+
+            byte[] topicBytes = topic.getBytes(StandardCharsets.UTF_8);
+            byte[] payloadBytes = payloadStr.getBytes(StandardCharsets.UTF_8);
             int remain = 2 + topicBytes.length + payloadBytes.length;
 
             ByteArrayOutputStream pubPacket = new ByteArrayOutputStream();
@@ -214,10 +271,8 @@ public class MooNetworkHandler {
             pubPacket.write(topicBytes);
             pubPacket.write(payloadBytes);
 
-            synchronized (MooNetworkHandler.class) {
-                out.write(pubPacket.toByteArray());
-                out.flush();
-            }
+            out.write(pubPacket.toByteArray());
+            out.flush();
         } catch (Exception e) {
             CONNECTED.set(false);
             ensureConnection();
