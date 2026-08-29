@@ -54,6 +54,7 @@ public class MooLanguage {
                 case "emotes_locked" -> "[SKLEP]";
                 case "emotes_store_required" -> "Wymaga zakupu w sklepie Moo Client";
                 case "emotes_dev_badge" -> "DEV MOO CLIENT";
+                case "emotes_tester_badge" -> "TESTER";
                 case "keybind_label" -> "Klawisz aktywacji";
                 case "press_key_hint" -> "> WCIŚNIJ KLAWISZ <";
                 case "mode_hold" -> "Przytrzymaj";
@@ -189,6 +190,7 @@ public class MooLanguage {
                 case "emotes_locked" -> "[STORE]";
                 case "emotes_store_required" -> "Requires Moo Client Store Unlock";
                 case "emotes_dev_badge" -> "DEV MOO CLIENT";
+                case "emotes_tester_badge" -> "TESTER";
                 case "keybind_label" -> "Activation Keybind";
                 case "press_key_hint" -> "> PRESS ANY KEY <";
                 case "mode_hold" -> "Hold";

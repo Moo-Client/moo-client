@@ -151,11 +151,15 @@ public class EmoteWheelScreen extends Screen {
         int logoSize = 52;
         context.drawTexture(RenderLayer::getGuiTextured, MOO_LOGO, cx - logoSize / 2, cy - logoSize / 2, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
 
-        // Developer Mode Badge in top center
+        // Developer / Tester Mode Badge in top center
         if (com.mooclient.util.EmoteAccessManager.isLocalPlayerDeveloper()) {
             String devBadge = "[ " + MooLanguage.get("emotes_dev_badge") + " ]";
             int dbW = this.textRenderer.getWidth(devBadge);
             context.drawTextWithShadow(this.textRenderer, devBadge, cx - (dbW / 2), cy - 140, 0xFF55FFFF);
+        } else if (com.mooclient.util.EmoteAccessManager.isLocalPlayerTester()) {
+            String testerBadge = "[ " + MooLanguage.get("emotes_tester_badge") + " ]";
+            int tbW = this.textRenderer.getWidth(testerBadge);
+            context.drawTextWithShadow(this.textRenderer, testerBadge, cx - (tbW / 2), cy - 140, 0xFFFFAA00);
         }
 
         // --- 3. Center Title Callout ---
