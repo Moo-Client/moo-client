@@ -1688,7 +1688,7 @@ public class MooClientScreen extends Screen {
         context.fill(rowX, rowY, rowX + rowW, rowY + 40, 0x33101018);
         drawBorder(context, rowX, rowY, rowW, 40, 0x22FFFFFF);
         context.drawTextWithShadow(this.textRenderer, 
-                MooLanguage.current == MooLanguage.PL ? "ℹ Koło wyboru (Warframe): Salto w przód, Salto w tył, Automatyczny widok F5." : "ℹ Radial Wheel (Warframe style): Frontflip, Backflip, Auto F5 camera.",
+                MooLanguage.current == MooLanguage.PL ? "ℹ Koło wyboru emotek: Salto w przód, Salto w tył, Automatyczny widok F5." : "ℹ Emote Radial Wheel: Frontflip, Backflip, Auto F5 camera.",
                 rowX + 10, rowY + 8, 0xFF55FFFF);
         context.drawTextWithShadow(this.textRenderer, 
                 MooLanguage.current == MooLanguage.PL ? "🌐 Pełna synchronizacja multiplayer w czasie rzeczywistym między graczami Moo Client." : "🌐 Real-time multiplayer synchronization across all Moo Client users.",

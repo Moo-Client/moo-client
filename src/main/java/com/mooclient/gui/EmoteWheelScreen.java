@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Warframe-inspired Radial Emote Wheel with curved wedge sectors,
+ * Radial Emote Wheel with curved wedge sectors,
  * glowing accent highlight, central Moo Client logo, and pure ASCII/Unicode-safe typography.
  */
 public class EmoteWheelScreen extends Screen {
@@ -68,7 +68,7 @@ public class EmoteWheelScreen extends Screen {
 
         if (dist > 28) {
             double rawAngle = Math.toDegrees(Math.atan2(dy, dx)); // -180 to 180
-            // Map angle to 3 Warframe sectors:
+            // Map angle to 3 sectors:
             if (rawAngle >= -90 && rawAngle < 20) {
                 selectedSlot = 0; // Top-Right: Frontflip
             } else if (rawAngle >= 20 && rawAngle < 160) {
@@ -80,7 +80,7 @@ public class EmoteWheelScreen extends Screen {
             selectedSlot = -1;
         }
 
-        // --- 1. Render Warframe Wedge Petals ---
+        // --- 1. Render Wedge Petals ---
         for (int i = 0; i < SEGMENTS_COUNT; i++) {
             boolean isSelected = (i == selectedSlot);
             boolean isUnlocked = com.mooclient.util.EmoteAccessManager.hasAccess(i);
@@ -95,7 +95,7 @@ public class EmoteWheelScreen extends Screen {
             float rOut = isSelected ? 122.0f : 112.0f;
 
             int accent = MooClientSettings.getAccentColor();
-            // Warframe glowing colors (or red/locked tint if not unlocked)
+            // Glowing colors (or red/locked tint if not unlocked)
             int fillColor;
             int borderColor;
             if (isUnlocked) {
@@ -158,7 +158,7 @@ public class EmoteWheelScreen extends Screen {
             context.drawTextWithShadow(this.textRenderer, devBadge, cx - (dbW / 2), cy - 140, 0xFF55FFFF);
         }
 
-        // --- 3. Warframe Center Title Callout ---
+        // --- 3. Center Title Callout ---
         String selectedTitle = getSelectedTitle();
         if (selectedTitle != null && !selectedTitle.isEmpty()) {
             int titleY = cy + 130;
@@ -222,7 +222,7 @@ public class EmoteWheelScreen extends Screen {
     private final int[] innerY = new int[MAX_STEPS + 1];
 
     /**
-     * Renders a curved Warframe sector with zero-allocation math for peak FPS.
+     * Renders a curved radial sector with zero-allocation math for peak FPS.
      */
     private void drawCurvedWedge(DrawContext context, int cx, int cy, float rIn, float rOut, double startDeg, double endDeg, int fillColor, int borderColor, boolean isSelected) {
         int steps = 12;
@@ -252,7 +252,7 @@ public class EmoteWheelScreen extends Screen {
         drawLine(context, innerX[0], innerY[0], outerX[0], outerY[0], borderColor);
         drawLine(context, innerX[steps], innerY[steps], outerX[steps], outerY[steps], borderColor);
 
-        // Warframe active pointer notch in center
+        // Active pointer notch in center
         if (isSelected) {
             double midRad = Math.toRadians((startDeg + endDeg) / 2.0);
             int tipX = (int) (cx + Math.cos(midRad) * (rIn - 6));
