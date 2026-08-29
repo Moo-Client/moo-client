@@ -121,9 +121,17 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
     }
 
     // 4. Upload NSIS Web Package (required by MooClient-Setup.exe bootstrapper)
-    let nsis7zPath = path.join(__dirname, 'dist', 'nsis-web', `moo-client-launcher-${VERSION}-x64.nsis.7z`);
-    if (fs.existsSync(nsis7zPath)) {
-        await uploadAsset(release.upload_url, token, nsis7zPath, `moo-client-launcher-${VERSION}-x64.nsis.7z`, 'application/octet-stream');
+    const nsisDir = path.join(__dirname, 'dist', 'nsis-web');
+    if (fs.existsSync(nsisDir)) {
+        const files = fs.readdirSync(nsisDir).filter(f => f.endsWith('.nsis.7z'));
+        if (files.length > 0) {
+            files.sort((a, b) => fs.statSync(path.join(nsisDir, b)).mtimeMs - fs.statSync(path.join(nsisDir, a)).mtimeMs);
+            const newest7z = files[0];
+            await uploadAsset(release.upload_url, token, path.join(nsisDir, newest7z), newest7z, 'application/octet-stream');
+            if (newest7z !== `moo-client-launcher-${VERSION}-x64.nsis.7z`) {
+                await uploadAsset(release.upload_url, token, path.join(nsisDir, newest7z), `moo-client-launcher-${VERSION}-x64.nsis.7z`, 'application/octet-stream');
+            }
+        }
     }
 
     // 5. Upload Standalone Installer EXE (if exists)
