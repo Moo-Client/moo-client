@@ -172,40 +172,6 @@ public class MooClient implements ClientModInitializer {
                     waypointKeyWasDown = isKeyDown;
                 }
 
-                // In-game Emotes / Hands Up key detection (Default: R key)
-                int emoteKeyCode = com.mooclient.module.modules.EmotesModule.getKeyCode();
-                if (emoteKeyCode > 0 && com.mooclient.module.modules.EmotesModule.isEmotesEnabled()) {
-                    boolean isKeyDown = GLFW.glfwGetKey(window, emoteKeyCode) == GLFW.GLFW_PRESS;
-                    if (com.mooclient.module.modules.EmotesModule.getMode() == com.mooclient.module.modules.EmotesModule.ActivationMode.HOLD) {
-                        com.mooclient.module.modules.EmotesModule.setHandsUp(isKeyDown);
-                    } else { // TOGGLE mode
-                        if (isKeyDown && !emoteKeyWasDown) {
-                            com.mooclient.module.modules.EmotesModule.toggleHandsUp();
-                        }
-                    }
-                    emoteKeyWasDown = isKeyDown;
-                }
-
-                // In-game Frontflip key detection (Default: V key)
-                int frontflipKeyCode = com.mooclient.module.modules.EmotesModule.getFrontflipKeyCode();
-                if (frontflipKeyCode > 0 && com.mooclient.module.modules.EmotesModule.isEmotesEnabled()) {
-                    boolean isKeyDown = GLFW.glfwGetKey(window, frontflipKeyCode) == GLFW.GLFW_PRESS;
-                    if (isKeyDown && !frontflipKeyWasDown) {
-                        com.mooclient.module.modules.EmotesModule.triggerFrontflip();
-                    }
-                    frontflipKeyWasDown = isKeyDown;
-                }
-
-                // In-game Backflip key detection
-                int backflipKeyCode = com.mooclient.module.modules.EmotesModule.getBackflipKeyCode();
-                if (backflipKeyCode > 0 && com.mooclient.module.modules.EmotesModule.isEmotesEnabled()) {
-                    boolean isKeyDown = GLFW.glfwGetKey(window, backflipKeyCode) == GLFW.GLFW_PRESS;
-                    if (isKeyDown && !backflipKeyWasDown) {
-                        com.mooclient.module.modules.EmotesModule.triggerBackflip();
-                    }
-                    backflipKeyWasDown = isKeyDown;
-                }
-
                 // In-game Emote Radial Wheel trigger (Default: B key)
                 int wheelKeyCode = com.mooclient.module.modules.EmotesModule.getWheelKeyCode();
                 if (wheelKeyCode > 0 && com.mooclient.module.modules.EmotesModule.isEmotesEnabled()) {

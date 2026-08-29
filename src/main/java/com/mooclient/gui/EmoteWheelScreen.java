@@ -10,9 +10,13 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
- * Modern Radial Emote Wheel with prominent central Moo Client Logo,
- * glassmorphism cards, and instant directional selection.
+ * Warframe-inspired Radial Emote Wheel with curved wedge sectors,
+ * glowing accent highlight, central Moo Client logo, and pure ASCII/Unicode-safe typography.
  */
 public class EmoteWheelScreen extends Screen {
 
@@ -20,6 +24,10 @@ public class EmoteWheelScreen extends Screen {
 
     private int selectedSlot = -1; // 0 = Hands Up, 1 = Frontflip, 2 = Stop, 3 = Backflip
     private int triggerKeyCode;
+
+    private static final int SEGMENTS_COUNT = 4;
+    // Segment centers: Top (-90°), Right (0°), Bottom (90°), Left (180°)
+    private static final double[] SEGMENT_ANGLES = new double[] { -90.0, 0.0, 90.0, 180.0 };
 
     public EmoteWheelScreen(int triggerKeyCode) {
         super(Text.literal("Emote Wheel"));
@@ -33,13 +41,13 @@ public class EmoteWheelScreen extends Screen {
 
     @Override
     public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
-        // Transparent overlay to keep the game visible
+        // Subtle dark cinematic vignette
         context.fill(0, 0, this.width, this.height, 0x66000000);
     }
 
     @Override
     public void renderInGameBackground(DrawContext context) {
-        // Disabled to prevent vanilla screen blur
+        // Disabled to prevent screen blur
     }
 
     @Override
@@ -47,18 +55,19 @@ public class EmoteWheelScreen extends Screen {
         int cx = this.width / 2;
         int cy = this.height / 2;
 
-        // Determine mouse distance and angle from center
+        // Calculate mouse angle & distance
         double dx = mouseX - cx;
         double dy = mouseY - cy;
         double dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (dist > 30) {
-            double angle = Math.toDegrees(Math.atan2(dy, dx)); // -180 to 180
-            if (angle >= -135 && angle < -45) {
+        if (dist > 28) {
+            double rawAngle = Math.toDegrees(Math.atan2(dy, dx)); // -180 to 180
+            // Map angle to 4 Warframe sectors:
+            if (rawAngle >= -135 && rawAngle < -45) {
                 selectedSlot = 0; // Top: Hands Up
-            } else if (angle >= -45 && angle < 45) {
+            } else if (rawAngle >= -45 && rawAngle < 45) {
                 selectedSlot = 1; // Right: Frontflip
-            } else if (angle >= 45 && angle < 135) {
+            } else if (rawAngle >= 45 && rawAngle < 135) {
                 selectedSlot = 2; // Bottom: Stop
             } else {
                 selectedSlot = 3; // Left: Backflip
@@ -67,74 +76,228 @@ public class EmoteWheelScreen extends Screen {
             selectedSlot = -1;
         }
 
-        // Draw connecting outer guideline ring
-        drawOuterRing(context, cx, cy, 88);
+        // --- 1. Render Warframe Wedge Petals ---
+        for (int i = 0; i < SEGMENTS_COUNT; i++) {
+            boolean isSelected = (i == selectedSlot);
+            double centerDeg = SEGMENT_ANGLES[i];
+            double spanDeg = 90.0;
+            double gapDeg = 5.0;
 
-        // Render 4 Radial Action Cards
-        renderEmoteCard(context, cx, cy - 88, 0, "🙋‍♂️", MooLanguage.get("emotes_wheel_hands_up"), selectedSlot == 0);
-        renderEmoteCard(context, cx + 96, cy, 1, "🤸‍♂️", MooLanguage.get("emotes_wheel_frontflip"), selectedSlot == 1);
-        renderEmoteCard(context, cx, cy + 88, 2, "🛑", MooLanguage.get("emotes_wheel_stop"), selectedSlot == 2);
-        renderEmoteCard(context, cx - 96, cy, 3, "🤸‍♀️", MooLanguage.get("emotes_wheel_backflip"), selectedSlot == 3);
+            double startDeg = centerDeg - (spanDeg / 2.0) + (gapDeg / 2.0);
+            double endDeg = centerDeg + (spanDeg / 2.0) - (gapDeg / 2.0);
 
-        // --- Central Disc with Large Moo Client Logo ---
-        int centerRadius = 38;
-        int centerBg = 0xEE12121A;
-        int centerBorder = (selectedSlot >= 0) ? MooClientSettings.getAccentColor() : 0x66FFFFFF;
+            float rIn = isSelected ? 48.0f : 52.0f;
+            float rOut = isSelected ? 122.0f : 112.0f;
 
-        // Center background fill & border
-        context.fill(cx - centerRadius, cy - centerRadius, cx + centerRadius, cy + centerRadius, centerBg);
-        drawRoundedBorder(context, cx - centerRadius, cy - centerRadius, centerRadius * 2, centerRadius * 2, centerBorder);
+            int accent = MooClientSettings.getAccentColor();
+            // Warframe glowing colors
+            int fillColor = isSelected ? (accent & 0x00FFFFFF | 0xDD000000) : 0xD012121A;
+            int borderColor = isSelected ? 0xFFFFFFFF : 0x44777799;
 
-        // Large Cow Logo in center (48x48)
-        int logoSize = 48;
+            drawCurvedWedge(context, cx, cy, rIn, rOut, startDeg, endDeg, fillColor, borderColor, isSelected);
+
+            // Text & Labels on each petal (Safe ASCII / Clean Polish / English - NO emoji glyphs)
+            String label = getSlotLabel(i);
+            String iconSymbol = getSlotSymbol(i);
+
+            double midAngleRad = Math.toRadians(centerDeg);
+            float rMid = (rIn + rOut) / 2.0f;
+            int textX = (int) (cx + Math.cos(midAngleRad) * rMid);
+            int textY = (int) (cy + Math.sin(midAngleRad) * rMid);
+
+            int textColor = isSelected ? 0xFFFFFFFF : 0xFFD0D0E0;
+
+            // Draw Symbol & Label centered
+            int symbolW = this.textRenderer.getWidth(iconSymbol);
+            int labelW = this.textRenderer.getWidth(label);
+
+            context.drawTextWithShadow(this.textRenderer, iconSymbol, textX - (symbolW / 2), textY - 8, isSelected ? 0xFF55FFFF : 0xFFAAAAAA);
+            context.drawTextWithShadow(this.textRenderer, label, textX - (labelW / 2), textY + 3, textColor);
+        }
+
+        // --- 2. Central Disc with LARGE Moo Client Logo ---
+        int centerRadius = 40;
+        int centerBg = 0xFA0E0E14;
+        int centerBorder = (selectedSlot >= 0) ? MooClientSettings.getAccentColor() : 0x55FFFFFF;
+
+        drawCircleFill(context, cx, cy, centerRadius, centerBg);
+        drawCircleOutline(context, cx, cy, centerRadius, centerBorder);
+
+        // Large Cow Logo (52x52)
+        int logoSize = 52;
         context.drawTexture(RenderLayer::getGuiTextured, MOO_LOGO, cx - logoSize / 2, cy - logoSize / 2, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
 
-        // --- Active Selection Header Text ---
+        // --- 3. Warframe Center Title Callout ---
         String selectedTitle = getSelectedTitle();
         if (selectedTitle != null && !selectedTitle.isEmpty()) {
-            int titleY = cy - 130;
+            int titleY = cy + 130;
             int textW = this.textRenderer.getWidth(selectedTitle);
             int pillPadding = 12;
             int pillX = cx - (textW / 2) - pillPadding;
             int pillW = textW + (pillPadding * 2);
             int pillH = 20;
 
-            context.fill(pillX, titleY - 4, pillX + pillW, titleY - 4 + pillH, 0xEE161622);
-            drawRoundedBorder(context, pillX, titleY - 4, pillW, pillH, MooClientSettings.getAccentColor());
-            context.drawTextWithShadow(this.textRenderer, selectedTitle, cx - (textW / 2), titleY + 2, 0xFFFFFFFF);
+            context.fill(pillX, titleY, pillX + pillW, titleY + pillH, 0xEE14141E);
+            drawRectOutline(context, pillX, titleY, pillW, pillH, MooClientSettings.getAccentColor());
+            context.drawTextWithShadow(this.textRenderer, selectedTitle, cx - (textW / 2), titleY + 6, 0xFFFFFFFF);
         }
 
         // Bottom usage hint
         String hint = MooLanguage.get("emotes_wheel_hint");
         int hintW = this.textRenderer.getWidth(hint);
-        context.drawTextWithShadow(this.textRenderer, hint, cx - (hintW / 2), this.height - 35, 0xFFA0A0AB);
+        context.drawTextWithShadow(this.textRenderer, hint, cx - (hintW / 2), this.height - 30, 0xFFA0A0AB);
 
         super.render(context, mouseX, mouseY, delta);
     }
 
-    private void renderEmoteCard(DrawContext context, int x, int y, int slot, String icon, String title, boolean isSelected) {
-        int cardW = 120;
-        int cardH = 34;
-        int cardX = x - (cardW / 2);
-        int cardY = y - (cardH / 2);
-
-        int accentColor = MooClientSettings.getAccentColor();
-        int bg = isSelected ? (accentColor & 0x00FFFFFF | 0xDD000000) : 0xDD161622;
-        int border = isSelected ? 0xFFFFFFFF : 0x44FFFFFF;
-        int textColor = isSelected ? 0xFF0A2514 : 0xFFFFFFFF;
-
-        // Card body & border
-        context.fill(cardX, cardY, cardX + cardW, cardY + cardH, bg);
-        drawRoundedBorder(context, cardX, cardY, cardW, cardH, border);
-
-        // Icon + Label
-        String fullText = icon + " " + title;
-        int tw = this.textRenderer.getWidth(fullText);
-        context.drawTextWithShadow(this.textRenderer, fullText, cardX + (cardW - tw) / 2, cardY + 13, isSelected ? 0xFFFFFFFF : textColor);
+    private String getSlotLabel(int slot) {
+        return switch (slot) {
+            case 0 -> MooLanguage.get("emotes_wheel_hands_up");
+            case 1 -> MooLanguage.get("emotes_wheel_frontflip");
+            case 2 -> MooLanguage.get("emotes_wheel_stop");
+            case 3 -> MooLanguage.get("emotes_wheel_backflip");
+            default -> "";
+        };
     }
 
-    private void drawOuterRing(DrawContext context, int cx, int cy, int radius) {
-        int segments = 32;
+    private String getSlotSymbol(int slot) {
+        return switch (slot) {
+            case 0 -> "^ ^"; // Hands Up
+            case 1 -> ">>";  // Frontflip
+            case 2 -> "[X]"; // Stop
+            case 3 -> "<<";  // Backflip
+            default -> "";
+        };
+    }
+
+    private String getSelectedTitle() {
+        return switch (selectedSlot) {
+            case 0 -> "> " + MooLanguage.get("emotes_wheel_hands_up").toUpperCase() + " <";
+            case 1 -> "> " + MooLanguage.get("emotes_wheel_frontflip").toUpperCase() + " <";
+            case 2 -> "> " + MooLanguage.get("emotes_wheel_stop").toUpperCase() + " <";
+            case 3 -> "> " + MooLanguage.get("emotes_wheel_backflip").toUpperCase() + " <";
+            default -> null;
+        };
+    }
+
+    /**
+     * Renders a curved Warframe sector (trapezoidal arc wedge) with smooth rasterization.
+     */
+    private void drawCurvedWedge(DrawContext context, int cx, int cy, float rIn, float rOut, double startDeg, double endDeg, int fillColor, int borderColor, boolean isSelected) {
+        int steps = 14;
+        double stepSize = (endDeg - startDeg) / steps;
+
+        List<int[]> outerPoints = new ArrayList<>();
+        List<int[]> innerPoints = new ArrayList<>();
+
+        for (int i = 0; i <= steps; i++) {
+            double rad = Math.toRadians(startDeg + i * stepSize);
+            int ox = (int) (cx + Math.cos(rad) * rOut);
+            int oy = (int) (cy + Math.sin(rad) * rOut);
+            int ix = (int) (cx + Math.cos(rad) * rIn);
+            int iy = (int) (cy + Math.sin(rad) * rIn);
+
+            outerPoints.add(new int[] { ox, oy });
+            innerPoints.add(new int[] { ix, iy });
+        }
+
+        // Fill sub-quads
+        for (int i = 0; i < steps; i++) {
+            int[] o1 = outerPoints.get(i);
+            int[] o2 = outerPoints.get(i + 1);
+            int[] i1 = innerPoints.get(i);
+            int[] i2 = innerPoints.get(i + 1);
+
+            fillQuad(context, o1[0], o1[1], o2[0], o2[1], i2[0], i2[1], i1[0], i1[1], fillColor);
+        }
+
+        // Draw crisp boundary outline
+        for (int i = 0; i < steps; i++) {
+            drawLine(context, outerPoints.get(i)[0], outerPoints.get(i)[1], outerPoints.get(i + 1)[0], outerPoints.get(i + 1)[1], borderColor);
+            drawLine(context, innerPoints.get(i)[0], innerPoints.get(i)[1], innerPoints.get(i + 1)[0], innerPoints.get(i + 1)[1], borderColor);
+        }
+        // Side straight lines
+        drawLine(context, innerPoints.get(0)[0], innerPoints.get(0)[1], outerPoints.get(0)[0], outerPoints.get(0)[1], borderColor);
+        drawLine(context, innerPoints.get(steps)[0], innerPoints.get(steps)[1], outerPoints.get(steps)[0], outerPoints.get(steps)[1], borderColor);
+
+        // Warframe active pointer notch in center
+        if (isSelected) {
+            double midRad = Math.toRadians((startDeg + endDeg) / 2.0);
+            int tipX = (int) (cx + Math.cos(midRad) * (rIn - 6));
+            int tipY = (int) (cy + Math.sin(midRad) * (rIn - 6));
+            int b1X = (int) (cx + Math.cos(midRad - 0.08) * rIn);
+            int b1Y = (int) (cy + Math.sin(midRad - 0.08) * rIn);
+            int b2X = (int) (cx + Math.cos(midRad + 0.08) * rIn);
+            int b2Y = (int) (cy + Math.sin(midRad + 0.08) * rIn);
+
+            fillQuad(context, tipX, tipY, b1X, b1Y, b2X, b2Y, tipX, tipY, borderColor);
+            drawLine(context, b1X, b1Y, tipX, tipY, 0xFFFFFFFF);
+            drawLine(context, b2X, b2Y, tipX, tipY, 0xFFFFFFFF);
+        }
+    }
+
+    private void fillQuad(DrawContext context, int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4, int color) {
+        int minY = Math.min(Math.min(y1, y2), Math.min(y3, y4));
+        int maxY = Math.max(Math.max(y1, y2), Math.max(y3, y4));
+
+        int[][] edges = new int[][] {
+            { x1, y1, x2, y2 },
+            { x2, y2, x3, y3 },
+            { x3, y3, x4, y4 },
+            { x4, y4, x1, y1 }
+        };
+
+        for (int y = minY; y <= maxY; y++) {
+            List<Integer> xIntersects = new ArrayList<>();
+            for (int[] edge : edges) {
+                int ex1 = edge[0], ey1 = edge[1], ex2 = edge[2], ey2 = edge[3];
+                if ((ey1 <= y && ey2 > y) || (ey2 <= y && ey1 > y)) {
+                    int x = ex1 + (y - ey1) * (ex2 - ex1) / (ey2 - ey1);
+                    xIntersects.add(x);
+                }
+            }
+            if (xIntersects.size() >= 2) {
+                Collections.sort(xIntersects);
+                int minX = xIntersects.get(0);
+                int maxX = xIntersects.get(xIntersects.size() - 1);
+                context.fill(minX, y, maxX + 1, y + 1, color);
+            }
+        }
+    }
+
+    private void drawLine(DrawContext context, int x1, int y1, int x2, int y2, int color) {
+        int dx = Math.abs(x2 - x1);
+        int dy = Math.abs(y2 - y1);
+        int sx = x1 < x2 ? 1 : -1;
+        int sy = y1 < y2 ? 1 : -1;
+        int err = dx - dy;
+
+        int x = x1;
+        int y = y1;
+        while (true) {
+            context.fill(x, y, x + 1, y + 1, color);
+            if (x == x2 && y == y2) break;
+            int e2 = 2 * err;
+            if (e2 > -dy) {
+                err -= dy;
+                x += sx;
+            }
+            if (e2 < dx) {
+                err += dx;
+                y += sy;
+            }
+        }
+    }
+
+    private void drawCircleFill(DrawContext context, int cx, int cy, int radius, int color) {
+        for (int y = -radius; y <= radius; y++) {
+            int dx = (int) Math.sqrt(radius * radius - y * y);
+            context.fill(cx - dx, cy + y, cx + dx, cy + y + 1, color);
+        }
+    }
+
+    private void drawCircleOutline(DrawContext context, int cx, int cy, int radius, int color) {
+        int segments = 36;
         double step = (2 * Math.PI) / segments;
         for (int i = 0; i < segments; i++) {
             double a1 = i * step;
@@ -143,41 +306,29 @@ public class EmoteWheelScreen extends Screen {
             int y1 = (int) (cy + Math.sin(a1) * radius);
             int x2 = (int) (cx + Math.cos(a2) * radius);
             int y2 = (int) (cy + Math.sin(a2) * radius);
-            context.fill(x1, y1, x1 + 1, y1 + 1, 0x33FFFFFF);
+            drawLine(context, x1, y1, x2, y2, color);
         }
     }
 
-    private void drawRoundedBorder(DrawContext context, int x, int y, int w, int h, int color) {
+    private void drawRectOutline(DrawContext context, int x, int y, int w, int h, int color) {
         context.fill(x, y, x + w, y + 1, color);
         context.fill(x, y + h - 1, x + w, y + h, color);
         context.fill(x, y + 1, x + 1, y + h - 1, color);
         context.fill(x + w - 1, y + 1, x + w, y + h - 1, color);
     }
 
-    private String getSelectedTitle() {
-        return switch (selectedSlot) {
-            case 0 -> "» " + MooLanguage.get("emotes_wheel_hands_up").toUpperCase() + " «";
-            case 1 -> "» " + MooLanguage.get("emotes_wheel_frontflip").toUpperCase() + " «";
-            case 2 -> "» " + MooLanguage.get("emotes_wheel_stop").toUpperCase() + " «";
-            case 3 -> "» " + MooLanguage.get("emotes_wheel_backflip").toUpperCase() + " «";
-            default -> null;
-        };
-    }
-
     private void executeAction() {
         switch (selectedSlot) {
             case 0 -> EmotesModule.toggleHandsUp();
             case 1 -> EmotesModule.triggerFrontflip();
-            case 2 -> {
-                EmotesModule.setHandsUp(false);
-            }
+            case 2 -> EmotesModule.setHandsUp(false);
             case 3 -> EmotesModule.triggerBackflip();
         }
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0) { // Left click
+        if (button == 0) {
             if (selectedSlot >= 0) {
                 executeAction();
             }
