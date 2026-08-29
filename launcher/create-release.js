@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.6.8';
+const VERSION = '1.6.9';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -71,7 +71,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         res = await apiRequest('POST', '/repos/Moo-Client/moo-client/releases', token, {
             tag_name: `v${VERSION}`,
             name: `Moo Client v${VERSION}`,
-            body: '🚀 **Moo Client v1.6.8**\n\n✓ **Wymuszenie widoku F5 (Third-Person)** podczas emotki wyłącznie z koła emotek z automatycznym powrotem kamery\n✓ **Pełna obsługa bindów na przyciskach myszy** (`LMB`, `RMB`, `SCROLL`, `MOUSE 4`, `MOUSE 5`, `MOUSE 6-8`)\n✓ **Koło emotek pod przyciskami myszy** z płynnym wybieraniem i zwalnianiem\n✓ **Wsparcie przycisków myszy dla wszystkich modułów** (Sprint, Freelook, Zoom, Waypoints, Emotki)\n✓ **Zaktualizowano wersję Fabric mod i launchera do 1.6.8**',
+            body: '🚀 **Moo Client v1.6.9**\n\n✓ **Emotki na stałe włączone** jako bazowa, integralna funkcja klienta\n✓ **Dedykowana sekcja w Ustawieniach** (`Shift` ➔ `Ustawienia` ➔ `🕺 EMOTKI`)\n✓ **Czyste menu modów** (usunięto emotki z listy modów)\n✓ **Wymuszenie F5 wyłącznie dla Koła Emotek** z automatycznym powrotem kamery\n✓ **Pełna obsługa bindów myszy i klawiatury** dla wszystkich modułów\n✓ **Zaktualizowano wersję Fabric mod i launchera do 1.6.9**',
             draft: false,
             prerelease: false
         });

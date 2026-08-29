@@ -1,7 +1,7 @@
 {
-  "version": "1.6.8",
+  "version": "1.6.9",
   "minecraft": "1.21.4",
-  "name": "Moo Client 1.6.8",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.8/moo-client-1.6.8.jar",
-  "changelog": "🚀 Moo Client v1.6.8:\n✓ Wymuszenie widoku F5 (Third-Person) podczas emotki wyłącznie z koła emotek z automatycznym powrotem kamery\n✓ Pełna obsługa bindów na przyciskach myszy (LMB, RMB, SCROLL, MOUSE 4, MOUSE 5, MOUSE 6-8)\n✓ Koło emotek pod przyciskami myszy z płynnym wybieraniem i zwalnianiem\n✓ Obsługa przycisków myszy dla Sprintu, Freelooka, Zooma, Waypointów i Emotek\n✓ Zaktualizowano wersję moda i launchera do 1.6.8"
+  "name": "Moo Client 1.6.9",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.9/moo-client-1.6.9.jar",
+  "changelog": "🚀 Moo Client v1.6.9:\n✓ Emotki są teraz integralną, stale aktywną funkcją klienta\n✓ Przeniesiono konfigurację emotek do dedykowanej sekcji w Ustawieniach (Shift ➔ Ustawienia ➔ Emotki)\n✓ Usunięto emotki z listy modów dla większej przejrzystości menu\n✓ Pełna obsługa bindów klawiatury i przycisków myszy\n✓ Zaktualizowano wersję moda Fabric i launchera do 1.6.9"
 }

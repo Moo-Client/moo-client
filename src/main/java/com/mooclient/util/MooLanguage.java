@@ -125,6 +125,7 @@ public class MooLanguage {
                 case "tab_accent" -> "🎨 KOLOR AKCENTU";
                 case "tab_hud" -> "📍 HUD & WIDGETY";
                 case "tab_gui" -> "✨ WYGLĄD GUI";
+                case "tab_emotes" -> "🕺 EMOTKI";
                 case "tab_profiles" -> "📁 PROFILE";
                 case "reset_hud_btn" -> "↺ PRZYWRÓĆ POZYCJE HUD";
                 case "reset_hud_done" -> "✓ Pozycje HUD zresetowane!";
@@ -257,6 +258,7 @@ public class MooLanguage {
                 case "tab_accent" -> "🎨 ACCENT COLOR";
                 case "tab_hud" -> "📍 HUD & WIDGETS";
                 case "tab_gui" -> "✨ GUI THEME";
+                case "tab_emotes" -> "🕺 EMOTES";
                 case "tab_profiles" -> "📁 PROFILES";
                 case "reset_hud_btn" -> "↺ RESET HUD POSITIONS";
                 case "reset_hud_done" -> "✓ HUD Positions Reset!";

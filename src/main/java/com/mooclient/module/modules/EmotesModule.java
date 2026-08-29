@@ -274,16 +274,11 @@ public class EmotesModule extends Module {
     // ==========================================
 
     public static boolean isEmotesEnabled() {
-        return enabled;
+        return true;
     }
 
     public static void setEmotesEnabled(boolean state) {
-        enabled = state;
-        if (!state) {
-            localPlayerState.stopEmotes();
-            restorePerspective();
-            sendPayload(MooEmotePayload.TYPE_STOP);
-        }
+        enabled = true;
     }
 
     public static ActivationMode getMode() {

@@ -1333,9 +1333,10 @@ public class MooClientScreen extends Screen {
         String[] tabs = new String[] {
                 MooLanguage.get("tab_accent"),
                 MooLanguage.get("tab_hud"),
-                MooLanguage.get("tab_gui")
+                MooLanguage.get("tab_gui"),
+                MooLanguage.get("tab_emotes")
         };
-        int tabW = (panelW - 28) / 3;
+        int tabW = (panelW - 28) / 4;
 
         for (int i = 0; i < tabs.length; i++) {
             int tX = panelX + 14 + i * tabW;
@@ -1373,6 +1374,10 @@ public class MooClientScreen extends Screen {
         // --- Tab 2: GUI Appearance ---
         else if (settingsTab == 2) {
             renderGuiSettingsTab(context, panelX, contentY, panelW, mouseX, mouseY);
+        }
+        // --- Tab 3: Emotes Configuration ---
+        else if (settingsTab == 3) {
+            renderEmotesSettingsTab(context, panelX, contentY, panelW, mouseX, mouseY);
         }
 
         String hint = MooLanguage.get("esc_hint");
@@ -1637,6 +1642,57 @@ public class MooClientScreen extends Screen {
 
             curX += w + gap;
         }
+    }
+
+    private void renderEmotesSettingsTab(DrawContext context, int panelX, int contentY, int panelW, int mouseX, int mouseY) {
+        int rowX = panelX + 18;
+        int rowY = contentY + 2;
+        int rowW = panelW - 36;
+        int rowH = 32;
+        int btnW = 150;
+        int btnH = 22;
+
+        // Row 1: Hands Up Keybind
+        drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("emotes_hands_up_label"));
+        boolean listening0 = this.listeningForKeybind && this.listeningEmoteSlot == 0;
+        String keyText0 = listening0 ? MooLanguage.get("press_key_hint")
+                : "[ " + com.mooclient.module.modules.EmotesModule.getKeyName() + " ]";
+        int btnX0 = rowX + rowW - btnW - 10;
+        int btnY0 = rowY + 5;
+        boolean btnHover0 = mouseX >= btnX0 && mouseX <= btnX0 + btnW && mouseY >= btnY0 && mouseY <= btnY0 + btnH;
+        context.fill(btnX0, btnY0, btnX0 + btnW, btnY0 + btnH, listening0 ? 0xEE334466 : (btnHover0 ? 0xCC252535 : 0x88181824));
+        drawBorder(context, btnX0, btnY0, btnW, btnH, listening0 ? 0xFF55FFFF : (btnHover0 ? 0xAAFFFFFF : 0x44FFFFFF));
+        drawCenteredText(context, keyText0, btnX0 + btnW / 2, btnY0 + 7, listening0 ? 0xFFFFFF55 : 0xFF55FFFF);
+
+        // Row 2: Emote Radial Wheel Keybind
+        rowY += rowH + 6;
+        drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("emotes_wheel_key_label"));
+        boolean listening1 = this.listeningForKeybind && this.listeningEmoteSlot == 1;
+        String keyText1 = listening1 ? MooLanguage.get("press_key_hint")
+                : "[ " + com.mooclient.module.modules.EmotesModule.getWheelKeyName() + " ]";
+        int btnX1 = rowX + rowW - btnW - 10;
+        int btnY1 = rowY + 5;
+        boolean btnHover1 = mouseX >= btnX1 && mouseX <= btnX1 + btnW && mouseY >= btnY1 && mouseY <= btnY1 + btnH;
+        context.fill(btnX1, btnY1, btnX1 + btnW, btnY1 + btnH, listening1 ? 0xEE334466 : (btnHover1 ? 0xCC252535 : 0x88181824));
+        drawBorder(context, btnX1, btnY1, btnW, btnH, listening1 ? 0xFF55FFFF : (btnHover1 ? 0xAAFFFFFF : 0x44FFFFFF));
+        drawCenteredText(context, keyText1, btnX1 + btnW / 2, btnY1 + 7, listening1 ? 0xFFFFFF55 : 0xFF55FFFF);
+
+        // Row 3: Activation Mode (Hold vs Toggle)
+        rowY += rowH + 6;
+        drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("mode_label"));
+        renderModeSelector(context, rowX + rowW - 206, rowY + 5, mouseX, mouseY,
+                com.mooclient.module.modules.EmotesModule.getMode().ordinal());
+
+        // Row 4: Info Card
+        rowY += rowH + 8;
+        context.fill(rowX, rowY, rowX + rowW, rowY + 40, 0x33101018);
+        drawBorder(context, rowX, rowY, rowW, 40, 0x22FFFFFF);
+        context.drawTextWithShadow(this.textRenderer, 
+                MooLanguage.current == MooLanguage.PL ? "ℹ Koło wyboru (Warframe): Salto w przód, Salto w tył, Automatyczny widok F5." : "ℹ Radial Wheel (Warframe style): Frontflip, Backflip, Auto F5 camera.",
+                rowX + 10, rowY + 8, 0xFF55FFFF);
+        context.drawTextWithShadow(this.textRenderer, 
+                MooLanguage.current == MooLanguage.PL ? "🌐 Pełna synchronizacja multiplayer w czasie rzeczywistym między graczami Moo Client." : "🌐 Real-time multiplayer synchronization across all Moo Client users.",
+                rowX + 10, rowY + 22, 0xFFA0A0AB);
     }
 
     private void drawOptionRow(DrawContext context, int x, int y, int w, int h, String title) {
@@ -1985,8 +2041,8 @@ public class MooClientScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        // If listening for new keybind/mouse bind in options
-        if (currentView == View.OPTIONS && listeningForKeybind) {
+        // If listening for new keybind/mouse bind in options OR settings
+        if ((currentView == View.OPTIONS || (currentView == View.SETTINGS && settingsTab == 3)) && listeningForKeybind) {
             String mouseName;
             if (button == 0) {
                 mouseName = "LMB";
@@ -2002,7 +2058,13 @@ public class MooClientScreen extends Screen {
                 mouseName = "BUTTON " + (button + 1);
             }
 
-            if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Freelook")) {
+            if (currentView == View.SETTINGS && settingsTab == 3) {
+                if (listeningEmoteSlot == 1) {
+                    com.mooclient.module.modules.EmotesModule.setWheelKeybind(button, mouseName, true);
+                } else {
+                    com.mooclient.module.modules.EmotesModule.setKeybind(button, mouseName, true);
+                }
+            } else if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Freelook")) {
                 FreelookModule.setKeybind(button, mouseName, true);
             } else if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Zoom")) {
                 com.mooclient.module.modules.ZoomModule.setKeybind(button, mouseName, true);
@@ -2890,12 +2952,13 @@ public class MooClientScreen extends Screen {
                 // Tabs Click
                 int tabY = panelY + 34;
                 int tabH = 22;
-                int tabW = (panelW - 28) / 3;
-                for (int i = 0; i < 3; i++) {
+                int tabW = (panelW - 28) / 4;
+                for (int i = 0; i < 4; i++) {
                     int tX = panelX + 14 + i * tabW;
                     if (mouseX >= tX && mouseX <= tX + tabW && mouseY >= tabY && mouseY <= tabY + tabH) {
                         playClickSound();
                         this.settingsTab = i;
+                        this.listeningForKeybind = false;
                         return true;
                     }
                 }
@@ -3035,6 +3098,59 @@ public class MooClientScreen extends Screen {
                         playClickSound();
                         com.mooclient.util.MooClientSettings.toggleGuiAnimations();
                         return true;
+                    }
+                }
+                // Tab 3: Emotes Configuration
+                else if (settingsTab == 3) {
+                    int rowX = panelX + 18;
+                    int rowY = contentY + 2;
+                    int rowW = panelW - 36;
+                    int rowH = 32;
+                    int btnW = 150;
+                    int btnH = 22;
+
+                    // Row 1: Hands Up keybind
+                    int btnX0 = rowX + rowW - btnW - 10;
+                    int btnY0 = rowY + 5;
+                    if (mouseX >= btnX0 && mouseX <= btnX0 + btnW && mouseY >= btnY0 && mouseY <= btnY0 + btnH) {
+                        boolean wasListening = this.listeningForKeybind && this.listeningEmoteSlot == 0;
+                        this.listeningForKeybind = !wasListening;
+                        this.listeningEmoteSlot = 0;
+                        playClickSound();
+                        return true;
+                    }
+
+                    // Row 2: Wheel keybind
+                    rowY += rowH + 6;
+                    int btnX1 = rowX + rowW - btnW - 10;
+                    int btnY1 = rowY + 5;
+                    if (mouseX >= btnX1 && mouseX <= btnX1 + btnW && mouseY >= btnY1 && mouseY <= btnY1 + btnH) {
+                        boolean wasListening = this.listeningForKeybind && this.listeningEmoteSlot == 1;
+                        this.listeningForKeybind = !wasListening;
+                        this.listeningEmoteSlot = 1;
+                        playClickSound();
+                        return true;
+                    }
+
+                    // Row 3: Mode selector
+                    rowY += rowH + 6;
+                    int modeW = 96;
+                    int modeH = 22;
+                    int modeX1 = rowX + rowW - 206;
+                    int modeX2 = modeX1 + modeW + 4;
+                    if (mouseY >= rowY + 5 && mouseY <= rowY + 5 + modeH) {
+                        if (mouseX >= modeX1 && mouseX <= modeX1 + modeW) {
+                            com.mooclient.module.modules.EmotesModule.setMode(com.mooclient.module.modules.EmotesModule.ActivationMode.HOLD);
+                            com.mooclient.util.MooConfig.save();
+                            playClickSound();
+                            return true;
+                        }
+                        if (mouseX >= modeX2 && mouseX <= modeX2 + modeW) {
+                            com.mooclient.module.modules.EmotesModule.setMode(com.mooclient.module.modules.EmotesModule.ActivationMode.TOGGLE);
+                            com.mooclient.util.MooConfig.save();
+                            playClickSound();
+                            return true;
+                        }
                     }
                 }
             }
@@ -3329,8 +3445,8 @@ public class MooClientScreen extends Screen {
             return true;
         }
 
-        // If listening for new keybind in Sprint, Freelook, Zoom options
-        if (currentView == View.OPTIONS && listeningForKeybind) {
+        // If listening for new keybind in Sprint, Freelook, Zoom options OR Settings Emotes tab
+        if ((currentView == View.OPTIONS || (currentView == View.SETTINGS && settingsTab == 3)) && listeningForKeybind) {
             if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
                 listeningForKeybind = false;
                 return true;
@@ -3347,7 +3463,13 @@ public class MooClientScreen extends Screen {
                 keyName = "KEY " + keyCode;
             }
 
-            if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Freelook")) {
+            if (currentView == View.SETTINGS && settingsTab == 3) {
+                if (listeningEmoteSlot == 1) {
+                    com.mooclient.module.modules.EmotesModule.setWheelKeybind(keyCode, keyName, false);
+                } else {
+                    com.mooclient.module.modules.EmotesModule.setKeybind(keyCode, keyName, false);
+                }
+            } else if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Freelook")) {
                 FreelookModule.setKeybind(keyCode, keyName, false);
             } else if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Zoom")) {
                 com.mooclient.module.modules.ZoomModule.setKeybind(keyCode, keyName, false);
