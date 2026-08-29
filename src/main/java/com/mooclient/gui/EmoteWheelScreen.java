@@ -180,45 +180,42 @@ public class EmoteWheelScreen extends Screen {
         };
     }
 
+    private static final int MAX_STEPS = 16;
+    private final int[] outerX = new int[MAX_STEPS + 1];
+    private final int[] outerY = new int[MAX_STEPS + 1];
+    private final int[] innerX = new int[MAX_STEPS + 1];
+    private final int[] innerY = new int[MAX_STEPS + 1];
+
     /**
-     * Renders a curved Warframe sector (trapezoidal arc wedge) with smooth rasterization.
+     * Renders a curved Warframe sector with zero-allocation math for peak FPS.
      */
     private void drawCurvedWedge(DrawContext context, int cx, int cy, float rIn, float rOut, double startDeg, double endDeg, int fillColor, int borderColor, boolean isSelected) {
-        int steps = 14;
+        int steps = 12;
         double stepSize = (endDeg - startDeg) / steps;
-
-        List<int[]> outerPoints = new ArrayList<>();
-        List<int[]> innerPoints = new ArrayList<>();
 
         for (int i = 0; i <= steps; i++) {
             double rad = Math.toRadians(startDeg + i * stepSize);
-            int ox = (int) (cx + Math.cos(rad) * rOut);
-            int oy = (int) (cy + Math.sin(rad) * rOut);
-            int ix = (int) (cx + Math.cos(rad) * rIn);
-            int iy = (int) (cy + Math.sin(rad) * rIn);
-
-            outerPoints.add(new int[] { ox, oy });
-            innerPoints.add(new int[] { ix, iy });
+            double cos = Math.cos(rad);
+            double sin = Math.sin(rad);
+            outerX[i] = (int) (cx + cos * rOut);
+            outerY[i] = (int) (cy + sin * rOut);
+            innerX[i] = (int) (cx + cos * rIn);
+            innerY[i] = (int) (cy + sin * rIn);
         }
 
-        // Fill sub-quads
+        // Fill sub-quads without creating garbage collection objects
         for (int i = 0; i < steps; i++) {
-            int[] o1 = outerPoints.get(i);
-            int[] o2 = outerPoints.get(i + 1);
-            int[] i1 = innerPoints.get(i);
-            int[] i2 = innerPoints.get(i + 1);
-
-            fillQuad(context, o1[0], o1[1], o2[0], o2[1], i2[0], i2[1], i1[0], i1[1], fillColor);
+            fillQuad(context, outerX[i], outerY[i], outerX[i + 1], outerY[i + 1], innerX[i + 1], innerY[i + 1], innerX[i], innerY[i], fillColor);
         }
 
-        // Draw crisp boundary outline
+        // Draw boundary outlines
         for (int i = 0; i < steps; i++) {
-            drawLine(context, outerPoints.get(i)[0], outerPoints.get(i)[1], outerPoints.get(i + 1)[0], outerPoints.get(i + 1)[1], borderColor);
-            drawLine(context, innerPoints.get(i)[0], innerPoints.get(i)[1], innerPoints.get(i + 1)[0], innerPoints.get(i + 1)[1], borderColor);
+            drawLine(context, outerX[i], outerY[i], outerX[i + 1], outerY[i + 1], borderColor);
+            drawLine(context, innerX[i], innerY[i], innerX[i + 1], innerY[i + 1], borderColor);
         }
         // Side straight lines
-        drawLine(context, innerPoints.get(0)[0], innerPoints.get(0)[1], outerPoints.get(0)[0], outerPoints.get(0)[1], borderColor);
-        drawLine(context, innerPoints.get(steps)[0], innerPoints.get(steps)[1], outerPoints.get(steps)[0], outerPoints.get(steps)[1], borderColor);
+        drawLine(context, innerX[0], innerY[0], outerX[0], outerY[0], borderColor);
+        drawLine(context, innerX[steps], innerY[steps], outerX[steps], outerY[steps], borderColor);
 
         // Warframe active pointer notch in center
         if (isSelected) {
@@ -240,26 +237,42 @@ public class EmoteWheelScreen extends Screen {
         int minY = Math.min(Math.min(y1, y2), Math.min(y3, y4));
         int maxY = Math.max(Math.max(y1, y2), Math.max(y3, y4));
 
-        int[][] edges = new int[][] {
-            { x1, y1, x2, y2 },
-            { x2, y2, x3, y3 },
-            { x3, y3, x4, y4 },
-            { x4, y4, x1, y1 }
-        };
+        int e0x1 = x1, e0y1 = y1, e0x2 = x2, e0y2 = y2;
+        int e1x1 = x2, e1y1 = y2, e1x2 = x3, e1y2 = y3;
+        int e2x1 = x3, e2y1 = y3, e2x2 = x4, e2y2 = y4;
+        int e3x1 = x4, e3y1 = y4, e3x2 = x1, e3y2 = y1;
 
         for (int y = minY; y <= maxY; y++) {
-            List<Integer> xIntersects = new ArrayList<>();
-            for (int[] edge : edges) {
-                int ex1 = edge[0], ey1 = edge[1], ex2 = edge[2], ey2 = edge[3];
-                if ((ey1 <= y && ey2 > y) || (ey2 <= y && ey1 > y)) {
-                    int x = ex1 + (y - ey1) * (ex2 - ex1) / (ey2 - ey1);
-                    xIntersects.add(x);
-                }
+            int minX = Integer.MAX_VALUE;
+            int maxX = Integer.MIN_VALUE;
+            int count = 0;
+
+            if ((e0y1 <= y && e0y2 > y) || (e0y2 <= y && e0y1 > y)) {
+                int x = e0x1 + (y - e0y1) * (e0x2 - e0x1) / (e0y2 - e0y1);
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                count++;
             }
-            if (xIntersects.size() >= 2) {
-                Collections.sort(xIntersects);
-                int minX = xIntersects.get(0);
-                int maxX = xIntersects.get(xIntersects.size() - 1);
+            if ((e1y1 <= y && e1y2 > y) || (e1y2 <= y && e1y1 > y)) {
+                int x = e1x1 + (y - e1y1) * (e1x2 - e1x1) / (e1y2 - e1y1);
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                count++;
+            }
+            if ((e2y1 <= y && e2y2 > y) || (e2y2 <= y && e2y1 > y)) {
+                int x = e2x1 + (y - e2y1) * (e2x2 - e2x1) / (e2y2 - e2y1);
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                count++;
+            }
+            if ((e3y1 <= y && e3y2 > y) || (e3y2 <= y && e3y1 > y)) {
+                int x = e3x1 + (y - e3y1) * (e3x2 - e3x1) / (e3y2 - e3y1);
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                count++;
+            }
+
+            if (count >= 2 && minX <= maxX) {
                 context.fill(minX, y, maxX + 1, y + 1, color);
             }
         }
