@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.6.9_1';
+const VERSION = '1.7.0_1';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -46,7 +46,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
     const cleanUrl = uploadUrl.replace('{?name,label}', '') + '?name=' + encodeURIComponent(fileName);
     console.log(`Uploading ${fileName} (${(fs.statSync(filePath).size / (1024 * 1024)).toFixed(1)} MB)...`);
     try {
-        const cmd = `curl.exe -s -o NUL -w "%{http_code}" -X POST -H "Authorization: token ${token}" -H "User-Agent: MooClient-Builder" -H "Content-Type: ${contentType}" --data-binary "@${filePath.replace(/\\/g, '/')}" "${cleanUrl}"`;
+        const cmd = `curl.exe --retry 3 -s -o NUL -w "%{http_code}" -X POST -H "Authorization: token ${token}" -H "User-Agent: MooClient-Builder" -H "Content-Type: ${contentType}" --data-binary "@${filePath.replace(/\\/g, '/')}" "${cleanUrl}"`;
         const output = execSync(cmd, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024, timeout: 600000 });
         const code = output.trim();
         console.log(`Upload ${fileName}: HTTP ${code}`);
@@ -71,7 +71,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         res = await apiRequest('POST', '/repos/Moo-Client/moo-client/releases', token, {
             tag_name: `v${VERSION}`,
             name: `Moo Client v${VERSION}`,
-            body: '🚀 **Moo Client v1.6.9_1**\n\n✓ **Odwrócono pozycje salt w kole emotek** (Salto w przód / tył)\n✓ **Nadano rangę Tester dla uprawnionych kont**\n✓ **Usunięto niepotrzebne napisy z zakładki Emotek**\n✓ **Pełna synchronizacja multiplayer w czasie rzeczywistym**',
+            body: '🚀 **Moo Client v1.7.0_1**\n\n✓ **Odwrócono pozycje salt w kole emotek** (Salto w przód / tył)\n✓ **Nadano rangę Tester dla uprawnionych kont** (UUID `6d4b68b1-0afd-4b6f-9247-e859154936b4`)\n✓ **Usunięto niepotrzebne napisy z zakładki Emotek**\n✓ **Pełna synchronizacja multiplayer w czasie rzeczywistym**',
             draft: false,
             prerelease: false
         });
