@@ -128,9 +128,6 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
             files.sort((a, b) => fs.statSync(path.join(nsisDir, b)).mtimeMs - fs.statSync(path.join(nsisDir, a)).mtimeMs);
             const newest7z = files[0];
             await uploadAsset(release.upload_url, token, path.join(nsisDir, newest7z), newest7z, 'application/octet-stream');
-            if (newest7z !== `moo-client-launcher-${VERSION}-x64.nsis.7z`) {
-                await uploadAsset(release.upload_url, token, path.join(nsisDir, newest7z), `moo-client-launcher-${VERSION}-x64.nsis.7z`, 'application/octet-stream');
-            }
         }
     }
 
