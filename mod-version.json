@@ -1,7 +1,7 @@
 {
-  "version": "1.6.7",
+  "version": "1.6.8",
   "minecraft": "1.21.4",
-  "name": "Moo Client 1.6.7",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.7/moo-client-1.6.7.jar",
-  "changelog": "🚀 Moo Client v1.6.7:\n✓ Pełna globalna synchronizacja emotek i salt (Multiplayer Emote Sync) w czasie rzeczywistym\n✓ Koło wyboru emotek (Emote Wheel) w stylu Warframe pod klawiszem B z kierunkowym podświetleniem\n✓ System uprawnień developerów i kategoryzacji sklepowej (EmoteAccessManager)\n✓ Dedykowany, w pełni bindowalny klawisz rąk w górę (Hands Up) w GUI pod klawiszem R\n✓ Płynne salta w przód i tył z parabolicznym wyskokiem +1.05m bez zmiany hitboxa\n✓ Zaktualizowano wersję moda Fabric do 1.6.7"
+  "name": "Moo Client 1.6.8",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.8/moo-client-1.6.8.jar",
+  "changelog": "🚀 Moo Client v1.6.8:\n✓ Wymuszenie widoku F5 (Third-Person) podczas emotki wyłącznie z koła emotek z automatycznym powrotem kamery\n✓ Pełna obsługa bindów na przyciskach myszy (LMB, RMB, SCROLL, MOUSE 4, MOUSE 5, MOUSE 6-8)\n✓ Koło emotek pod przyciskami myszy z płynnym wybieraniem i zwalnianiem\n✓ Obsługa przycisków myszy dla Sprintu, Freelooka, Zooma, Waypointów i Emotek\n✓ Zaktualizowano wersję moda i launchera do 1.6.8"
 }

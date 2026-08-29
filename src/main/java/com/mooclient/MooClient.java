@@ -21,7 +21,7 @@ public class MooClient implements ClientModInitializer {
 
     public static final String MOD_ID = "mooclient";
     public static final String MOD_NAME = "Moo Client";
-    public static final String VERSION = "1.6.7";
+    public static final String VERSION = "1.6.8";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
 
     private static MooClient instance;
@@ -123,9 +123,11 @@ public class MooClient implements ClientModInitializer {
             // In-game Toggle Sprint key detection
             if (client.player != null && client.currentScreen == null) {
                 long window = client.getWindow().getHandle();
+
+                // 1. Sprint
                 int sprintKeyCode = ToggleSprintModule.getKeyCode();
-                if (sprintKeyCode > 0) {
-                    boolean isKeyDown = GLFW.glfwGetKey(window, sprintKeyCode) == GLFW.GLFW_PRESS;
+                if (sprintKeyCode >= 0) {
+                    boolean isKeyDown = isInputPressed(window, sprintKeyCode, ToggleSprintModule.isMouseButton());
                     if (isKeyDown && !sprintKeyWasDown) {
                         if (ToggleSprintModule.isSprintEnabled()) {
                             ToggleSprintModule.toggleSprintActive();
@@ -134,10 +136,10 @@ public class MooClient implements ClientModInitializer {
                     sprintKeyWasDown = isKeyDown;
                 }
 
-                // In-game Freelook key detection
+                // 2. Freelook
                 int freelookKeyCode = com.mooclient.module.modules.FreelookModule.getKeyCode();
-                if (freelookKeyCode > 0 && com.mooclient.module.modules.FreelookModule.isFreelookEnabled()) {
-                    boolean isKeyDown = GLFW.glfwGetKey(window, freelookKeyCode) == GLFW.GLFW_PRESS;
+                if (freelookKeyCode >= 0 && com.mooclient.module.modules.FreelookModule.isFreelookEnabled()) {
+                    boolean isKeyDown = isInputPressed(window, freelookKeyCode, com.mooclient.module.modules.FreelookModule.isMouseButton());
                     if (com.mooclient.module.modules.FreelookModule.getMode() == com.mooclient.module.modules.FreelookModule.ActivationMode.HOLD) {
                         if (isKeyDown) {
                             com.mooclient.module.modules.FreelookModule.start();
@@ -152,16 +154,10 @@ public class MooClient implements ClientModInitializer {
                     freelookKeyWasDown = isKeyDown;
                 }
 
-                // In-game Zoom key / mouse button detection
+                // 3. Zoom
                 int zoomKeyCode = com.mooclient.module.modules.ZoomModule.getKeyCode();
                 if (zoomKeyCode >= 0 && com.mooclient.module.modules.ZoomModule.isZoomEnabled()) {
-                    boolean isKeyDown;
-                    if (com.mooclient.module.modules.ZoomModule.isMouseButton()) {
-                        isKeyDown = GLFW.glfwGetMouseButton(window, zoomKeyCode) == GLFW.GLFW_PRESS;
-                    } else {
-                        isKeyDown = GLFW.glfwGetKey(window, zoomKeyCode) == GLFW.GLFW_PRESS;
-                    }
-
+                    boolean isKeyDown = isInputPressed(window, zoomKeyCode, com.mooclient.module.modules.ZoomModule.isMouseButton());
                     if (com.mooclient.module.modules.ZoomModule.getMode() == com.mooclient.module.modules.ZoomModule.ActivationMode.HOLD) {
                         if (isKeyDown) {
                             com.mooclient.module.modules.ZoomModule.start();
@@ -176,20 +172,20 @@ public class MooClient implements ClientModInitializer {
                     zoomKeyWasDown = isKeyDown;
                 }
 
-                // In-game Waypoint Screen Keybind detection (e.g. B key)
+                // 4. Waypoints
                 int waypointKeyCode = com.mooclient.module.modules.WaypointsModule.getKeyCode();
-                if (waypointKeyCode > 0 && com.mooclient.module.modules.WaypointsModule.isWaypointsEnabled()) {
-                    boolean isKeyDown = GLFW.glfwGetKey(window, waypointKeyCode) == GLFW.GLFW_PRESS;
+                if (waypointKeyCode >= 0 && com.mooclient.module.modules.WaypointsModule.isWaypointsEnabled()) {
+                    boolean isKeyDown = isInputPressed(window, waypointKeyCode, com.mooclient.module.modules.WaypointsModule.isMouseButton());
                     if (isKeyDown && !waypointKeyWasDown) {
                         client.setScreen(new com.mooclient.gui.MooWaypointScreen());
                     }
                     waypointKeyWasDown = isKeyDown;
                 }
 
-                // In-game Hands Up key detection (Default: R key)
+                // 5. Hands Up (Default: R)
                 int handsUpKey = com.mooclient.module.modules.EmotesModule.getKeyCode();
-                if (handsUpKey > 0 && com.mooclient.module.modules.EmotesModule.isEmotesEnabled()) {
-                    boolean isKeyDown = GLFW.glfwGetKey(window, handsUpKey) == GLFW.GLFW_PRESS;
+                if (handsUpKey >= 0 && com.mooclient.module.modules.EmotesModule.isEmotesEnabled()) {
+                    boolean isKeyDown = isInputPressed(window, handsUpKey, com.mooclient.module.modules.EmotesModule.isMouseButton());
                     if (com.mooclient.module.modules.EmotesModule.getMode() == com.mooclient.module.modules.EmotesModule.ActivationMode.HOLD) {
                         com.mooclient.module.modules.EmotesModule.setHandsUp(isKeyDown);
                     } else { // TOGGLE mode
@@ -200,12 +196,13 @@ public class MooClient implements ClientModInitializer {
                     emoteKeyWasDown = isKeyDown;
                 }
 
-                // In-game Emote Radial Wheel trigger (Default: B key)
+                // 6. Emote Radial Wheel (Default: B)
                 int wheelKeyCode = com.mooclient.module.modules.EmotesModule.getWheelKeyCode();
-                if (wheelKeyCode > 0 && com.mooclient.module.modules.EmotesModule.isEmotesEnabled()) {
-                    boolean isKeyDown = GLFW.glfwGetKey(window, wheelKeyCode) == GLFW.GLFW_PRESS;
+                if (wheelKeyCode >= 0 && com.mooclient.module.modules.EmotesModule.isEmotesEnabled()) {
+                    boolean isMouse = com.mooclient.module.modules.EmotesModule.isWheelMouseButton();
+                    boolean isKeyDown = isInputPressed(window, wheelKeyCode, isMouse);
                     if (isKeyDown && !wheelKeyWasDown) {
-                        client.setScreen(new com.mooclient.gui.EmoteWheelScreen(wheelKeyCode));
+                        client.setScreen(new com.mooclient.gui.EmoteWheelScreen(wheelKeyCode, isMouse));
                     }
                     wheelKeyWasDown = isKeyDown;
                 }
@@ -235,5 +232,14 @@ public class MooClient implements ClientModInitializer {
         });
 
         LOGGER.info("{} initialized successfully! Press Right Shift to open menu.", MOD_NAME);
+    }
+
+    public static boolean isInputPressed(long window, int code, boolean isMouse) {
+        if (code < 0) return false;
+        if (isMouse) {
+            return GLFW.glfwGetMouseButton(window, code) == GLFW.GLFW_PRESS;
+        } else {
+            return GLFW.glfwGetKey(window, code) == GLFW.GLFW_PRESS;
+        }
     }
 }

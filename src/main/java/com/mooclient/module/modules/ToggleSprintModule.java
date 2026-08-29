@@ -33,6 +33,7 @@ public class ToggleSprintModule extends Module {
     // Configurable Keybind (Default: Left Control)
     private static int keyCode = GLFW.GLFW_KEY_LEFT_CONTROL;
     private static String keyName = "LCONTROL";
+    private static boolean isMouseButton = false;
 
     // Draggable coordinates & anchor
     public static com.mooclient.util.MooHudPositionHelper.WidgetPosition position =
@@ -138,8 +139,17 @@ public class ToggleSprintModule extends Module {
         return keyName;
     }
 
+    public static boolean isMouseButton() {
+        return isMouseButton;
+    }
+
     public static void setKeybind(int code, String name) {
+        setKeybind(code, name, false);
+    }
+
+    public static void setKeybind(int code, String name, boolean isMouse) {
         keyCode = code;
         keyName = name;
+        isMouseButton = isMouse;
     }
 }

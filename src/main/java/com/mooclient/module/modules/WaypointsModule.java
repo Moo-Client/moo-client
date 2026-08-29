@@ -148,6 +148,8 @@ public class WaypointsModule extends Module {
         scale = Math.max(0.1f, Math.min(2.5f, Math.round(newScale * 100.0f) / 100.0f));
     }
 
+    private static boolean isMouseButton = false;
+
     public static int getKeyCode() {
         return keyCode;
     }
@@ -156,8 +158,17 @@ public class WaypointsModule extends Module {
         return keyName;
     }
 
+    public static boolean isMouseButton() {
+        return isMouseButton;
+    }
+
     public static void setKeybind(int code, String name) {
+        setKeybind(code, name, false);
+    }
+
+    public static void setKeybind(int code, String name, boolean isMouse) {
         keyCode = code;
         keyName = name;
+        isMouseButton = isMouse;
     }
 }

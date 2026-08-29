@@ -59,6 +59,7 @@ public class MooConfig {
             sprint.addProperty("textShadow", ToggleSprintModule.isTextShadow());
             sprint.addProperty("keyCode", ToggleSprintModule.getKeyCode());
             sprint.addProperty("keyName", ToggleSprintModule.getKeyName());
+            sprint.addProperty("isMouseButton", ToggleSprintModule.isMouseButton());
             sprint.addProperty("anchorX", ToggleSprintModule.position.anchorX.name());
             sprint.addProperty("anchorY", ToggleSprintModule.position.anchorY.name());
             sprint.addProperty("offsetX", ToggleSprintModule.position.offsetX);
@@ -74,6 +75,7 @@ public class MooConfig {
             freelook.addProperty("invertPitch", com.mooclient.module.modules.FreelookModule.isInvertPitch());
             freelook.addProperty("keyCode", com.mooclient.module.modules.FreelookModule.getKeyCode());
             freelook.addProperty("keyName", com.mooclient.module.modules.FreelookModule.getKeyName());
+            freelook.addProperty("isMouseButton", com.mooclient.module.modules.FreelookModule.isMouseButton());
             root.add("freelook", freelook);
 
             // Potion Effects Module
@@ -169,6 +171,7 @@ public class MooConfig {
             waypoints.addProperty("scale", com.mooclient.module.modules.WaypointsModule.getScale());
             waypoints.addProperty("keyCode", com.mooclient.module.modules.WaypointsModule.getKeyCode());
             waypoints.addProperty("keyName", com.mooclient.module.modules.WaypointsModule.getKeyName());
+            waypoints.addProperty("isMouseButton", com.mooclient.module.modules.WaypointsModule.isMouseButton());
             root.add("waypoints", waypoints);
 
             // Scoreboard Module
@@ -206,12 +209,14 @@ public class MooConfig {
             emotes.addProperty("enabled", com.mooclient.module.modules.EmotesModule.isEmotesEnabled());
             emotes.addProperty("keyCode", com.mooclient.module.modules.EmotesModule.getKeyCode());
             emotes.addProperty("keyName", com.mooclient.module.modules.EmotesModule.getKeyName());
+            emotes.addProperty("isMouseButton", com.mooclient.module.modules.EmotesModule.isMouseButton());
             emotes.addProperty("frontflipKeyCode", com.mooclient.module.modules.EmotesModule.getFrontflipKeyCode());
             emotes.addProperty("frontflipKeyName", com.mooclient.module.modules.EmotesModule.getFrontflipKeyName());
             emotes.addProperty("backflipKeyCode", com.mooclient.module.modules.EmotesModule.getBackflipKeyCode());
             emotes.addProperty("backflipKeyName", com.mooclient.module.modules.EmotesModule.getBackflipKeyName());
             emotes.addProperty("wheelKeyCode", com.mooclient.module.modules.EmotesModule.getWheelKeyCode());
             emotes.addProperty("wheelKeyName", com.mooclient.module.modules.EmotesModule.getWheelKeyName());
+            emotes.addProperty("wheelIsMouseButton", com.mooclient.module.modules.EmotesModule.isWheelMouseButton());
             emotes.addProperty("mode", com.mooclient.module.modules.EmotesModule.getMode().name());
             root.add("emotes", emotes);
 
@@ -324,8 +329,9 @@ public class MooConfig {
                 if (sprint.has("textShadow"))
                     ToggleSprintModule.setTextShadow(sprint.get("textShadow").getAsBoolean());
                 if (sprint.has("keyCode") && sprint.has("keyName")) {
+                    boolean isMouse = sprint.has("isMouseButton") && sprint.get("isMouseButton").getAsBoolean();
                     ToggleSprintModule.setKeybind(sprint.get("keyCode").getAsInt(),
-                            sprint.get("keyName").getAsString());
+                            sprint.get("keyName").getAsString(), isMouse);
                 }
                 if (sprint.has("anchorX") && sprint.has("anchorY") && sprint.has("offsetX") && sprint.has("offsetY")) {
                     try {
@@ -373,8 +379,9 @@ public class MooConfig {
                             .setInvertPitch(freelook.get("invertPitch").getAsBoolean());
                 }
                 if (freelook.has("keyCode") && freelook.has("keyName")) {
+                    boolean isMouse = freelook.has("isMouseButton") && freelook.get("isMouseButton").getAsBoolean();
                     com.mooclient.module.modules.FreelookModule.setKeybind(freelook.get("keyCode").getAsInt(),
-                            freelook.get("keyName").getAsString());
+                            freelook.get("keyName").getAsString(), isMouse);
                 }
             }
 
@@ -649,8 +656,9 @@ public class MooConfig {
                     com.mooclient.module.modules.WaypointsModule.setScale(waypoints.get("scale").getAsFloat());
                 }
                 if (waypoints.has("keyCode") && waypoints.has("keyName")) {
+                    boolean isMouse = waypoints.has("isMouseButton") && waypoints.get("isMouseButton").getAsBoolean();
                     com.mooclient.module.modules.WaypointsModule.setKeybind(waypoints.get("keyCode").getAsInt(),
-                            waypoints.get("keyName").getAsString());
+                            waypoints.get("keyName").getAsString(), isMouse);
                 }
             }
 
@@ -762,8 +770,9 @@ public class MooConfig {
                     ModuleManager.getInstance().getModule("Emotki").ifPresent(m -> m.setEnabled(state));
                 }
                 if (emotes.has("keyCode") && emotes.has("keyName")) {
+                    boolean isMouse = emotes.has("isMouseButton") && emotes.get("isMouseButton").getAsBoolean();
                     com.mooclient.module.modules.EmotesModule.setKeybind(emotes.get("keyCode").getAsInt(),
-                            emotes.get("keyName").getAsString());
+                            emotes.get("keyName").getAsString(), isMouse);
                 }
                 if (emotes.has("frontflipKeyCode") && emotes.has("frontflipKeyName")) {
                     com.mooclient.module.modules.EmotesModule.setFrontflipKeybind(
@@ -776,9 +785,10 @@ public class MooConfig {
                             emotes.get("backflipKeyName").getAsString());
                 }
                 if (emotes.has("wheelKeyCode") && emotes.has("wheelKeyName")) {
+                    boolean wheelIsMouse = emotes.has("wheelIsMouseButton") && emotes.get("wheelIsMouseButton").getAsBoolean();
                     com.mooclient.module.modules.EmotesModule.setWheelKeybind(
                             emotes.get("wheelKeyCode").getAsInt(),
-                            emotes.get("wheelKeyName").getAsString());
+                            emotes.get("wheelKeyName").getAsString(), wheelIsMouse);
                 }
                 if (emotes.has("mode")) {
                     try {

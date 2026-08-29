@@ -22,16 +22,22 @@ public class EmoteWheelScreen extends Screen {
 
     private static final Identifier MOO_LOGO = Identifier.of("mooclient", "textures/gui/icon.png");
 
-    private int selectedSlot = -1; // 0 = Hands Up, 1 = Frontflip, 2 = Stop, 3 = Backflip
+    private int selectedSlot = -1; // 0 = Frontflip, 1 = Backflip, 2 = Stop
     private int triggerKeyCode;
+    private boolean isMouseTrigger;
 
     private static final int SEGMENTS_COUNT = 3;
     // Segment centers: Top-Right (-45°), Top-Left (-135°), Bottom (90°)
     private static final double[] SEGMENT_ANGLES = new double[] { -45.0, -135.0, 90.0 };
 
     public EmoteWheelScreen(int triggerKeyCode) {
+        this(triggerKeyCode, false);
+    }
+
+    public EmoteWheelScreen(int triggerKeyCode, boolean isMouseTrigger) {
         super(Text.literal("Emote Wheel"));
         this.triggerKeyCode = triggerKeyCode;
+        this.isMouseTrigger = isMouseTrigger;
     }
 
     @Override
@@ -382,9 +388,9 @@ public class EmoteWheelScreen extends Screen {
         }
 
         switch (selectedSlot) {
-            case 0 -> EmotesModule.triggerFrontflip();
-            case 1 -> EmotesModule.triggerBackflip();
-            case 2 -> EmotesModule.setHandsUp(false);
+            case 0 -> EmotesModule.triggerFrontflipFromWheel();
+            case 1 -> EmotesModule.triggerBackflipFromWheel();
+            case 2 -> EmotesModule.stopEmotesFromWheel();
         }
     }
 
@@ -401,8 +407,20 @@ public class EmoteWheelScreen extends Screen {
     }
 
     @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (this.isMouseTrigger && button == this.triggerKeyCode) {
+            if (selectedSlot >= 0) {
+                executeAction();
+            }
+            this.close();
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == this.triggerKeyCode || keyCode == EmotesModule.getWheelKeyCode() || keyCode == GLFW.GLFW_KEY_B) {
+        if (!this.isMouseTrigger && (keyCode == this.triggerKeyCode || keyCode == EmotesModule.getWheelKeyCode() || keyCode == GLFW.GLFW_KEY_B)) {
             if (selectedSlot >= 0) {
                 executeAction();
             }

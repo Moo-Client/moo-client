@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.6.7';
+const VERSION = '1.6.8';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -71,7 +71,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         res = await apiRequest('POST', '/repos/Moo-Client/moo-client/releases', token, {
             tag_name: `v${VERSION}`,
             name: `Moo Client v${VERSION}`,
-            body: '🚀 **Moo Client v1.6.7**\n\n✓ **Pełna globalna synchronizacja emotek i salt (Multiplayer Emote Sync)** w czasie rzeczywistym\n✓ **Koło wyboru emotek (Emote Wheel)** w stylu Warframe pod klawiszem `B` z kierunkowym podświetleniem\n✓ **System uprawnień developerów i kategoryzacji sklepowej** (`EmoteAccessManager`)\n✓ **Dedykowany, w pełni bindowalny klawisz rąk w górę (Hands Up)** w GUI pod klawiszem `R`\n✓ **Płynne salta w przód i tył z parabolicznym wyskokiem +1.05m** bez zmiany hitboxa\n✓ **Zoptymalizowany pod kątem FPS, zero-alokacji i pamięci GC**\n✓ Zaktualizowano wersję Fabric mod do 1.6.7',
+            body: '🚀 **Moo Client v1.6.8**\n\n✓ **Wymuszenie widoku F5 (Third-Person)** podczas emotki wyłącznie z koła emotek z automatycznym powrotem kamery\n✓ **Pełna obsługa bindów na przyciskach myszy** (`LMB`, `RMB`, `SCROLL`, `MOUSE 4`, `MOUSE 5`, `MOUSE 6-8`)\n✓ **Koło emotek pod przyciskami myszy** z płynnym wybieraniem i zwalnianiem\n✓ **Wsparcie przycisków myszy dla wszystkich modułów** (Sprint, Freelook, Zoom, Waypoints, Emotki)\n✓ **Zaktualizowano wersję Fabric mod i launchera do 1.6.8**',
             draft: false,
             prerelease: false
         });

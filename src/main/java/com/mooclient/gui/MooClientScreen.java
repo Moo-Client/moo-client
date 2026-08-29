@@ -2003,15 +2003,22 @@ public class MooClientScreen extends Screen {
             }
 
             if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Freelook")) {
-                FreelookModule.setKeybind(button, mouseName);
+                FreelookModule.setKeybind(button, mouseName, true);
             } else if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Zoom")) {
                 com.mooclient.module.modules.ZoomModule.setKeybind(button, mouseName, true);
-            } else if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Emotki")) {
-                com.mooclient.module.modules.EmotesModule.setKeybind(button, mouseName);
+            } else if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Waypoints")) {
+                com.mooclient.module.modules.WaypointsModule.setKeybind(button, mouseName, true);
+            } else if (selectedModule != null && (selectedModule.getName().equalsIgnoreCase("Emotki") || selectedModule.getName().equalsIgnoreCase("Emotes"))) {
+                if (listeningEmoteSlot == 1) {
+                    com.mooclient.module.modules.EmotesModule.setWheelKeybind(button, mouseName, true);
+                } else {
+                    com.mooclient.module.modules.EmotesModule.setKeybind(button, mouseName, true);
+                }
             } else {
-                ToggleSprintModule.setKeybind(button, mouseName);
+                ToggleSprintModule.setKeybind(button, mouseName, true);
             }
 
+            com.mooclient.util.MooConfig.save();
             listeningForKeybind = false;
             playClickSound();
             return true;
@@ -3341,19 +3348,19 @@ public class MooClientScreen extends Screen {
             }
 
             if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Freelook")) {
-                FreelookModule.setKeybind(keyCode, keyName);
+                FreelookModule.setKeybind(keyCode, keyName, false);
             } else if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Zoom")) {
-                com.mooclient.module.modules.ZoomModule.setKeybind(keyCode, keyName);
+                com.mooclient.module.modules.ZoomModule.setKeybind(keyCode, keyName, false);
             } else if (selectedModule != null && selectedModule.getName().equalsIgnoreCase("Waypoints")) {
-                com.mooclient.module.modules.WaypointsModule.setKeybind(keyCode, keyName);
+                com.mooclient.module.modules.WaypointsModule.setKeybind(keyCode, keyName, false);
             } else if (selectedModule != null && (selectedModule.getName().equalsIgnoreCase("Emotki") || selectedModule.getName().equalsIgnoreCase("Emotes"))) {
                 if (listeningEmoteSlot == 1) {
-                    com.mooclient.module.modules.EmotesModule.setWheelKeybind(keyCode, keyName);
+                    com.mooclient.module.modules.EmotesModule.setWheelKeybind(keyCode, keyName, false);
                 } else {
-                    com.mooclient.module.modules.EmotesModule.setKeybind(keyCode, keyName);
+                    com.mooclient.module.modules.EmotesModule.setKeybind(keyCode, keyName, false);
                 }
             } else {
-                ToggleSprintModule.setKeybind(keyCode, keyName);
+                ToggleSprintModule.setKeybind(keyCode, keyName, false);
             }
 
             com.mooclient.util.MooConfig.save();

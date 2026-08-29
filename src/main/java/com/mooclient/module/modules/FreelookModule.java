@@ -150,6 +150,8 @@ public class FreelookModule extends Module {
         invertPitch = state;
     }
 
+    private static boolean isMouseButton = false;
+
     public static int getKeyCode() {
         return keyCode;
     }
@@ -158,8 +160,17 @@ public class FreelookModule extends Module {
         return keyName;
     }
 
+    public static boolean isMouseButton() {
+        return isMouseButton;
+    }
+
     public static void setKeybind(int code, String name) {
+        setKeybind(code, name, false);
+    }
+
+    public static void setKeybind(int code, String name, boolean isMouse) {
         keyCode = code;
         keyName = name;
+        isMouseButton = isMouse;
     }
 }
