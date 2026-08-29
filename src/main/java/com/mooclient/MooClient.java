@@ -79,6 +79,9 @@ public class MooClient implements ClientModInitializer {
         // Initialize Discord Rich Presence
         DiscordRPC.getInstance().init();
 
+        // Fetch User Permissions and Roles asynchronously from API
+        com.mooclient.util.EmoteAccessManager.fetchLocalPlayerPermissions();
+
         // Register the Right Shift keybinding for the client menu
         menuKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.mooclient.menu",

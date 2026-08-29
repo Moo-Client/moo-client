@@ -71,7 +71,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         res = await apiRequest('POST', '/repos/Moo-Client/moo-client/releases', token, {
             tag_name: `v${VERSION}`,
             name: `Moo Client v${VERSION}`,
-            body: '🚀 **Moo Client v1.7.0_1**\n\n✓ **Odwrócono pozycje salt w kole emotek** (Salto w przód / tył)\n✓ **Nadano rangę Tester dla uprawnionych kont** (UUID `6d4b68b1-0afd-4b6f-9247-e859154936b4`)\n✓ **Usunięto niepotrzebne napisy z zakładki Emotek**\n✓ **Pełna synchronizacja multiplayer w czasie rzeczywistym**',
+            body: '🚀 **Moo Client v1.7.0_1**\n\n✓ **Dynamiczny system uprawnień i ról API** (usunięto hardcoded UUID z kodu)\n✓ **Odwrócono pozycje salt w kole emotek** (Salto w przód / tył)\n✓ **Usunięto niepotrzebne napisy z zakładki Emotek**\n✓ **Pełna synchronizacja multiplayer w czasie rzeczywistym**',
             draft: false,
             prerelease: false
         });

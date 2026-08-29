@@ -151,15 +151,37 @@ public class EmoteWheelScreen extends Screen {
         int logoSize = 52;
         context.drawTexture(RenderLayer::getGuiTextured, MOO_LOGO, cx - logoSize / 2, cy - logoSize / 2, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
 
-        // Developer / Tester Mode Badge in top center
-        if (com.mooclient.util.EmoteAccessManager.isLocalPlayerDeveloper()) {
-            String devBadge = "[ " + MooLanguage.get("emotes_dev_badge") + " ]";
-            int dbW = this.textRenderer.getWidth(devBadge);
-            context.drawTextWithShadow(this.textRenderer, devBadge, cx - (dbW / 2), cy - 140, 0xFF55FFFF);
-        } else if (com.mooclient.util.EmoteAccessManager.isLocalPlayerTester()) {
-            String testerBadge = "[ " + MooLanguage.get("emotes_tester_badge") + " ]";
-            int tbW = this.textRenderer.getWidth(testerBadge);
-            context.drawTextWithShadow(this.textRenderer, testerBadge, cx - (tbW / 2), cy - 140, 0xFFFFAA00);
+        // Dynamic Role Badge in top center (from API)
+        String playerRole = com.mooclient.util.EmoteAccessManager.getLocalPlayerRole();
+        if (playerRole != null && !playerRole.isEmpty() && !playerRole.equalsIgnoreCase("user") && !playerRole.equalsIgnoreCase("none")) {
+            String badgeText;
+            int badgeColor;
+
+            switch (playerRole.toLowerCase()) {
+                case "developer", "dev" -> {
+                    badgeText = "[ " + MooLanguage.get("emotes_dev_badge") + " ]";
+                    badgeColor = 0xFF55FFFF; // Cyan
+                }
+                case "tester" -> {
+                    badgeText = "[ " + MooLanguage.get("emotes_tester_badge") + " ]";
+                    badgeColor = 0xFFFFAA00; // Amber / Gold
+                }
+                case "admin" -> {
+                    badgeText = "[ ADMIN ]";
+                    badgeColor = 0xFFFF5555; // Red
+                }
+                case "vip" -> {
+                    badgeText = "[ VIP ]";
+                    badgeColor = 0xFF55FF55; // Green
+                }
+                default -> {
+                    badgeText = "[ " + playerRole.toUpperCase() + " ]";
+                    badgeColor = MooClientSettings.getAccentColor();
+                }
+            }
+
+            int bw = this.textRenderer.getWidth(badgeText);
+            context.drawTextWithShadow(this.textRenderer, badgeText, cx - (bw / 2), cy - 140, badgeColor);
         }
 
         // --- 3. Center Title Callout ---
