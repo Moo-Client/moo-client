@@ -37,6 +37,8 @@ public class MooClient implements ClientModInitializer {
     private static boolean zoomKeyWasDown = false;
     private static boolean waypointKeyWasDown = false;
     private static boolean emoteKeyWasDown = false;
+    private static boolean frontflipKeyWasDown = false;
+    private static boolean backflipKeyWasDown = false;
     private static int tickCounter = 0;
 
     @Override
@@ -95,6 +97,8 @@ public class MooClient implements ClientModInitializer {
                 sprintKeyWasDown = false;
                 waypointKeyWasDown = false;
                 emoteKeyWasDown = false;
+                frontflipKeyWasDown = false;
+                backflipKeyWasDown = false;
                 if (com.mooclient.module.modules.EmotesModule.getMode() == com.mooclient.module.modules.EmotesModule.ActivationMode.HOLD) {
                     com.mooclient.module.modules.EmotesModule.setHandsUp(false);
                 }
@@ -178,6 +182,26 @@ public class MooClient implements ClientModInitializer {
                         }
                     }
                     emoteKeyWasDown = isKeyDown;
+                }
+
+                // In-game Frontflip key detection (Default: V key)
+                int frontflipKeyCode = com.mooclient.module.modules.EmotesModule.getFrontflipKeyCode();
+                if (frontflipKeyCode > 0 && com.mooclient.module.modules.EmotesModule.isEmotesEnabled()) {
+                    boolean isKeyDown = GLFW.glfwGetKey(window, frontflipKeyCode) == GLFW.GLFW_PRESS;
+                    if (isKeyDown && !frontflipKeyWasDown) {
+                        com.mooclient.module.modules.EmotesModule.triggerFrontflip();
+                    }
+                    frontflipKeyWasDown = isKeyDown;
+                }
+
+                // In-game Backflip key detection (Default: B key)
+                int backflipKeyCode = com.mooclient.module.modules.EmotesModule.getBackflipKeyCode();
+                if (backflipKeyCode > 0 && com.mooclient.module.modules.EmotesModule.isEmotesEnabled()) {
+                    boolean isKeyDown = GLFW.glfwGetKey(window, backflipKeyCode) == GLFW.GLFW_PRESS;
+                    if (isKeyDown && !backflipKeyWasDown) {
+                        com.mooclient.module.modules.EmotesModule.triggerBackflip();
+                    }
+                    backflipKeyWasDown = isKeyDown;
                 }
 
                 // In-game Macro execution detection

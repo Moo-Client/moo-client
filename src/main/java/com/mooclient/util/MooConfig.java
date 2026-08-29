@@ -206,6 +206,10 @@ public class MooConfig {
             emotes.addProperty("enabled", com.mooclient.module.modules.EmotesModule.isEmotesEnabled());
             emotes.addProperty("keyCode", com.mooclient.module.modules.EmotesModule.getKeyCode());
             emotes.addProperty("keyName", com.mooclient.module.modules.EmotesModule.getKeyName());
+            emotes.addProperty("frontflipKeyCode", com.mooclient.module.modules.EmotesModule.getFrontflipKeyCode());
+            emotes.addProperty("frontflipKeyName", com.mooclient.module.modules.EmotesModule.getFrontflipKeyName());
+            emotes.addProperty("backflipKeyCode", com.mooclient.module.modules.EmotesModule.getBackflipKeyCode());
+            emotes.addProperty("backflipKeyName", com.mooclient.module.modules.EmotesModule.getBackflipKeyName());
             emotes.addProperty("mode", com.mooclient.module.modules.EmotesModule.getMode().name());
             root.add("emotes", emotes);
 
@@ -758,6 +762,16 @@ public class MooConfig {
                 if (emotes.has("keyCode") && emotes.has("keyName")) {
                     com.mooclient.module.modules.EmotesModule.setKeybind(emotes.get("keyCode").getAsInt(),
                             emotes.get("keyName").getAsString());
+                }
+                if (emotes.has("frontflipKeyCode") && emotes.has("frontflipKeyName")) {
+                    com.mooclient.module.modules.EmotesModule.setFrontflipKeybind(
+                            emotes.get("frontflipKeyCode").getAsInt(),
+                            emotes.get("frontflipKeyName").getAsString());
+                }
+                if (emotes.has("backflipKeyCode") && emotes.has("backflipKeyName")) {
+                    com.mooclient.module.modules.EmotesModule.setBackflipKeybind(
+                            emotes.get("backflipKeyCode").getAsInt(),
+                            emotes.get("backflipKeyName").getAsString());
                 }
                 if (emotes.has("mode")) {
                     try {
