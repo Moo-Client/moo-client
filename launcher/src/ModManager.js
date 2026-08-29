@@ -30,16 +30,27 @@ class ModManager {
         this.ensureBundledMod();
     }
 
+    static parseVersion(ver) {
+        if (!ver) return [0, 0, 0, 0];
+        const cleaned = String(ver).replace(/^v/i, '').trim();
+        const matches = cleaned.match(/\d+/g);
+        if (!matches) return [0, 0, 0, 0];
+        const nums = matches.map(n => parseInt(n, 10) || 0);
+        while (nums.length < 4) nums.push(0);
+        return nums;
+    }
+
     static isNewerVersion(remote, local) {
         if (!remote) return false;
         if (!local) return true;
-        const rParts = String(remote).replace(/^v/i, '').split(/[._-]/).map(n => parseInt(n, 10) || 0);
-        const lParts = String(local).replace(/^v/i, '').split(/[._-]/).map(n => parseInt(n, 10) || 0);
-        for (let i = 0; i < Math.max(rParts.length, lParts.length); i++) {
-            const r = rParts[i] || 0;
-            const l = lParts[i] || 0;
-            if (r > l) return true;
-            if (r < l) return false;
+        const r = ModManager.parseVersion(remote);
+        const l = ModManager.parseVersion(local);
+        const len = Math.max(r.length, l.length);
+        for (let i = 0; i < len; i++) {
+            const rVal = r[i] || 0;
+            const lVal = l[i] || 0;
+            if (rVal > lVal) return true;
+            if (rVal < lVal) return false;
         }
         return false;
     }
