@@ -39,6 +39,7 @@ public class MooClient implements ClientModInitializer {
     private static boolean emoteKeyWasDown = false;
     private static boolean frontflipKeyWasDown = false;
     private static boolean backflipKeyWasDown = false;
+    private static boolean wheelKeyWasDown = false;
     private static int tickCounter = 0;
 
     @Override
@@ -99,6 +100,7 @@ public class MooClient implements ClientModInitializer {
                 emoteKeyWasDown = false;
                 frontflipKeyWasDown = false;
                 backflipKeyWasDown = false;
+                wheelKeyWasDown = false;
                 if (com.mooclient.module.modules.EmotesModule.getMode() == com.mooclient.module.modules.EmotesModule.ActivationMode.HOLD) {
                     com.mooclient.module.modules.EmotesModule.setHandsUp(false);
                 }
@@ -194,7 +196,7 @@ public class MooClient implements ClientModInitializer {
                     frontflipKeyWasDown = isKeyDown;
                 }
 
-                // In-game Backflip key detection (Default: B key)
+                // In-game Backflip key detection
                 int backflipKeyCode = com.mooclient.module.modules.EmotesModule.getBackflipKeyCode();
                 if (backflipKeyCode > 0 && com.mooclient.module.modules.EmotesModule.isEmotesEnabled()) {
                     boolean isKeyDown = GLFW.glfwGetKey(window, backflipKeyCode) == GLFW.GLFW_PRESS;
@@ -202,6 +204,16 @@ public class MooClient implements ClientModInitializer {
                         com.mooclient.module.modules.EmotesModule.triggerBackflip();
                     }
                     backflipKeyWasDown = isKeyDown;
+                }
+
+                // In-game Emote Radial Wheel trigger (Default: B key)
+                int wheelKeyCode = com.mooclient.module.modules.EmotesModule.getWheelKeyCode();
+                if (wheelKeyCode > 0 && com.mooclient.module.modules.EmotesModule.isEmotesEnabled()) {
+                    boolean isKeyDown = GLFW.glfwGetKey(window, wheelKeyCode) == GLFW.GLFW_PRESS;
+                    if (isKeyDown && !wheelKeyWasDown) {
+                        client.setScreen(new com.mooclient.gui.EmoteWheelScreen(wheelKeyCode));
+                    }
+                    wheelKeyWasDown = isKeyDown;
                 }
 
                 // In-game Macro execution detection

@@ -210,6 +210,8 @@ public class MooConfig {
             emotes.addProperty("frontflipKeyName", com.mooclient.module.modules.EmotesModule.getFrontflipKeyName());
             emotes.addProperty("backflipKeyCode", com.mooclient.module.modules.EmotesModule.getBackflipKeyCode());
             emotes.addProperty("backflipKeyName", com.mooclient.module.modules.EmotesModule.getBackflipKeyName());
+            emotes.addProperty("wheelKeyCode", com.mooclient.module.modules.EmotesModule.getWheelKeyCode());
+            emotes.addProperty("wheelKeyName", com.mooclient.module.modules.EmotesModule.getWheelKeyName());
             emotes.addProperty("mode", com.mooclient.module.modules.EmotesModule.getMode().name());
             root.add("emotes", emotes);
 
@@ -772,6 +774,11 @@ public class MooConfig {
                     com.mooclient.module.modules.EmotesModule.setBackflipKeybind(
                             emotes.get("backflipKeyCode").getAsInt(),
                             emotes.get("backflipKeyName").getAsString());
+                }
+                if (emotes.has("wheelKeyCode") && emotes.has("wheelKeyName")) {
+                    com.mooclient.module.modules.EmotesModule.setWheelKeybind(
+                            emotes.get("wheelKeyCode").getAsInt(),
+                            emotes.get("wheelKeyName").getAsString());
                 }
                 if (emotes.has("mode")) {
                     try {

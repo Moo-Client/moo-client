@@ -1252,7 +1252,20 @@ public class MooClientScreen extends Screen {
             int btnW = 140;
             int btnH = 22;
 
-            // Row 1: Hands Up Keybind (default R)
+            // Row 1: Emote Radial Wheel Keybind (default B)
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("emotes_wheel_key_label"));
+            boolean listening3 = this.listeningForKeybind && this.listeningEmoteSlot == 3;
+            String keyText3 = listening3 ? MooLanguage.get("press_key_hint")
+                    : "[ " + com.mooclient.module.modules.EmotesModule.getWheelKeyName() + " ]";
+            int btnX3 = rowX + rowW - btnW - 10;
+            int btnY3 = rowY + 6;
+            boolean btnHover3 = mouseX >= btnX3 && mouseX <= btnX3 + btnW && mouseY >= btnY3 && mouseY <= btnY3 + btnH;
+            context.fill(btnX3, btnY3, btnX3 + btnW, btnY3 + btnH, listening3 ? 0xEE334466 : (btnHover3 ? 0xCC252535 : 0x88181824));
+            drawBorder(context, btnX3, btnY3, btnW, btnH, listening3 ? 0xFF55FFFF : (btnHover3 ? 0xAAFFFFFF : 0x44FFFFFF));
+            drawCenteredText(context, keyText3, btnX3 + btnW / 2, btnY3 + 7, listening3 ? 0xFFFFFF55 : 0xFF55FFFF);
+
+            // Row 2: Hands Up Keybind (default R)
+            rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("emotes_hands_up_label"));
             boolean listening0 = this.listeningForKeybind && this.listeningEmoteSlot == 0;
             String keyText0 = listening0 ? MooLanguage.get("press_key_hint")
@@ -1264,7 +1277,7 @@ public class MooClientScreen extends Screen {
             drawBorder(context, btnX0, btnY0, btnW, btnH, listening0 ? 0xFF55FFFF : (btnHover0 ? 0xAAFFFFFF : 0x44FFFFFF));
             drawCenteredText(context, keyText0, btnX0 + btnW / 2, btnY0 + 7, listening0 ? 0xFFFFFF55 : 0xFF55FFFF);
 
-            // Row 2: Frontflip Keybind (default V)
+            // Row 3: Frontflip Keybind (default V)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("emotes_frontflip_label"));
             boolean listening1 = this.listeningForKeybind && this.listeningEmoteSlot == 1;
@@ -1277,7 +1290,7 @@ public class MooClientScreen extends Screen {
             drawBorder(context, btnX1, btnY1, btnW, btnH, listening1 ? 0xFF55FFFF : (btnHover1 ? 0xAAFFFFFF : 0x44FFFFFF));
             drawCenteredText(context, keyText1, btnX1 + btnW / 2, btnY1 + 7, listening1 ? 0xFFFFFF55 : 0xFF55FFFF);
 
-            // Row 3: Backflip Keybind (default B)
+            // Row 4: Backflip Keybind (default G)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("emotes_backflip_label"));
             boolean listening2 = this.listeningForKeybind && this.listeningEmoteSlot == 2;
@@ -1290,13 +1303,13 @@ public class MooClientScreen extends Screen {
             drawBorder(context, btnX2, btnY2, btnW, btnH, listening2 ? 0xFF55FFFF : (btnHover2 ? 0xAAFFFFFF : 0x44FFFFFF));
             drawCenteredText(context, keyText2, btnX2 + btnW / 2, btnY2 + 7, listening2 ? 0xFFFFFF55 : 0xFF55FFFF);
 
-            // Row 4: Activation Mode (Hold vs Toggle for Hands Up)
+            // Row 5: Activation Mode (Hold vs Toggle for Hands Up)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("mode_label"));
             renderModeSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY,
                     com.mooclient.module.modules.EmotesModule.getMode().ordinal());
 
-            // Row 5: Enable / Disable toggle
+            // Row 6: Enable / Disable toggle
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("enabled"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
@@ -2819,7 +2832,18 @@ public class MooClientScreen extends Screen {
                     int btnX = rowX + rowW - btnW - 10;
                     int btnY = rowY + 6;
 
-                    // Row 1: Hands Up Keybind click
+                    // Row 1: Emote Wheel Keybind click
+                    if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
+                        playClickSound();
+                        boolean wasListening = this.listeningForKeybind && this.listeningEmoteSlot == 3;
+                        this.listeningForKeybind = !wasListening;
+                        this.listeningEmoteSlot = 3;
+                        return true;
+                    }
+
+                    // Row 2: Hands Up Keybind click
+                    rowY += rowH + 6;
+                    btnY = rowY + 6;
                     if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
                         playClickSound();
                         boolean wasListening = this.listeningForKeybind && this.listeningEmoteSlot == 0;
@@ -2828,7 +2852,7 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 2: Frontflip Keybind click
+                    // Row 3: Frontflip Keybind click
                     rowY += rowH + 6;
                     btnY = rowY + 6;
                     if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
@@ -2839,7 +2863,7 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 3: Backflip Keybind click
+                    // Row 4: Backflip Keybind click
                     rowY += rowH + 6;
                     btnY = rowY + 6;
                     if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
@@ -2850,7 +2874,7 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 4: Mode Selector (Hold vs Toggle)
+                    // Row 5: Mode Selector (Hold vs Toggle)
                     rowY += rowH + 6;
                     int modeClick = getModeSelectorClick(rowX + rowW - 206, rowY + 6, (int) mouseX, (int) mouseY);
                     if (modeClick >= 0) {
@@ -2862,7 +2886,7 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 5: Enable Toggle
+                    // Row 6: Enable Toggle
                     rowY += rowH + 6;
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {
@@ -3375,6 +3399,8 @@ public class MooClientScreen extends Screen {
                     com.mooclient.module.modules.EmotesModule.setFrontflipKeybind(keyCode, keyName);
                 } else if (listeningEmoteSlot == 2) {
                     com.mooclient.module.modules.EmotesModule.setBackflipKeybind(keyCode, keyName);
+                } else if (listeningEmoteSlot == 3) {
+                    com.mooclient.module.modules.EmotesModule.setWheelKeybind(keyCode, keyName);
                 } else {
                     com.mooclient.module.modules.EmotesModule.setKeybind(keyCode, keyName);
                 }

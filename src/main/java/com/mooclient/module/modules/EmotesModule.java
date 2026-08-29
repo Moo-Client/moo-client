@@ -260,4 +260,21 @@ public class EmotesModule extends Module {
         backflipKeyCode = key;
         backflipKeyName = name;
     }
+
+    // Emote Radial Wheel Keybind (Default: B)
+    private static int wheelKeyCode = GLFW.GLFW_KEY_B;
+    private static String wheelKeyName = "B";
+
+    public static int getWheelKeyCode() {
+        return wheelKeyCode;
+    }
+
+    public static String getWheelKeyName() {
+        return wheelKeyName;
+    }
+
+    public static void setWheelKeybind(int key, String name) {
+        wheelKeyCode = key;
+        wheelKeyName = name;
+    }
 }
