@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.6.10';
+const VERSION = '1.6.9_1';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -71,7 +71,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         res = await apiRequest('POST', '/repos/Moo-Client/moo-client/releases', token, {
             tag_name: `v${VERSION}`,
             name: `Moo Client v${VERSION}`,
-            body: '🚀 **Moo Client v1.6.10**\n\n✓ **Usunięto niepotrzebne napisy** z zakładki Emotek i interfejsu klienta\n✓ **Drobne poprawki wizualne w menu Ustawień**\n✓ **Emotki włączone na stałe w Ustawieniach** (`Shift` ➔ `Ustawienia` ➔ `🕺 EMOTKI`)\n✓ **Wymuszenie F5 wyłącznie dla Koła Emotek** z automatycznym powrotem kamery\n✓ **Pełna obsługa bindów myszy i klawiatury**',
+            body: '🚀 **Moo Client v1.6.9_1**\n\n✓ **Odwrócono pozycje salt w kole emotek** (Salto w przód / tył)\n✓ **Nadano rangę Tester dla uprawnionych kont**\n✓ **Usunięto niepotrzebne napisy z zakładki Emotek**\n✓ **Pełna synchronizacja multiplayer w czasie rzeczywistym**',
             draft: false,
             prerelease: false
         });

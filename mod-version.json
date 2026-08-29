@@ -1,7 +1,7 @@
 {
-  "version": "1.6.10",
+  "version": "1.6.9_1",
   "minecraft": "1.21.4",
-  "name": "Moo Client 1.6.10",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.10/moo-client-1.6.10.jar",
-  "changelog": "🚀 Moo Client v1.6.10:\n✓ Usunięto niepotrzebne napisy z zakładki Emotek i interfejsu\n✓ Drobne poprawki wizualne w menu Ustawień"
+  "name": "Moo Client 1.6.9_1",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.6.9_1/moo-client-1.6.9_1.jar",
+  "changelog": "🚀 Moo Client v1.6.9_1:\n✓ Odwrócono pozycje salt w kole emotek (Salto w przód / tył)\n✓ Nadano rangę Tester dla uprawnionych kont\n✓ Usunięto niepotrzebne napisy z zakładki Emotek"
 }
