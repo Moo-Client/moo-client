@@ -43,13 +43,18 @@ public class PlayerEntityRendererMixin {
     private void mooClient$applyFlipRotation(PlayerEntityRenderState state, MatrixStack matrices, float bodyYaw, float baseTickDelta, CallbackInfo ci) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player != null && state.id == client.player.getId() && EmotesModule.isFlipping()) {
-            float flipAngle = EmotesModule.getFlipRotationDegrees(client.getRenderTickCounter().getTickDelta(true));
-            if (Math.abs(flipAngle) > 0.001F) {
+            float delta = client.getRenderTickCounter().getTickDelta(true);
+            float flipAngle = EmotesModule.getFlipRotationDegrees(delta);
+            float jumpHeight = EmotesModule.getFlipJumpHeight(delta);
+
+            if (Math.abs(flipAngle) > 0.001F || jumpHeight > 0.001F) {
+                // Czysto wizualny wyskok postaci w górę (MatrixStack translate bez zmiany hitboxa)
+                matrices.translate(0.0F, jumpHeight, 0.0F);
                 // Przesuwamy punkt obrotu na środek sylwetki gracza (~0.9m wysokości)
                 matrices.translate(0.0F, 0.9F, 0.0F);
                 // Płynna rotacja wokół osi X (pitch)
                 matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(flipAngle));
-                // Przesunięcie z powrotem
+                // Przesunięcie punktu obrotu z powrotem
                 matrices.translate(0.0F, -0.9F, 0.0F);
             }
         }

@@ -179,6 +179,20 @@ public class EmotesModule extends Module {
     }
 
     /**
+     * Zwraca wysokość wyskoku (w metrach) dla bieżącej klatki salta.
+     * Czysto wizualny łuk paraboliczny bez wpływu na hitbox.
+     */
+    public static float getFlipJumpHeight(float tickDelta) {
+        float p = getInterpolatedFlipProgress(tickDelta);
+        if (p <= 0.0001f || p >= 0.9999f || flipDirection == FlipDirection.NONE) {
+            return 0.0f;
+        }
+        // Paraboliczny łuk wyskoku (szczyt 1.05m w połowie obrotu)
+        float maxJumpHeight = 1.05f;
+        return (float) (Math.sin(p * Math.PI) * maxJumpHeight);
+    }
+
+    /**
      * Zwraca współczynnik zwinięcia ciała (tuck factor: 0.0 -> 1.0 w szczycie -> 0.0 przy lądowaniu).
      */
     public static float getFlipTuckFactor(float tickDelta) {
