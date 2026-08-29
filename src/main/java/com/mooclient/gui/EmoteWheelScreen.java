@@ -70,11 +70,11 @@ public class EmoteWheelScreen extends Screen {
             double rawAngle = Math.toDegrees(Math.atan2(dy, dx)); // -180 to 180
             // Map angle to 3 sectors:
             if (rawAngle >= -90 && rawAngle < 20) {
-                selectedSlot = 0; // Top-Right: Frontflip
+                selectedSlot = 0; // Top-Right: Backflip
             } else if (rawAngle >= 20 && rawAngle < 160) {
                 selectedSlot = 2; // Bottom: Stop
             } else {
-                selectedSlot = 1; // Top-Left: Backflip
+                selectedSlot = 1; // Top-Left: Frontflip
             }
         } else {
             selectedSlot = -1;
@@ -186,8 +186,8 @@ public class EmoteWheelScreen extends Screen {
 
     private String getSlotLabel(int slot) {
         return switch (slot) {
-            case 0 -> MooLanguage.get("emotes_wheel_frontflip");
-            case 1 -> MooLanguage.get("emotes_wheel_backflip");
+            case 0 -> MooLanguage.get("emotes_wheel_backflip");
+            case 1 -> MooLanguage.get("emotes_wheel_frontflip");
             case 2 -> MooLanguage.get("emotes_wheel_stop");
             default -> "";
         };
@@ -195,8 +195,8 @@ public class EmoteWheelScreen extends Screen {
 
     private String getSlotSymbol(int slot) {
         return switch (slot) {
-            case 0 -> ">>";  // Frontflip
-            case 1 -> "<<";  // Backflip
+            case 0 -> "<<";  // Backflip
+            case 1 -> ">>";  // Frontflip
             case 2 -> "[X]"; // Stop
             default -> "";
         };
@@ -208,8 +208,8 @@ public class EmoteWheelScreen extends Screen {
             return "> " + MooLanguage.get("emotes_store_required").toUpperCase() + " <";
         }
         return switch (selectedSlot) {
-            case 0 -> "> " + MooLanguage.get("emotes_wheel_frontflip").toUpperCase() + " <";
-            case 1 -> "> " + MooLanguage.get("emotes_wheel_backflip").toUpperCase() + " <";
+            case 0 -> "> " + MooLanguage.get("emotes_wheel_backflip").toUpperCase() + " <";
+            case 1 -> "> " + MooLanguage.get("emotes_wheel_frontflip").toUpperCase() + " <";
             case 2 -> "> " + MooLanguage.get("emotes_wheel_stop").toUpperCase() + " <";
             default -> null;
         };
