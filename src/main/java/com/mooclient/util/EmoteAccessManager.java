@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
@@ -20,7 +21,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Dynamic Access Manager for Moo Client Emotes and Cosmetics.
- * Connects directly to Supabase REST API to fetch real-time user roles and emote permissions.
+ * Connects directly to Supabase REST API to fetch real-time user roles and emote permissions
+ * by matching either UUID or Player Nickname.
  * Safe non-blocking async execution, memory caching, zero hardcoded UUIDs.
  */
 public class EmoteAccessManager {
@@ -70,7 +72,8 @@ public class EmoteAccessManager {
     }
 
     private static final Map<UUID, UserPermission> PERMISSION_CACHE = new ConcurrentHashMap<>();
-    private static final Set<UUID> PENDING_REQUESTS = ConcurrentHashMap.newKeySet();
+    private static final Map<String, UserPermission> NAME_PERMISSION_CACHE = new ConcurrentHashMap<>();
+    private static final Set<String> PENDING_REQUESTS = ConcurrentHashMap.newKeySet();
     private static final long CACHE_TTL_MS = 5 * 60 * 1000L; // 5 minutes cache TTL
 
     public enum EmoteId {
@@ -104,31 +107,44 @@ public class EmoteAccessManager {
     }
 
     /**
-     * Triggers asynchronous fetching of permissions for a player UUID.
+     * Triggers asynchronous fetching of permissions for a player UUID and/or Name.
      * Completely non-blocking and safe against timeouts / network failures.
      */
-    public static void fetchPermissionsAsync(UUID uuid) {
-        if (uuid == null) return;
+    public static void fetchPermissionsAsync(UUID uuid, String playerName) {
+        String cleanName = playerName != null ? playerName.trim() : null;
+        String pendingKey = (uuid != null ? uuid.toString() : "") + ":" + (cleanName != null ? cleanName.toLowerCase() : "");
+        if (pendingKey.equals(":")) return;
 
-        UserPermission cached = PERMISSION_CACHE.get(uuid);
-        if (cached != null && !cached.isExpired(CACHE_TTL_MS)) {
-            return;
+        if (uuid != null) {
+            UserPermission cached = PERMISSION_CACHE.get(uuid);
+            if (cached != null && !cached.isExpired(CACHE_TTL_MS)) return;
+        }
+        if (cleanName != null) {
+            UserPermission cached = NAME_PERMISSION_CACHE.get(cleanName.toLowerCase());
+            if (cached != null && !cached.isExpired(CACHE_TTL_MS)) return;
         }
 
-        if (!PENDING_REQUESTS.add(uuid)) {
+        if (!PENDING_REQUESTS.add(pendingKey)) {
             return; // Already in progress
         }
 
         CompletableFuture.runAsync(() -> {
             try {
-                String uuidStr = uuid.toString();
-                // Supabase REST query format: ?uuid=eq.<UUID>&select=role,all_emotes
-                String targetUrl = apiEndpoint + "?uuid=eq." + uuidStr + "&select=role,all_emotes";
+                String targetUrl;
+                if (uuid != null && cleanName != null) {
+                    String encName = URLEncoder.encode(cleanName, StandardCharsets.UTF_8);
+                    targetUrl = apiEndpoint + "?or=(uuid.eq." + uuid.toString() + ",name.ilike." + encName + ")&select=role,all_emotes,name,uuid";
+                } else if (uuid != null) {
+                    targetUrl = apiEndpoint + "?uuid=eq." + uuid.toString() + "&select=role,all_emotes,name,uuid";
+                } else {
+                    String encName = URLEncoder.encode(cleanName, StandardCharsets.UTF_8);
+                    targetUrl = apiEndpoint + "?name.ilike=" + encName + "&select=role,all_emotes,name,uuid";
+                }
 
                 URL url = URI.create(targetUrl).toURL();
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
-                conn.setRequestProperty("User-Agent", "MooClient/1.7.0");
+                conn.setRequestProperty("User-Agent", "MooClient/1.8.0");
                 conn.setRequestProperty("Accept", "application/json");
                 if (apiKey != null && !apiKey.isEmpty()) {
                     conn.setRequestProperty("apikey", apiKey);
@@ -161,41 +177,59 @@ public class EmoteAccessManager {
                             boolean allEmotes = false;
                             if (obj.has("all_emotes") && !obj.get("all_emotes").isJsonNull()) {
                                 allEmotes = obj.get("all_emotes").getAsBoolean();
-                            } else if (role.equalsIgnoreCase("developer") || role.equalsIgnoreCase("tester") || role.equalsIgnoreCase("admin")) {
+                            } else if (role.equalsIgnoreCase("developer") || role.equalsIgnoreCase("tester") || role.equalsIgnoreCase("admin") || role.equalsIgnoreCase("vip") || role.equalsIgnoreCase("dev")) {
                                 allEmotes = true;
                             }
 
-                            PERMISSION_CACHE.put(uuid, new UserPermission(role, allEmotes));
+                            UserPermission permission = new UserPermission(role, allEmotes);
+                            if (uuid != null) PERMISSION_CACHE.put(uuid, permission);
+                            if (cleanName != null) NAME_PERMISSION_CACHE.put(cleanName.toLowerCase(), permission);
                         } else {
                             // Player not found in database -> standard user
-                            PERMISSION_CACHE.put(uuid, UserPermission.DEFAULT_USER);
+                            if (uuid != null) PERMISSION_CACHE.put(uuid, UserPermission.DEFAULT_USER);
+                            if (cleanName != null) NAME_PERMISSION_CACHE.put(cleanName.toLowerCase(), UserPermission.DEFAULT_USER);
                         }
                     }
-                } else if (responseCode == 404) {
-                    PERMISSION_CACHE.put(uuid, UserPermission.DEFAULT_USER);
                 } else {
-                    PERMISSION_CACHE.putIfAbsent(uuid, UserPermission.DEFAULT_USER);
+                    if (uuid != null) PERMISSION_CACHE.putIfAbsent(uuid, UserPermission.DEFAULT_USER);
+                    if (cleanName != null) NAME_PERMISSION_CACHE.putIfAbsent(cleanName.toLowerCase(), UserPermission.DEFAULT_USER);
                 }
             } catch (Exception ignored) {
-                PERMISSION_CACHE.putIfAbsent(uuid, UserPermission.DEFAULT_USER);
+                if (uuid != null) PERMISSION_CACHE.putIfAbsent(uuid, UserPermission.DEFAULT_USER);
+                if (cleanName != null) NAME_PERMISSION_CACHE.putIfAbsent(cleanName.toLowerCase(), UserPermission.DEFAULT_USER);
             } finally {
-                PENDING_REQUESTS.remove(uuid);
+                PENDING_REQUESTS.remove(pendingKey);
             }
         });
     }
 
-    /**
-     * Gets user permissions for a UUID from cache, scheduling a background fetch if missing.
-     */
-    public static UserPermission getUserPermission(UUID uuid) {
-        if (uuid == null) return UserPermission.DEFAULT_USER;
+    public static void fetchPermissionsAsync(UUID uuid) {
+        fetchPermissionsAsync(uuid, null);
+    }
 
-        UserPermission perm = PERMISSION_CACHE.get(uuid);
-        if (perm == null || perm.isExpired(CACHE_TTL_MS)) {
-            fetchPermissionsAsync(uuid);
-            return perm != null ? perm : UserPermission.DEFAULT_USER;
+    /**
+     * Gets user permissions for a UUID and/or Name from cache, scheduling background fetch if missing.
+     */
+    public static UserPermission getUserPermission(UUID uuid, String playerName) {
+        if (uuid != null) {
+            UserPermission perm = PERMISSION_CACHE.get(uuid);
+            if (perm != null && !perm.isExpired(CACHE_TTL_MS)) {
+                return perm;
+            }
         }
-        return perm;
+        if (playerName != null) {
+            UserPermission perm = NAME_PERMISSION_CACHE.get(playerName.toLowerCase().trim());
+            if (perm != null && !perm.isExpired(CACHE_TTL_MS)) {
+                return perm;
+            }
+        }
+
+        fetchPermissionsAsync(uuid, playerName);
+        return UserPermission.DEFAULT_USER;
+    }
+
+    public static UserPermission getUserPermission(UUID uuid) {
+        return getUserPermission(uuid, null);
     }
 
     /**
@@ -204,20 +238,18 @@ public class EmoteAccessManager {
     public static UserPermission getLocalPlayerPermission() {
         MinecraftClient client = MinecraftClient.getInstance();
         UUID localUuid = null;
+        String localName = null;
 
-        if (client.player != null && client.player.getUuid() != null) {
+        if (client.player != null) {
             localUuid = client.player.getUuid();
-        } else if (client.getSession() != null && client.getSession().getUuidOrNull() != null) {
+            localName = client.player.getName().getString();
+        } else if (client.getSession() != null) {
             localUuid = client.getSession().getUuidOrNull();
+            localName = client.getSession().getUsername();
         }
 
-        if (localUuid != null) {
-            return getUserPermission(localUuid);
-        }
-
-        // Local development environment fallback
-        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            return new UserPermission("developer", true);
+        if (localUuid != null || localName != null) {
+            return getUserPermission(localUuid, localName);
         }
 
         return UserPermission.DEFAULT_USER;
@@ -231,7 +263,8 @@ public class EmoteAccessManager {
     }
 
     public static boolean isLocalPlayerDeveloper() {
-        return "developer".equalsIgnoreCase(getLocalPlayerRole()) || "dev".equalsIgnoreCase(getLocalPlayerRole());
+        String r = getLocalPlayerRole();
+        return "developer".equalsIgnoreCase(r) || "dev".equalsIgnoreCase(r);
     }
 
     public static boolean isLocalPlayerTester() {
@@ -239,13 +272,16 @@ public class EmoteAccessManager {
     }
 
     public static boolean isPlayerDeveloper(PlayerEntity player) {
-        if (player == null || player.getUuid() == null) return false;
-        return "developer".equalsIgnoreCase(getUserPermission(player.getUuid()).getRole());
+        if (player == null) return false;
+        String name = player.getName() != null ? player.getName().getString() : null;
+        return "developer".equalsIgnoreCase(getUserPermission(player.getUuid(), name).getRole())
+                || "dev".equalsIgnoreCase(getUserPermission(player.getUuid(), name).getRole());
     }
 
     public static boolean isPlayerTester(PlayerEntity player) {
-        if (player == null || player.getUuid() == null) return false;
-        return "tester".equalsIgnoreCase(getUserPermission(player.getUuid()).getRole());
+        if (player == null) return false;
+        String name = player.getName() != null ? player.getName().getString() : null;
+        return "tester".equalsIgnoreCase(getUserPermission(player.getUuid(), name).getRole());
     }
 
     /**
@@ -253,10 +289,19 @@ public class EmoteAccessManager {
      */
     public static void fetchLocalPlayerPermissions() {
         MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player != null && client.player.getUuid() != null) {
-            fetchPermissionsAsync(client.player.getUuid());
-        } else if (client.getSession() != null && client.getSession().getUuidOrNull() != null) {
-            fetchPermissionsAsync(client.getSession().getUuidOrNull());
+        UUID localUuid = null;
+        String localName = null;
+
+        if (client.player != null) {
+            localUuid = client.player.getUuid();
+            localName = client.player.getName().getString();
+        } else if (client.getSession() != null) {
+            localUuid = client.getSession().getUuidOrNull();
+            localName = client.getSession().getUsername();
+        }
+
+        if (localUuid != null || localName != null) {
+            fetchPermissionsAsync(localUuid, localName);
         }
     }
 
@@ -271,25 +316,24 @@ public class EmoteAccessManager {
             return true;
         }
 
-        // Unlocked via all_emotes permission from Supabase or developer/tester role
+        // Unlocked via all_emotes permission from Supabase or developer/tester/admin role
         UserPermission perm = getLocalPlayerPermission();
         if (perm.hasAllEmotes()) {
             return true;
         }
 
-        // Development environment override for convenience
-        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+        String role = perm.getRole();
+        if ("developer".equalsIgnoreCase(role) || "tester".equalsIgnoreCase(role) || "admin".equalsIgnoreCase(role) || "dev".equalsIgnoreCase(role)) {
             return true;
         }
 
-        // Store-locked for regular non-upgraded accounts
         return false;
     }
 
     public static boolean hasAccess(int slot) {
         return switch (slot) {
-            case 0 -> hasAccess(EmoteId.BACKFLIP);
-            case 1 -> hasAccess(EmoteId.FRONTFLIP);
+            case 0 -> hasAccess(EmoteId.FRONTFLIP);
+            case 1 -> hasAccess(EmoteId.BACKFLIP);
             default -> false;
         };
     }

@@ -50,6 +50,7 @@ public class EmoteWheelEditScreen extends Screen {
     protected void init() {
         super.init();
         EmoteWheelConfig.load();
+        EmoteAccessManager.fetchLocalPlayerPermissions();
         for (int i = 0; i < EmoteWheelConfig.TOTAL_SLOTS; i++) {
             workingSlots[i] = EmoteWheelConfig.getSlot(i);
         }

@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.8.0';
+const VERSION = '1.8.0_1';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -64,7 +64,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);
     let release;
 
-    const CHANGELOG_BODY = '🚀 **Moo Client v1.8.0**\n\n✓ **Nowy interaktywny edytor 12-slotowego koła emotek (Drag & Drop)**\n✓ **Przewijanie scrollem biblioteki emotek**\n✓ **Nowe animacje postaci 3D:** Medytacja, Przyjazne machanie, Facepalm\n✓ **Usunięto wymuszanie perspektywy F5 przy saltach**';
+    const CHANGELOG_BODY = '🚀 **Moo Client v1.8.0_1**\n\n✓ **Poprawiono weryfikację uprawnień i odblokowywania emotek dla graczy**\n✓ **Usprawniono automatyczne odświeżanie dostępu do kosmetyków w menu koła emotek**\n✓ **Optymalizacje stabilności i działania klienta**';
 
     if (res.status === 200) {
         release = res.data;
