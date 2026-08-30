@@ -1,6 +1,7 @@
 package com.mooclient.mixin;
 
 import com.mooclient.gui.InvitationUIManager;
+import com.mooclient.module.modules.ArmorModule;
 import com.mooclient.module.modules.CpsModule;
 import com.mooclient.module.modules.FpsModule;
 import com.mooclient.module.modules.PingModule;
@@ -12,6 +13,8 @@ import com.mooclient.waypoint.WaypointRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.item.ItemStack;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.texture.Sprite;
@@ -41,6 +44,11 @@ import java.util.List;
  */
 @Mixin(InGameHud.class)
 public class InGameHudMixin {
+
+    @Inject(method = "renderStatusEffectOverlay", at = @At("HEAD"), cancellable = true)
+    private void mooClient$cancelVanillaStatusEffectOverlay(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+        ci.cancel();
+    }
 
     @Inject(method = "renderMainHud", at = @At("TAIL"))
     private void mooClient$renderHudElements(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
@@ -433,7 +441,12 @@ public class InGameHudMixin {
             }
         }
 
-        // 6. Multiplayer Invitation UI (4 switchable HUD variants)
+        // 6. Armor HUD Module Rendering (Set Display & Durability)
+        if (ArmorModule.isArmorEnabled()) {
+            renderArmorHud(context, client, hudScale, customScale, scaledWidth, scaledHeight);
+        }
+
+        // 7. Multiplayer Invitation UI (4 switchable HUD variants)
         InvitationUIManager.getInstance().renderHud(context, scaledWidth, scaledHeight, tickCounter.getTickDelta(true));
     }
 
@@ -557,5 +570,192 @@ public class InGameHudMixin {
         if (customScale) {
             context.getMatrices().pop();
         }
+    }
+
+    private void renderArmorHud(DrawContext context, MinecraftClient client, float hudScale, boolean customScale,
+            int scaledWidth, int scaledHeight) {
+        boolean isMenu = client.currentScreen instanceof com.mooclient.gui.MooClientScreen;
+        if (client.player == null && !isMenu) {
+            return;
+        }
+
+        List<ItemStack> stacks = new java.util.ArrayList<>();
+        if (client.player != null) {
+            net.minecraft.entity.player.PlayerInventory inv = client.player.getInventory();
+            stacks.add(inv.getArmorStack(3)); // Helmet
+            stacks.add(inv.getArmorStack(2)); // Chestplate
+            stacks.add(inv.getArmorStack(1)); // Leggings
+            stacks.add(inv.getArmorStack(0)); // Boots
+            if (ArmorModule.isShowOffhand()) {
+                stacks.add(client.player.getOffHandStack());
+            }
+            if (ArmorModule.isShowMainHand()) {
+                stacks.add(client.player.getMainHandStack());
+            }
+        }
+
+        boolean allEmpty = true;
+        for (ItemStack st : stacks) {
+            if (st != null && !st.isEmpty()) {
+                allEmpty = false;
+                break;
+            }
+        }
+
+        if (allEmpty && isMenu) {
+            stacks.clear();
+            stacks.add(new ItemStack(net.minecraft.item.Items.NETHERITE_HELMET));
+            stacks.add(new ItemStack(net.minecraft.item.Items.NETHERITE_CHESTPLATE));
+            stacks.add(new ItemStack(net.minecraft.item.Items.NETHERITE_LEGGINGS));
+            stacks.add(new ItemStack(net.minecraft.item.Items.NETHERITE_BOOTS));
+            if (ArmorModule.isShowOffhand()) {
+                stacks.add(new ItemStack(net.minecraft.item.Items.SHIELD));
+            }
+            if (ArmorModule.isShowMainHand()) {
+                stacks.add(new ItemStack(net.minecraft.item.Items.NETHERITE_SWORD));
+            }
+            allEmpty = false;
+        }
+
+        if (allEmpty && !ArmorModule.isShowEmptySlots()) {
+            return;
+        }
+
+        int slotCount = stacks.isEmpty() ? ArmorModule.getSlotCount() : stacks.size();
+        int slotSize = ArmorModule.getSlotSize();
+        int gap = ArmorModule.getSlotGap();
+        ArmorModule.ArmorOrientation orientation = ArmorModule.getOrientation();
+        ArmorModule.ArmorStyle style = ArmorModule.getStyle();
+        ArmorModule.DurabilityTextMode textMode = ArmorModule.getDurabilityTextMode();
+        boolean showBar = ArmorModule.isShowDurabilityBar();
+
+        int unscaledW = ArmorModule.calculateUnscaledWidth();
+        int unscaledH = ArmorModule.calculateUnscaledHeight();
+
+        int boxW = ArmorModule.calculateBoxWidth(hudScale);
+        int boxH = ArmorModule.calculateBoxHeight(hudScale);
+        ArmorModule.width = boxW;
+        ArmorModule.height = boxH;
+
+        int startX = ArmorModule.position.calculateX(boxW, scaledWidth);
+        int startY = ArmorModule.position.calculateY(boxH, scaledHeight);
+
+        // Low Durability Cow Sound Alert (<= 50) - Plays ONCE when an item drops to <= 50
+        if (client.player != null && !isMenu) {
+            if (ArmorModule.checkAndTriggerWarning(stacks)) {
+                try {
+                    client.getSoundManager().play(
+                            net.minecraft.client.sound.PositionedSoundInstance.master(
+                                    com.mooclient.sound.MooSounds.COW_MOO, 1.0f, 1.5f));
+                    client.player.playSound(com.mooclient.sound.MooSounds.COW_MOO, 1.5f, 1.0f);
+                } catch (Exception ignored) {
+                    try {
+                        client.getSoundManager().play(
+                                net.minecraft.client.sound.PositionedSoundInstance.master(
+                                        net.minecraft.sound.SoundEvents.ENTITY_COW_AMBIENT, 1.0f, 1.5f));
+                    } catch (Exception ignored2) {}
+                }
+            }
+        }
+
+        if (customScale) {
+            context.getMatrices().push();
+            context.getMatrices().translate(startX, startY, 0);
+            context.getMatrices().scale(hudScale, hudScale, 1.0f);
+            context.getMatrices().translate(-startX, -startY, 0);
+        }
+
+        int extraTop = (orientation == ArmorModule.ArmorOrientation.HORIZONTAL && textMode != ArmorModule.DurabilityTextMode.NONE) ? 10 : 0;
+        int slotStartY = startY + extraTop;
+
+        for (int i = 0; i < slotCount; i++) {
+            ItemStack stack = (i < stacks.size()) ? stacks.get(i) : ItemStack.EMPTY;
+            int curX = (orientation == ArmorModule.ArmorOrientation.HORIZONTAL)
+                    ? startX + i * (slotSize + gap) : startX;
+            int curY = (orientation == ArmorModule.ArmorOrientation.HORIZONTAL)
+                    ? slotStartY : slotStartY + i * (slotSize + gap);
+
+            // 1. Draw Slot Background & Border
+            if (style == ArmorModule.ArmorStyle.MOO_CLIENT) {
+                if (ArmorModule.isShowBackground()) {
+                    // Translucent dark Moo Client background
+                    context.fill(curX, curY, curX + slotSize, curY + slotSize, 0x66000000);
+                    // Sleek 1px light border matching Moo Client HUD style
+                    drawSlotBorder(context, curX, curY, slotSize, slotSize, 0x88B0D8EA);
+                }
+            } else if (style == ArmorModule.ArmorStyle.COMPACT) {
+                if (ArmorModule.isShowBackground()) {
+                    context.fill(curX, curY, curX + slotSize, curY + slotSize, 0x55000000);
+                    drawSlotBorder(context, curX, curY, slotSize, slotSize, 0x44FFFFFF);
+                }
+            }
+
+            // 2. Draw Item & Durability
+            if (stack != null && !stack.isEmpty()) {
+                context.drawItem(stack, curX + 2, curY + 2);
+
+                // 3. Durability Bar at the bottom (ALWAYS on) - moved 2px down, sleek 1px thickness
+                if (showBar) {
+                    int barX = curX + 2;
+                    int barY = curY + 18;
+                    int barW = 16;
+
+                    float ratio = 1.0f;
+                    if (stack.isDamageable() && stack.getMaxDamage() > 0) {
+                        ratio = (float) (stack.getMaxDamage() - stack.getDamage()) / (float) stack.getMaxDamage();
+                        ratio = Math.max(0.0f, Math.min(1.0f, ratio));
+                    }
+
+                    int filledW = Math.max(1, Math.round(ratio * barW));
+                    int durColor = (ratio > 0.5f) ? 0xFF00FF00 : ((ratio > 0.2f) ? 0xFFFFAA00 : 0xFFFF3333);
+
+                    context.fill(barX, barY, barX + barW, barY + 1, 0x88000000);
+                    context.fill(barX, barY, barX + filledW, barY + 1, durColor);
+                }
+
+                // 4. Durability Text DELIKATNIE NAD (slightly above the slot)
+                if (textMode != ArmorModule.DurabilityTextMode.NONE) {
+                    float ratio = 1.0f;
+                    int remaining = 100;
+                    if (stack.isDamageable() && stack.getMaxDamage() > 0) {
+                        ratio = (float) (stack.getMaxDamage() - stack.getDamage()) / (float) stack.getMaxDamage();
+                        ratio = Math.max(0.0f, Math.min(1.0f, ratio));
+                        remaining = Math.max(0, stack.getMaxDamage() - stack.getDamage());
+                    }
+                    int pct = Math.max(0, Math.min(100, Math.round(ratio * 100)));
+
+                    String txt = (textMode == ArmorModule.DurabilityTextMode.PERCENT)
+                            ? (pct + "%")
+                            : String.valueOf(remaining);
+
+                    int tw = client.textRenderer.getWidth(txt);
+                    int textColor = (ratio > 0.5f) ? 0xFFFFFFFF : ((ratio > 0.2f) ? 0xFFFFFF55 : 0xFFFF5555);
+
+                    if (orientation == ArmorModule.ArmorOrientation.HORIZONTAL) {
+                        int textX = curX + (slotSize - tw) / 2;
+                        int textY = curY - 9;
+                        context.drawText(client.textRenderer, txt, textX, textY, textColor, true);
+                    } else {
+                        int textX = curX + slotSize + 4;
+                        int textY = curY + (slotSize - 8) / 2;
+                        context.drawText(client.textRenderer, txt, textX, textY, textColor, true);
+                    }
+                }
+            } else if (ArmorModule.isShowEmptySlots() && style != ArmorModule.ArmorStyle.SIMPLE) {
+                // Empty slot indicator
+                context.fill(curX + 6, curY + 6, curX + slotSize - 6, curY + slotSize - 6, 0x15FFFFFF);
+            }
+        }
+
+        if (customScale) {
+            context.getMatrices().pop();
+        }
+    }
+
+    private static void drawSlotBorder(DrawContext context, int x, int y, int w, int h, int color) {
+        context.fill(x, y, x + w, y + 1, color);
+        context.fill(x, y + h - 1, x + w, y + h, color);
+        context.fill(x, y + 1, x + 1, y + h - 1, color);
+        context.fill(x + w - 1, y + 1, x + w, y + h - 1, color);
     }
 }

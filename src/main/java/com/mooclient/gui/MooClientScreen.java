@@ -2,6 +2,7 @@ package com.mooclient.gui;
 
 import com.mooclient.module.Module;
 import com.mooclient.module.ModuleManager;
+import com.mooclient.module.modules.ArmorModule;
 import com.mooclient.module.modules.CpsModule;
 import com.mooclient.module.modules.FpsModule;
 import com.mooclient.module.modules.FreelookModule;
@@ -308,7 +309,23 @@ public class MooClientScreen extends Screen {
             renderWidgetBoundingBox(context, x - 2, y - 2, boxW, boxH, hovered, isDragging);
         }
 
-        // 7. Render Active Alignment Guidelines (Smart Magnetic Snapping)
+        // 7. Draggable Armor HUD Widget Preview
+        if (ArmorModule.isArmorEnabled()) {
+            int boxW = ArmorModule.calculateBoxWidth(hudScale);
+            int boxH = ArmorModule.calculateBoxHeight(hudScale);
+            ArmorModule.width = boxW;
+            ArmorModule.height = boxH;
+
+            int x = ArmorModule.position.calculateX(boxW, this.width);
+            int y = ArmorModule.position.calculateY(boxH, this.height);
+
+            boolean hovered = mouseX >= x && mouseX <= x + boxW && mouseY >= y && mouseY <= y + boxH;
+            boolean isDragging = "ARMOR".equals(draggingWidget);
+
+            renderWidgetBoundingBox(context, x, y, boxW, boxH, hovered, isDragging);
+        }
+
+        // 8. Render Active Alignment Guidelines (Smart Magnetic Snapping)
         if (draggingWidget != null && activeGuideLines != null
                 && com.mooclient.util.MooClientSettings.isHudSnapping()) {
             for (com.mooclient.util.MooHudPositionHelper.GuideLine line : activeGuideLines) {
@@ -362,6 +379,12 @@ public class MooClientScreen extends Screen {
                     ScoreboardModule.position.calculateX(ScoreboardModule.width, this.width),
                     ScoreboardModule.position.calculateY(ScoreboardModule.height, this.height),
                     ScoreboardModule.width, ScoreboardModule.height));
+        }
+        if (!"ARMOR".equals(currentWidgetId) && ArmorModule.isArmorEnabled()) {
+            list.add(new WidgetRect("ARMOR",
+                    ArmorModule.position.calculateX(ArmorModule.width, this.width),
+                    ArmorModule.position.calculateY(ArmorModule.height, this.height),
+                    ArmorModule.width, ArmorModule.height));
         }
         return list;
     }
@@ -678,6 +701,8 @@ public class MooClientScreen extends Screen {
                 icon = "📋";
             } else if (module.getName().equalsIgnoreCase("CPS")) {
                 icon = "🖱";
+            } else if (module.getName().equalsIgnoreCase("Armor") || module.getName().equalsIgnoreCase("Armor HUD")) {
+                icon = "🛡";
             } else if (module.getName().equalsIgnoreCase("Emotki") || module.getName().equalsIgnoreCase("Emotes")) {
                 icon = "🙋";
             } else {
@@ -685,7 +710,8 @@ public class MooClientScreen extends Screen {
             }
             drawCenteredText(context, icon, cardX + cardW / 2, cardY + 20, COLOR_TEXT_WHITE);
             String cardTitle = (module.getName().equalsIgnoreCase("Emotki") || module.getName().equalsIgnoreCase("Emotes"))
-                    ? MooLanguage.get("emotes_name") : module.getName();
+                    ? MooLanguage.get("emotes_name")
+                    : ((module.getName().equalsIgnoreCase("Armor") || module.getName().equalsIgnoreCase("Armor HUD")) ? MooLanguage.get("armor_name") : module.getName());
             drawCenteredText(context, cardTitle, cardX + cardW / 2, cardY + 44, COLOR_TEXT_WHITE);
 
             // OPTIONS Bar
@@ -760,6 +786,10 @@ public class MooClientScreen extends Screen {
             return MooLanguage.get("waypoints_desc");
         if (name.equalsIgnoreCase("Scoreboard"))
             return MooLanguage.get("scoreboard_desc");
+        if (name.equalsIgnoreCase("Armor") || name.equalsIgnoreCase("Armor HUD"))
+            return MooLanguage.get("armor_desc");
+        if (name.equalsIgnoreCase("Shulker Tooltip") || name.equalsIgnoreCase("Shulker Box Tooltip"))
+            return MooLanguage.get("shulker_desc");
         if (name.equalsIgnoreCase("Emotki") || name.equalsIgnoreCase("Emotes"))
             return MooLanguage.get("emotes_desc");
         return MooLanguage.get("macro_desc");
@@ -771,7 +801,9 @@ public class MooClientScreen extends Screen {
     private void renderOptionsWindow(DrawContext context, int mouseX, int mouseY, float delta) {
         String modName = selectedModule != null ? selectedModule.getName() : "FPS";
         int panelW = 480;
-        int panelH = (modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) ? 365 : 330;
+        int panelH = (modName.equalsIgnoreCase("Armor") || modName.equalsIgnoreCase("Armor HUD")) ? 410
+                : ((modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) ? 365
+                : ((modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) ? 230 : 330));
         int panelX = (this.width - panelW) / 2;
         int panelY = (this.height - panelH) / 2;
 
@@ -824,6 +856,12 @@ public class MooClientScreen extends Screen {
         } else if (modName.equalsIgnoreCase("Scoreboard")) {
             optTitle = MooLanguage.get("scoreboard_opt_title");
             optSubtitle = MooLanguage.get("scoreboard_opt_subtitle");
+        } else if (modName.equalsIgnoreCase("Armor") || modName.equalsIgnoreCase("Armor HUD")) {
+            optTitle = MooLanguage.get("armor_opt_title");
+            optSubtitle = MooLanguage.get("armor_opt_subtitle");
+        } else if (modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) {
+            optTitle = MooLanguage.get("shulker_opt_title");
+            optSubtitle = MooLanguage.get("shulker_opt_subtitle");
         } else if (modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) {
             optTitle = MooLanguage.get("emotes_opt_title");
             optSubtitle = MooLanguage.get("emotes_opt_subtitle");
@@ -1256,6 +1294,72 @@ public class MooClientScreen extends Screen {
             drawBorder(context, rBtnX, rBtnY, rBtnW, rBtnH, rHover ? 0xAAFFFFFF : 0x33FFFFFF);
             drawCenteredText(context, MooLanguage.get("reset_pos_btn"), rBtnX + rBtnW / 2, rBtnY + 7,
                     rHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
+
+        } else if (modName.equalsIgnoreCase("Armor") || modName.equalsIgnoreCase("Armor HUD")) {
+            // Row 1: Appearance Style (Moo Client / Simple / Compact)
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("style_label"));
+            renderPotionStyleSelector(context, rowX + rowW - 248, rowY + 6, mouseX, mouseY,
+                    ArmorModule.getStyle().ordinal());
+
+            // Row 2: Orientation (Horizontal / Vertical)
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("orientation_label"));
+            renderArmorOrientationSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY,
+                    ArmorModule.getOrientation().ordinal());
+
+            // Row 3: Durability Text Mode (None / % / Value)
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("durability_text_label"));
+            renderArmorDurabilitySelector(context, rowX + rowW - 170, rowY + 6, mouseX, mouseY,
+                    ArmorModule.getDurabilityTextMode().ordinal());
+
+            // Row 4: Durability Bar (Bottom)
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("durability_bar_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    ArmorModule.isShowDurabilityBar());
+
+            // Row 5: Low Durability Warning Sound (<= 50)
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("durability_warning_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    ArmorModule.isLowDurabilityWarning());
+
+            // Row 6: Show Background
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("bg_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    ArmorModule.isShowBackground());
+
+            // Row 7: Show Empty Slots
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("show_empty_slots_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    ArmorModule.isShowEmptySlots());
+
+            // Row 8: Show Offhand (Shield / Totem)
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("show_offhand_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    ArmorModule.isShowOffhand());
+
+        } else if (modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) {
+            // Row 1: Color-Matched Border
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shulker_color_border_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.ShulkerTooltipModule.isColorMatchedBorder());
+
+            // Row 2: Show Empty Slots
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shulker_empty_slots_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.ShulkerTooltipModule.isShowEmptySlots());
+
+            // Row 3: Require SHIFT Key
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shulker_require_shift_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.ShulkerTooltipModule.isRequireShift());
 
         } else if (modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) {
             int btnW = 140;
@@ -1950,6 +2054,94 @@ public class MooClientScreen extends Screen {
         return -1;
     }
 
+    private void renderArmorOrientationSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
+            int selectedOrdinal) {
+        String[] labels = MooLanguage.current.equals(MooLanguage.PL)
+                ? new String[] { "Pozioma", "Pionowa" }
+                : new String[] { "Horizontal", "Vertical" };
+        int w = 98;
+        int gap = 4;
+        int curX = startX;
+        int h = 22;
+
+        for (int i = 0; i < labels.length; i++) {
+            boolean selected = (i == selectedOrdinal);
+            boolean hover = mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h;
+
+            int bg = selected ? com.mooclient.util.MooClientSettings.getAccentColor()
+                    : (hover ? 0xCC252535 : 0x66141420);
+            int border = selected ? com.mooclient.util.MooClientSettings.getAccentHoverColor()
+                    : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
+            int textColor = selected ? 0xFF0A2514 : (hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
+
+            context.fill(curX, y, curX + w, y + h, bg);
+            drawBorder(context, curX, y, w, h, border);
+            drawCenteredText(context, labels[i], curX + w / 2, y + 7, textColor);
+
+            curX += w + gap;
+        }
+    }
+
+    private int getArmorOrientationClick(int startX, int y, int mouseX, int mouseY) {
+        int w = 98;
+        int gap = 4;
+        int curX = startX;
+        int h = 22;
+
+        for (int i = 0; i < 2; i++) {
+            if (mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h) {
+                return i;
+            }
+            curX += w + gap;
+        }
+        return -1;
+    }
+
+    private void renderArmorDurabilitySelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
+            int selectedOrdinal) {
+        String[] labels = MooLanguage.current.equals(MooLanguage.PL)
+                ? new String[] { "Brak", "%", "Wartość" }
+                : new String[] { "None", "%", "Value" };
+        int[] widths = new int[] { 54, 40, 68 };
+        int gap = 4;
+        int curX = startX;
+        int h = 22;
+
+        for (int i = 0; i < labels.length; i++) {
+            int w = widths[i];
+            boolean selected = (i == selectedOrdinal);
+            boolean hover = mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h;
+
+            int bg = selected ? com.mooclient.util.MooClientSettings.getAccentColor()
+                    : (hover ? 0xCC252535 : 0x66141420);
+            int border = selected ? com.mooclient.util.MooClientSettings.getAccentHoverColor()
+                    : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
+            int textColor = selected ? 0xFF0A2514 : (hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
+
+            context.fill(curX, y, curX + w, y + h, bg);
+            drawBorder(context, curX, y, w, h, border);
+            drawCenteredText(context, labels[i], curX + w / 2, y + 7, textColor);
+
+            curX += w + gap;
+        }
+    }
+
+    private int getArmorDurabilityClick(int startX, int y, int mouseX, int mouseY) {
+        int[] widths = new int[] { 54, 40, 68 };
+        int gap = 4;
+        int curX = startX;
+        int h = 22;
+
+        for (int i = 0; i < widths.length; i++) {
+            int w = widths[i];
+            if (mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h) {
+                return i;
+            }
+            curX += w + gap;
+        }
+        return -1;
+    }
+
     private void renderFactorSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
             int selectedOrdinal) {
         String[] labels = new String[] { "2x", "3x", "4x", "5x", "6x" };
@@ -2126,6 +2318,109 @@ public class MooClientScreen extends Screen {
             return true;
         }
 
+        if (button == 1 && currentView == View.HUB) {
+            // Right-click on any HUD widget to quickly open its options!
+            if (ArmorModule.isArmorEnabled()) {
+                int w = ArmorModule.width;
+                int h = ArmorModule.height;
+                int x = ArmorModule.position.calculateX(w, this.width);
+                int y = ArmorModule.position.calculateY(h, this.height);
+                if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
+                    playClickSound();
+                    this.selectedModule = ModuleManager.getInstance().getModule("Armor HUD")
+                            .orElseGet(() -> ModuleManager.getInstance().getModule("Armor").orElse(null));
+                    this.openedFromHub = true;
+                    this.listeningForKeybind = false;
+                    this.currentView = View.OPTIONS;
+                    return true;
+                }
+            }
+            if (FpsModule.isFpsEnabled()) {
+                int w = FpsModule.width;
+                int h = FpsModule.height;
+                int x = FpsModule.position.calculateX(w, this.width);
+                int y = FpsModule.position.calculateY(h, this.height);
+                if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
+                    playClickSound();
+                    this.selectedModule = ModuleManager.getInstance().getModule("FPS").orElse(null);
+                    this.openedFromHub = true;
+                    this.listeningForKeybind = false;
+                    this.currentView = View.OPTIONS;
+                    return true;
+                }
+            }
+            if (ToggleSprintModule.isSprintEnabled()) {
+                int w = ToggleSprintModule.width;
+                int h = ToggleSprintModule.height;
+                int x = ToggleSprintModule.position.calculateX(w, this.width);
+                int y = ToggleSprintModule.position.calculateY(h, this.height);
+                if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
+                    playClickSound();
+                    this.selectedModule = ModuleManager.getInstance().getModule("Sprint").orElse(null);
+                    this.openedFromHub = true;
+                    this.listeningForKeybind = false;
+                    this.currentView = View.OPTIONS;
+                    return true;
+                }
+            }
+            if (PotionEffectsModule.isModuleEnabled()) {
+                int w = PotionEffectsModule.width;
+                int h = PotionEffectsModule.height;
+                int x = PotionEffectsModule.position.calculateX(w, this.width);
+                int y = PotionEffectsModule.position.calculateY(h, this.height);
+                if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
+                    playClickSound();
+                    this.selectedModule = ModuleManager.getInstance().getModule("Potion Effects").orElse(null);
+                    this.openedFromHub = true;
+                    this.listeningForKeybind = false;
+                    this.currentView = View.OPTIONS;
+                    return true;
+                }
+            }
+            if (com.mooclient.module.modules.PingModule.isPingEnabled()) {
+                int w = com.mooclient.module.modules.PingModule.width;
+                int h = com.mooclient.module.modules.PingModule.height;
+                int x = com.mooclient.module.modules.PingModule.position.calculateX(w, this.width);
+                int y = com.mooclient.module.modules.PingModule.position.calculateY(h, this.height);
+                if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
+                    playClickSound();
+                    this.selectedModule = ModuleManager.getInstance().getModule("Ping").orElse(null);
+                    this.openedFromHub = true;
+                    this.listeningForKeybind = false;
+                    this.currentView = View.OPTIONS;
+                    return true;
+                }
+            }
+            if (com.mooclient.module.modules.CpsModule.isCpsEnabled()) {
+                int w = com.mooclient.module.modules.CpsModule.width;
+                int h = com.mooclient.module.modules.CpsModule.height;
+                int x = com.mooclient.module.modules.CpsModule.position.calculateX(w, this.width);
+                int y = com.mooclient.module.modules.CpsModule.position.calculateY(h, this.height);
+                if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
+                    playClickSound();
+                    this.selectedModule = ModuleManager.getInstance().getModule("CPS").orElse(null);
+                    this.openedFromHub = true;
+                    this.listeningForKeybind = false;
+                    this.currentView = View.OPTIONS;
+                    return true;
+                }
+            }
+            if (com.mooclient.module.modules.ScoreboardModule.isScoreboardEnabled()) {
+                int w = com.mooclient.module.modules.ScoreboardModule.width;
+                int h = com.mooclient.module.modules.ScoreboardModule.height;
+                int x = com.mooclient.module.modules.ScoreboardModule.position.calculateX(w, this.width);
+                int y = com.mooclient.module.modules.ScoreboardModule.position.calculateY(h, this.height);
+                if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
+                    playClickSound();
+                    this.selectedModule = ModuleManager.getInstance().getModule("Scoreboard").orElse(null);
+                    this.openedFromHub = true;
+                    this.listeningForKeybind = false;
+                    this.currentView = View.OPTIONS;
+                    return true;
+                }
+            }
+        }
+
         if (button == 0) { // Left click
             // 1. Language Switcher Click
             int langX = this.width - 66;
@@ -2222,6 +2517,19 @@ public class MooClientScreen extends Screen {
                     int y = com.mooclient.module.modules.ScoreboardModule.position.calculateY(h, this.height);
                     if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
                         draggingWidget = "SCOREBOARD";
+                        dragOffsetX = (int) mouseX - x;
+                        dragOffsetY = (int) mouseY - y;
+                        return true;
+                    }
+                }
+
+                if (ArmorModule.isArmorEnabled()) {
+                    int w = ArmorModule.width;
+                    int h = ArmorModule.height;
+                    int x = ArmorModule.position.calculateX(w, this.width);
+                    int y = ArmorModule.position.calculateY(h, this.height);
+                    if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
+                        draggingWidget = "ARMOR";
                         dragOffsetX = (int) mouseX - x;
                         dragOffsetY = (int) mouseY - y;
                         return true;
@@ -2367,7 +2675,9 @@ public class MooClientScreen extends Screen {
             else if (currentView == View.OPTIONS) {
                 String modName = selectedModule != null ? selectedModule.getName() : "FPS";
                 int panelW = 480;
-                int panelH = (modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) ? 365 : 330;
+                int panelH = (modName.equalsIgnoreCase("Armor") || modName.equalsIgnoreCase("Armor HUD")) ? 410
+                        : ((modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) ? 365
+                        : ((modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) ? 230 : 330));
                 int panelX = (this.width - panelW) / 2;
                 int panelY = (this.height - panelH) / 2;
 
@@ -2948,6 +3258,130 @@ public class MooClientScreen extends Screen {
                         com.mooclient.util.MooConfig.save();
                         return true;
                     }
+                } else if (modName.equalsIgnoreCase("Armor") || modName.equalsIgnoreCase("Armor HUD")) {
+                    // Row 1: Style Selector
+                    int styleClick = getPotionStyleClick(rowX + rowW - 248, rowY + 6, (int) mouseX, (int) mouseY);
+                    if (styleClick >= 0 && styleClick < ArmorModule.ArmorStyle.values().length) {
+                        playClickSound();
+                        ArmorModule.setStyle(ArmorModule.ArmorStyle.values()[styleClick]);
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 2: Orientation Selector
+                    rowY += rowH + 6;
+                    int orientClick = getArmorOrientationClick(rowX + rowW - 206, rowY + 6, (int) mouseX, (int) mouseY);
+                    if (orientClick >= 0 && orientClick < ArmorModule.ArmorOrientation.values().length) {
+                        playClickSound();
+                        ArmorModule.setOrientation(ArmorModule.ArmorOrientation.values()[orientClick]);
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 3: Durability Text Mode Selector (None / % / Value)
+                    rowY += rowH + 6;
+                    int durClick = getArmorDurabilityClick(rowX + rowW - 170, rowY + 6, (int) mouseX, (int) mouseY);
+                    if (durClick >= 0 && durClick < ArmorModule.DurabilityTextMode.values().length) {
+                        playClickSound();
+                        ArmorModule.setDurabilityTextMode(ArmorModule.DurabilityTextMode.values()[durClick]);
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 4: Durability Bar Toggle
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        ArmorModule.toggleShowDurabilityBar();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 5: Low Durability Warning Sound Toggle
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        ArmorModule.toggleLowDurabilityWarning();
+                        if (ArmorModule.isLowDurabilityWarning() && this.client != null) {
+                            try {
+                                this.client.getSoundManager().play(
+                                        net.minecraft.client.sound.PositionedSoundInstance.master(
+                                                com.mooclient.sound.MooSounds.COW_MOO, 1.0f, 1.5f));
+                            } catch (Exception ignored) {
+                                try {
+                                    this.client.getSoundManager().play(
+                                            net.minecraft.client.sound.PositionedSoundInstance.master(
+                                                    net.minecraft.sound.SoundEvents.ENTITY_COW_AMBIENT, 1.0f, 1.5f));
+                                } catch (Exception ignored2) {
+                                    playClickSound();
+                                }
+                            }
+                        } else {
+                            playClickSound();
+                        }
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 6: Show Background
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        ArmorModule.toggleShowBackground();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 7: Show Empty Slots
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        ArmorModule.toggleShowEmptySlots();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 8: Show Offhand
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        ArmorModule.toggleShowOffhand();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+                } else if (modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) {
+                    // Row 1: Color Matched Border
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        com.mooclient.module.modules.ShulkerTooltipModule.toggleColorMatchedBorder();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 2: Show Empty Slots
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        com.mooclient.module.modules.ShulkerTooltipModule.toggleShowEmptySlots();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 3: Require SHIFT Key
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        com.mooclient.module.modules.ShulkerTooltipModule.toggleRequireShift();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
                 } else if (modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) {
                     int btnW = 140;
                     int btnH = 22;
@@ -3379,6 +3813,16 @@ public class MooClientScreen extends Screen {
                         ScoreboardModule.width, ScoreboardModule.height, this.width, this.height);
                 ScoreboardModule.posX = res.snappedX;
                 ScoreboardModule.posY = res.snappedY;
+                return true;
+            } else if ("ARMOR".equals(draggingWidget)) {
+                MooHudPositionHelper.SnapResult res = MooHudPositionHelper.calculateSmartSnap(
+                        rawX, rawY, ArmorModule.width, ArmorModule.height, this.width, this.height, others,
+                        snapping, accent);
+                this.activeGuideLines = res.guideLines;
+                ArmorModule.position.setFromScreenCoords(res.snappedX, res.snappedY,
+                        ArmorModule.width, ArmorModule.height, this.width, this.height);
+                ArmorModule.posX = res.snappedX;
+                ArmorModule.posY = res.snappedY;
                 return true;
             }
         }

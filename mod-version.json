@@ -1,7 +1,7 @@
 {
-  "version": "1.9.2",
+  "version": "1.9.3",
   "minecraft": "1.21.4",
-  "name": "Moo Client 1.9.2",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.9.2/moo-client-1.9.2.jar",
-  "changelog": "🚀 Moo Client v1.9.2:\n✓ Poprawki emotek wieloosobowych – zwiększono zasięg, poprawiono celowanie w graczy i naprawiono błąd z brakiem uprawnień\n✓ Zapisywanie ustawień – klient trwale pamięta teraz wszystkie Twoje konfiguracje modów, pozycje na ekranie oraz wybrany język po ponownym uruchomieniu gry\n✓ Poprawka menu sterowania – dodano czytelne nazwy dla kategorii klienta i klawisza menu w ustawieniach klawiatury"
+  "name": "Moo Client 1.9.3",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.9.3/moo-client-1.9.3.jar",
+  "changelog": "🚀 Moo Client v1.9.3:\n✓ Nowy mod Shulker Box Tooltip – natychmiastowy graficzny podgląd 27 slotów shulkera w ekwipunku z ramką w kolorze shulkera\n✓ Udoskonalony Armor HUD – odświeżony 1px pasek wytrzymałości, zerowe opóźnienie odczytu i realistyczny dźwięk krowy (.ogg) przy spadku pancerza poniżej 50 pkt (bez zapętlania)\n✓ Poprawki interfejsu opcji – naprawiono klikanie przełączników i wyczyszczono zbędne domyślne napisy tekstowe MC"
 }

@@ -183,6 +183,12 @@ public class MooClientSettings {
         PotionEffectsModule.posX = 10;
         PotionEffectsModule.posY = 74;
 
+        com.mooclient.module.modules.ArmorModule.position = new com.mooclient.util.MooHudPositionHelper.WidgetPosition(
+                com.mooclient.util.MooHudPositionHelper.HudAnchorX.LEFT,
+                com.mooclient.util.MooHudPositionHelper.HudAnchorY.TOP, 10, 106);
+        com.mooclient.module.modules.ArmorModule.posX = 10;
+        com.mooclient.module.modules.ArmorModule.posY = 106;
+
         com.mooclient.module.modules.ScoreboardModule.resetPosition();
 
         MooConfig.save();

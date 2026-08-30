@@ -210,6 +210,35 @@ public class MooConfig {
             cps.addProperty("posY", com.mooclient.module.modules.CpsModule.posY);
             root.add("cps", cps);
 
+            // Armor HUD Module
+            JsonObject armor = new JsonObject();
+            armor.addProperty("enabled", com.mooclient.module.modules.ArmorModule.isArmorEnabled());
+            armor.addProperty("style", com.mooclient.module.modules.ArmorModule.getStyle().name());
+            armor.addProperty("orientation", com.mooclient.module.modules.ArmorModule.getOrientation().name());
+            armor.addProperty("durabilityTextMode", com.mooclient.module.modules.ArmorModule.getDurabilityTextMode().name());
+            armor.addProperty("showDurabilityBar", com.mooclient.module.modules.ArmorModule.isShowDurabilityBar());
+            armor.addProperty("lowDurabilityWarning", com.mooclient.module.modules.ArmorModule.isLowDurabilityWarning());
+            armor.addProperty("durabilityMode", com.mooclient.module.modules.ArmorModule.getDurabilityMode().name());
+            armor.addProperty("showBackground", com.mooclient.module.modules.ArmorModule.isShowBackground());
+            armor.addProperty("showEmptySlots", com.mooclient.module.modules.ArmorModule.isShowEmptySlots());
+            armor.addProperty("showOffhand", com.mooclient.module.modules.ArmorModule.isShowOffhand());
+            armor.addProperty("showMainHand", com.mooclient.module.modules.ArmorModule.isShowMainHand());
+            armor.addProperty("anchorX", com.mooclient.module.modules.ArmorModule.position.anchorX.name());
+            armor.addProperty("anchorY", com.mooclient.module.modules.ArmorModule.position.anchorY.name());
+            armor.addProperty("offsetX", com.mooclient.module.modules.ArmorModule.position.offsetX);
+            armor.addProperty("offsetY", com.mooclient.module.modules.ArmorModule.position.offsetY);
+            armor.addProperty("posX", com.mooclient.module.modules.ArmorModule.posX);
+            armor.addProperty("posY", com.mooclient.module.modules.ArmorModule.posY);
+            root.add("armor", armor);
+
+            // Shulker Tooltip Module
+            JsonObject shulker = new JsonObject();
+            shulker.addProperty("enabled", com.mooclient.module.modules.ShulkerTooltipModule.isShulkerEnabled());
+            shulker.addProperty("colorMatchedBorder", com.mooclient.module.modules.ShulkerTooltipModule.isColorMatchedBorder());
+            shulker.addProperty("showEmptySlots", com.mooclient.module.modules.ShulkerTooltipModule.isShowEmptySlots());
+            shulker.addProperty("requireShift", com.mooclient.module.modules.ShulkerTooltipModule.isRequireShift());
+            root.add("shulkerTooltip", shulker);
+
             // Emotes Module
             JsonObject emotes = new JsonObject();
             emotes.addProperty("enabled", com.mooclient.module.modules.EmotesModule.isEmotesEnabled());
@@ -780,6 +809,95 @@ public class MooConfig {
                 }
                 if (cps.has("posY")) {
                     com.mooclient.module.modules.CpsModule.posY = cps.get("posY").getAsInt();
+                }
+            }
+
+            // Armor HUD Module
+            if (root.has("armor")) {
+                JsonObject armor = root.getAsJsonObject("armor");
+                if (armor.has("enabled")) {
+                    boolean state = armor.get("enabled").getAsBoolean();
+                    com.mooclient.module.modules.ArmorModule.setArmorEnabled(state);
+                    ModuleManager.getInstance().getModule("Armor HUD").ifPresent(m -> m.setEnabled(state));
+                    ModuleManager.getInstance().getModule("Armor").ifPresent(m -> m.setEnabled(state));
+                }
+                if (armor.has("style")) {
+                    try {
+                        com.mooclient.module.modules.ArmorModule.setStyle(
+                                com.mooclient.module.modules.ArmorModule.ArmorStyle.valueOf(armor.get("style").getAsString()));
+                    } catch (Exception ignored) {}
+                }
+                if (armor.has("orientation")) {
+                    try {
+                        com.mooclient.module.modules.ArmorModule.setOrientation(
+                                com.mooclient.module.modules.ArmorModule.ArmorOrientation.valueOf(armor.get("orientation").getAsString()));
+                    } catch (Exception ignored) {}
+                }
+                if (armor.has("durabilityTextMode")) {
+                    try {
+                        com.mooclient.module.modules.ArmorModule.setDurabilityTextMode(
+                                com.mooclient.module.modules.ArmorModule.DurabilityTextMode.valueOf(armor.get("durabilityTextMode").getAsString()));
+                    } catch (Exception ignored) {}
+                } else if (armor.has("durabilityMode")) {
+                    try {
+                        com.mooclient.module.modules.ArmorModule.setDurabilityMode(
+                                com.mooclient.module.modules.ArmorModule.DurabilityMode.valueOf(armor.get("durabilityMode").getAsString()));
+                    } catch (Exception ignored) {}
+                }
+                if (armor.has("showDurabilityBar")) {
+                    com.mooclient.module.modules.ArmorModule.setShowDurabilityBar(armor.get("showDurabilityBar").getAsBoolean());
+                }
+                if (armor.has("lowDurabilityWarning")) {
+                    com.mooclient.module.modules.ArmorModule.setLowDurabilityWarning(armor.get("lowDurabilityWarning").getAsBoolean());
+                }
+                if (armor.has("showBackground")) {
+                    com.mooclient.module.modules.ArmorModule.setShowBackground(armor.get("showBackground").getAsBoolean());
+                }
+                if (armor.has("showEmptySlots")) {
+                    com.mooclient.module.modules.ArmorModule.setShowEmptySlots(armor.get("showEmptySlots").getAsBoolean());
+                }
+                if (armor.has("showOffhand")) {
+                    com.mooclient.module.modules.ArmorModule.setShowOffhand(armor.get("showOffhand").getAsBoolean());
+                }
+                if (armor.has("showMainHand")) {
+                    com.mooclient.module.modules.ArmorModule.setShowMainHand(armor.get("showMainHand").getAsBoolean());
+                }
+                if (armor.has("anchorX") && armor.has("anchorY") && armor.has("offsetX") && armor.has("offsetY")) {
+                    try {
+                        com.mooclient.module.modules.ArmorModule.position.anchorX = MooHudPositionHelper.HudAnchorX.valueOf(armor.get("anchorX").getAsString());
+                        com.mooclient.module.modules.ArmorModule.position.anchorY = MooHudPositionHelper.HudAnchorY.valueOf(armor.get("anchorY").getAsString());
+                        com.mooclient.module.modules.ArmorModule.position.offsetX = armor.get("offsetX").getAsInt();
+                        com.mooclient.module.modules.ArmorModule.position.offsetY = armor.get("offsetY").getAsInt();
+                    } catch (Exception ignored) {}
+                } else if (armor.has("posX") && armor.has("posY")) {
+                    int px = armor.get("posX").getAsInt();
+                    int py = armor.get("posY").getAsInt();
+                    com.mooclient.module.modules.ArmorModule.position.setFromScreenCoords(px, py, com.mooclient.module.modules.ArmorModule.width, com.mooclient.module.modules.ArmorModule.height, 960, 540);
+                }
+                if (armor.has("posX")) {
+                    com.mooclient.module.modules.ArmorModule.posX = armor.get("posX").getAsInt();
+                }
+                if (armor.has("posY")) {
+                    com.mooclient.module.modules.ArmorModule.posY = armor.get("posY").getAsInt();
+                }
+            }
+
+            // Shulker Tooltip Module
+            if (root.has("shulkerTooltip")) {
+                JsonObject shulker = root.getAsJsonObject("shulkerTooltip");
+                if (shulker.has("enabled")) {
+                    boolean state = shulker.get("enabled").getAsBoolean();
+                    com.mooclient.module.modules.ShulkerTooltipModule.setShulkerEnabled(state);
+                    ModuleManager.getInstance().getModule("Shulker Tooltip").ifPresent(m -> m.setEnabled(state, false));
+                }
+                if (shulker.has("colorMatchedBorder")) {
+                    com.mooclient.module.modules.ShulkerTooltipModule.setColorMatchedBorder(shulker.get("colorMatchedBorder").getAsBoolean());
+                }
+                if (shulker.has("showEmptySlots")) {
+                    com.mooclient.module.modules.ShulkerTooltipModule.setShowEmptySlots(shulker.get("showEmptySlots").getAsBoolean());
+                }
+                if (shulker.has("requireShift")) {
+                    com.mooclient.module.modules.ShulkerTooltipModule.setRequireShift(shulker.get("requireShift").getAsBoolean());
                 }
             }
 

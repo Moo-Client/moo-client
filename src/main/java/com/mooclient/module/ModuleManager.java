@@ -42,6 +42,8 @@ public class ModuleManager {
         register(new com.mooclient.module.modules.WaypointsModule()); // "Waypoints"
         register(new com.mooclient.module.modules.ScoreboardModule()); // "Scoreboard"
         register(new com.mooclient.module.modules.CpsModule()); // "CPS"
+        register(new com.mooclient.module.modules.ArmorModule()); // "Armor"
+        register(new com.mooclient.module.modules.ShulkerTooltipModule()); // "Shulker Tooltip"
         register(new com.mooclient.module.modules.EmotesModule()); // "Emotes"
     }
 

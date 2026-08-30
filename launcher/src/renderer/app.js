@@ -1744,7 +1744,7 @@ async function checkClientCoreUpdate(showToastIfUpToDate = false) {
         } else {
             currentClientUpdateInfo = null;
             pill.classList.remove('has-update');
-            const ver = String(res?.currentVersion || '1.9.2').replace(/-/g, '_');
+            const ver = String(res?.currentVersion || '1.9.3').replace(/-/g, '_');
             label.textContent = `v${ver} (${t('update_up_to_date')})`;
             pill.title = `Moo Client v${ver} — ${t('update_up_to_date')}`;
 

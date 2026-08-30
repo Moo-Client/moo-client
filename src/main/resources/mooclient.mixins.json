@@ -20,7 +20,9 @@
     "EntityRendererMixin",
     "NametagBackgroundMixin",
     "ChatHudMixin",
-    "PlayerListHudMixin"
+    "PlayerListHudMixin",
+    "ItemStackMixin",
+    "TooltipComponentMixin"
   ],
   "injectors": {
     "defaultRequire": 1

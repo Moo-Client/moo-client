@@ -1,0 +1,9 @@
+{
+  "cow_moo": {
+    "category": "master",
+    "subtitle": "Moo!",
+    "sounds": [
+      "mooclient:cow_moo"
+    ]
+  }
+}

@@ -27,7 +27,7 @@ public class MooClient implements ClientModInitializer {
 
     public static final String MOD_ID = "mooclient";
     public static final String MOD_NAME = "Moo Client";
-    public static final String VERSION = "1.9.2";
+    public static final String VERSION = "1.9.3";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
 
     private static MooClient instance;
@@ -63,7 +63,10 @@ public class MooClient implements ClientModInitializer {
         // 2. Initialize Emote Engine & Registry
         EmoteEngine.init();
 
-        // 3. Load saved config from disk
+        // 3. Register Custom Moo Sounds
+        com.mooclient.sound.MooSounds.register();
+
+        // 4. Load saved config from disk
         MooConfig.load();
 
         // 4. Initialize Moo Client Network & Discovery Handler

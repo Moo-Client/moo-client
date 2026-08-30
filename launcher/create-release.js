@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.9.2';
+const VERSION = '1.9.3';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,9 +63,9 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-✓ **Poprawki emotek wieloosobowych** – zwiększono zasięg, poprawiono celowanie w graczy i naprawiono błąd z brakiem uprawnień
-✓ **Zapisywanie ustawień** – klient trwale pamięta teraz wszystkie Twoje konfiguracje modów, pozycje na ekranie oraz wybrany język po ponownym uruchomieniu gry
-✓ **Poprawka menu sterowania** – dodano czytelne nazwy dla kategorii klienta i klawisza menu w ustawieniach klawiatury`;
+✓ **Nowy mod Shulker Box Tooltip** – natychmiastowy graficzny podgląd 27 slotów shulkera w ekwipunku z ramką w kolorze shulkera
+✓ **Udoskonalony Armor HUD** – odświeżony 1px pasek wytrzymałości, zerowe opóźnienie odczytu i realistyczny dźwięk krowy (.ogg) przy spadku pancerza poniżej 50 pkt (bez zapętlania)
+✓ **Poprawki interfejsu opcji** – naprawiono klikanie przełączników i wyczyszczono zbędne domyślne napisy tekstowe MC`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);
