@@ -178,7 +178,7 @@ public class PlayerEmoteState {
         float p = getInterpolatedFlipProgress(tickDelta);
         if (p <= 0.0001f || flipDirection == EmotesModule.FlipDirection.NONE) return 0.0f;
         float eased = (float) (0.5 - 0.5 * Math.cos(p * Math.PI));
-        float total = (flipDirection == EmotesModule.FlipDirection.FRONT) ? 360.0f : -360.0f;
+        float total = (flipDirection == EmotesModule.FlipDirection.FRONT) ? -360.0f : 360.0f;
         return eased * total;
     }
 

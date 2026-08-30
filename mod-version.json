@@ -1,7 +1,7 @@
 {
-  "version": "1.8.0_1",
+  "version": "1.8.0_2",
   "minecraft": "1.21.4",
-  "name": "Moo Client 1.8.0_1",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.8.0_1/moo-client-1.8.0_1.jar",
-  "changelog": "🚀 Moo Client v1.8.0_1:\n✓ Poprawiono weryfikację uprawnień i odblokowywania emotek dla graczy\n✓ Usprawniono automatyczne odświeżanie dostępu do kosmetyków w menu koła emotek\n✓ Optymalizacje stabilności i działania klienta"
+  "name": "Moo Client 1.8.0_2",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.8.0_2/moo-client-1.8.0_2.jar",
+  "changelog": "🚀 Moo Client v1.8.0_2:\n✓ Poprawiono kierunki salt (przód / tył)\n✓ Pełna synchronizacja emotek w trybie Multiplayer\n✓ Usprawnienia systemu uprawnień konta\n✓ Optymalizacje stabilności i działania klienta"
 }

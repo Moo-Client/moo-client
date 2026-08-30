@@ -61,6 +61,7 @@ public class EmotesModule extends Module {
     // --- Local & Multiplayer States ---
     private static final PlayerEmoteState localPlayerState = new PlayerEmoteState(null);
     private static final Map<UUID, PlayerEmoteState> playerStates = new ConcurrentHashMap<>();
+    private static final Map<String, PlayerEmoteState> namePlayerStates = new ConcurrentHashMap<>();
 
     // --- F5 Perspective Restoration (Wheel only) ---
     private static Perspective previousPerspective = null;
@@ -109,6 +110,12 @@ public class EmotesModule extends Module {
             playerStates.entrySet().removeIf(entry -> {
                 PlayerEmoteState state = entry.getValue();
                 state.onTick();
+                return state.isIdle();
+            });
+        }
+        if (!namePlayerStates.isEmpty()) {
+            namePlayerStates.entrySet().removeIf(entry -> {
+                PlayerEmoteState state = entry.getValue();
                 return state.isIdle();
             });
         }
@@ -173,7 +180,15 @@ public class EmotesModule extends Module {
         if (client.world != null) {
             Entity entity = client.world.getEntityById(entityId);
             if (entity instanceof PlayerEntity player) {
-                return getPlayerState(player.getUuid());
+                if (player.getUuid() != null) {
+                    PlayerEmoteState state = playerStates.get(player.getUuid());
+                    if (state != null) return state;
+                }
+                if (player.getName() != null) {
+                    String name = player.getName().getString().trim().toLowerCase();
+                    PlayerEmoteState state = namePlayerStates.get(name);
+                    if (state != null) return state;
+                }
             }
         }
         return null;
@@ -188,14 +203,14 @@ public class EmotesModule extends Module {
             MinecraftClient client = MinecraftClient.getInstance();
             if (client.player != null) {
                 UUID uuid = client.player.getUuid();
-                if (uuid != null) {
-                    // 1. Universal Real-Time Broadcast via MQTT Broker
-                    com.mooclient.network.MooNetworkHandler.sendEmoteBroadcast(uuid, emoteType);
+                String username = client.player.getName() != null ? client.player.getName().getString() : null;
 
-                    // 2. Fabric Plugin Channel Broadcast (for Fabric/Proxy companion channels)
-                    if (client.getNetworkHandler() != null && ClientPlayNetworking.canSend(MooEmotePayload.ID)) {
-                        ClientPlayNetworking.send(new MooEmotePayload(uuid, emoteType));
-                    }
+                // 1. Universal Real-Time Broadcast via MQTT Broker
+                com.mooclient.network.MooNetworkHandler.sendEmoteBroadcast(uuid, username, emoteType);
+
+                // 2. Fabric Plugin Channel Broadcast (for Fabric/Proxy companion channels)
+                if (uuid != null && client.getNetworkHandler() != null && ClientPlayNetworking.canSend(MooEmotePayload.ID)) {
+                    ClientPlayNetworking.send(new MooEmotePayload(uuid, emoteType));
                 }
             }
         } catch (Throwable ignored) {
@@ -203,22 +218,53 @@ public class EmotesModule extends Module {
         }
     }
 
-    public static void handleIncomingPayload(UUID uuid, byte emoteType) {
-        if (uuid == null) return;
+    public static void handleIncomingPayload(UUID uuid, String username, byte emoteType) {
         MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player != null && uuid.equals(client.player.getUuid())) {
-            return; // Ignore echo of own packet
+        if (client.player != null) {
+            if (uuid != null && uuid.equals(client.player.getUuid())) {
+                return; // Ignore echo of own packet
+            }
+            if (username != null && username.equalsIgnoreCase(client.player.getName().getString())) {
+                return; // Ignore echo of own packet
+            }
         }
 
-        PlayerEmoteState state = getOrCreateRemoteState(uuid);
+        PlayerEmoteState state = null;
+        if (uuid != null) {
+            state = playerStates.computeIfAbsent(uuid, PlayerEmoteState::new);
+        }
+        if (username != null && !username.trim().isEmpty()) {
+            String cleanName = username.trim().toLowerCase();
+            if (state == null) {
+                state = namePlayerStates.computeIfAbsent(cleanName, k -> new PlayerEmoteState(null));
+            } else {
+                namePlayerStates.put(cleanName, state);
+            }
+        }
         if (state == null) return;
 
+        applyEmoteToState(state, emoteType);
+    }
+
+    public static void handleIncomingPayload(UUID uuid, byte emoteType) {
+        handleIncomingPayload(uuid, null, emoteType);
+    }
+
+    private static void applyEmoteToState(PlayerEmoteState state, byte emoteType) {
         switch (emoteType) {
+            case MooEmotePayload.TYPE_STOP -> state.stopEmotes();
             case MooEmotePayload.TYPE_HANDS_UP_START -> state.triggerHandsUp(true);
             case MooEmotePayload.TYPE_HANDS_UP_STOP -> state.triggerHandsUp(false);
             case MooEmotePayload.TYPE_FRONTFLIP -> state.triggerFrontflip();
             case MooEmotePayload.TYPE_BACKFLIP -> state.triggerBackflip();
-            case MooEmotePayload.TYPE_STOP -> state.stopEmotes();
+            default -> {
+                EmoteType type = MooEmotePayload.toEmoteType(emoteType);
+                if (type != EmoteType.NONE) {
+                    state.triggerEmote(type);
+                } else {
+                    state.stopEmotes();
+                }
+            }
         }
     }
 
@@ -265,6 +311,7 @@ public class EmotesModule extends Module {
         if (!enabled || type == null) return;
         forceF5Perspective();
         localPlayerState.triggerEmote(type);
+        sendPayload(MooEmotePayload.fromEmoteType(type));
     }
 
     public static void triggerHandsUpFromWheel() {
@@ -273,6 +320,7 @@ public class EmotesModule extends Module {
 
     public static void stopEmotesFromWheel() {
         localPlayerState.stopEmotes();
+        sendPayload(MooEmotePayload.TYPE_STOP);
         restorePerspective();
     }
 

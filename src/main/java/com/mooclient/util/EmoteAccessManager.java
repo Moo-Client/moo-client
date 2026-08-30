@@ -133,18 +133,18 @@ public class EmoteAccessManager {
                 String targetUrl;
                 if (uuid != null && cleanName != null) {
                     String encName = URLEncoder.encode(cleanName, StandardCharsets.UTF_8);
-                    targetUrl = apiEndpoint + "?or=(uuid.eq." + uuid.toString() + ",name.ilike." + encName + ")&select=role,all_emotes,name,uuid";
+                    targetUrl = apiEndpoint + "?or=(uuid.eq." + uuid.toString() + ",name.ilike." + encName + ")&select=*";
                 } else if (uuid != null) {
-                    targetUrl = apiEndpoint + "?uuid=eq." + uuid.toString() + "&select=role,all_emotes,name,uuid";
+                    targetUrl = apiEndpoint + "?uuid=eq." + uuid.toString() + "&select=*";
                 } else {
                     String encName = URLEncoder.encode(cleanName, StandardCharsets.UTF_8);
-                    targetUrl = apiEndpoint + "?name.ilike=" + encName + "&select=role,all_emotes,name,uuid";
+                    targetUrl = apiEndpoint + "?name.ilike=" + encName + "&select=*";
                 }
 
                 URL url = URI.create(targetUrl).toURL();
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
-                conn.setRequestProperty("User-Agent", "MooClient/1.8.0");
+                conn.setRequestProperty("User-Agent", "MooClient/1.8.0_2");
                 conn.setRequestProperty("Accept", "application/json");
                 if (apiKey != null && !apiKey.isEmpty()) {
                     conn.setRequestProperty("apikey", apiKey);
@@ -170,15 +170,23 @@ public class EmoteAccessManager {
                         }
 
                         if (obj != null) {
-                            String role = obj.has("role") && !obj.get("role").isJsonNull()
-                                    ? obj.get("role").getAsString()
-                                    : "user";
+                            boolean isActive = true;
+                            if (obj.has("is_active") && !obj.get("is_active").isJsonNull()) {
+                                isActive = obj.get("is_active").getAsBoolean();
+                            }
 
+                            String role = "user";
                             boolean allEmotes = false;
-                            if (obj.has("all_emotes") && !obj.get("all_emotes").isJsonNull()) {
-                                allEmotes = obj.get("all_emotes").getAsBoolean();
-                            } else if (role.equalsIgnoreCase("developer") || role.equalsIgnoreCase("tester") || role.equalsIgnoreCase("admin") || role.equalsIgnoreCase("vip") || role.equalsIgnoreCase("dev")) {
-                                allEmotes = true;
+
+                            if (isActive) {
+                                if (obj.has("role") && !obj.get("role").isJsonNull()) {
+                                    role = obj.get("role").getAsString();
+                                }
+                                if (obj.has("all_emotes") && !obj.get("all_emotes").isJsonNull()) {
+                                    allEmotes = obj.get("all_emotes").getAsBoolean();
+                                } else if (role.equalsIgnoreCase("developer") || role.equalsIgnoreCase("tester") || role.equalsIgnoreCase("admin") || role.equalsIgnoreCase("vip") || role.equalsIgnoreCase("dev")) {
+                                    allEmotes = true;
+                                }
                             }
 
                             UserPermission permission = new UserPermission(role, allEmotes);

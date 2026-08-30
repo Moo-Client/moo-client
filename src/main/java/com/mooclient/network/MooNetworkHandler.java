@@ -189,12 +189,24 @@ public class MooNetworkHandler {
             if (jsonStr == null || jsonStr.trim().isEmpty()) return;
             JsonObject obj = JsonParser.parseString(jsonStr).getAsJsonObject();
 
-            if (obj.has("uuid") && obj.has("e")) {
-                String idStr = obj.get("uuid").getAsString();
+            if (obj.has("e")) {
                 byte emoteType = obj.get("e").getAsByte();
-                if (!idStr.isEmpty()) {
-                    UUID uuid = UUID.fromString(idStr);
-                    EmotesModule.handleIncomingPayload(uuid, emoteType);
+                UUID uuid = null;
+                String username = obj.has("u") && !obj.get("u").isJsonNull() ? obj.get("u").getAsString() : null;
+                if (obj.has("uuid") && !obj.get("uuid").isJsonNull()) {
+                    try {
+                        String idStr = obj.get("uuid").getAsString();
+                        if (!idStr.isEmpty()) uuid = UUID.fromString(idStr);
+                    } catch (Exception ignored) {}
+                }
+
+                UUID finalUuid = uuid;
+                String finalUsername = username;
+                MinecraftClient client = MinecraftClient.getInstance();
+                if (client != null) {
+                    client.execute(() -> {
+                        EmotesModule.handleIncomingPayload(finalUuid, finalUsername, emoteType);
+                    });
                 }
             }
         } catch (Exception ignored) {}
@@ -236,8 +248,7 @@ public class MooNetworkHandler {
         }
     }
 
-    public static void sendEmoteBroadcast(UUID uuid, byte emoteType) {
-        if (uuid == null) return;
+    public static void sendEmoteBroadcast(UUID uuid, String username, byte emoteType) {
         EXECUTOR.execute(() -> {
             try {
                 if (!CONNECTED.get() || out == null) {
@@ -246,7 +257,8 @@ public class MooNetworkHandler {
                 }
 
                 JsonObject payload = new JsonObject();
-                payload.addProperty("uuid", uuid.toString());
+                if (uuid != null) payload.addProperty("uuid", uuid.toString());
+                if (username != null && !username.trim().isEmpty()) payload.addProperty("u", username.trim());
                 payload.addProperty("e", emoteType);
                 payload.addProperty("t", System.currentTimeMillis());
 
