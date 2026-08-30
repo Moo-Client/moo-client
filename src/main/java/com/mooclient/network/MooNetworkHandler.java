@@ -227,26 +227,48 @@ public class MooNetworkHandler implements IMooTransport {
 
         String type = obj.has("type") ? obj.get("type").getAsString() : "";
         UUID localUuid = MooSessionValidator.getLocalPlayerUuid();
-        if (localUuid == null) return;
+        String localName = MooSessionValidator.getLocalPlayerName();
 
         if ("req".equals(type)) {
-            UUID targetUuid = obj.has("to_uuid") ? UUID.fromString(obj.get("to_uuid").getAsString()) : null;
-            if (!localUuid.equals(targetUuid)) return; // Nie do nas
+            UUID targetUuid = null;
+            if (obj.has("to_uuid") && !obj.get("to_uuid").isJsonNull()) {
+                try {
+                    String s = obj.get("to_uuid").getAsString();
+                    if (!s.isEmpty()) targetUuid = UUID.fromString(s);
+                } catch (Exception ignored) {}
+            }
+            String toName = obj.has("to_name") && !obj.get("to_name").isJsonNull() ? obj.get("to_name").getAsString() : null;
+
+            boolean isForUs = (targetUuid != null && targetUuid.equals(localUuid))
+                    || (toName != null && localName != null && toName.equalsIgnoreCase(localName));
+            if (!isForUs) return; // Nie do nas
 
             UUID interactionId = UUID.fromString(obj.get("id").getAsString());
             String emoteId = obj.get("e").getAsString();
-            UUID fromUuid = UUID.fromString(obj.get("from_uuid").getAsString());
-            String fromName = obj.has("from_name") ? obj.get("from_name").getAsString() : "Player";
+            UUID fromUuid = null;
+            if (obj.has("from_uuid") && !obj.get("from_uuid").isJsonNull()) {
+                try {
+                    String s = obj.get("from_uuid").getAsString();
+                    if (!s.isEmpty()) fromUuid = UUID.fromString(s);
+                } catch (Exception ignored) {}
+            }
+            String fromName = obj.has("from_name") && !obj.get("from_name").isJsonNull() ? obj.get("from_name").getAsString() : "Player";
+
+            // Rejestracja obecności nadawcy
+            if (fromName != null && fromUuid != null) {
+                MooUserManager.registerUser(fromName, fromUuid);
+            }
 
             // Rejestracja pingu
-            if (obj.has("t")) {
+            if (obj.has("t") && fromUuid != null) {
                 long sentTime = obj.get("t").getAsLong();
                 long rtt = Math.max(10L, System.currentTimeMillis() - sentTime);
                 DynamicLatencySynchronizer.recordPingRtt(fromUuid, rtt);
             }
 
+            UUID finalFromUuid = fromUuid;
             client.execute(() -> {
-                InteractionEngine.getInstance().onIncomingRequest(interactionId, emoteId, fromUuid, fromName);
+                InteractionEngine.getInstance().onIncomingRequest(interactionId, emoteId, finalFromUuid, fromName);
             });
         } else if ("resp".equals(type)) {
             UUID interactionId = UUID.fromString(obj.get("id").getAsString());

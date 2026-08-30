@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.9.1_3';
+const VERSION = '1.9.2';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,7 +63,9 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-✓ **Drobne poprawki wizualne**`;
+✓ **Poprawki emotek wieloosobowych** – zwiększono zasięg, poprawiono celowanie w graczy i naprawiono błąd z brakiem uprawnień
+✓ **Zapisywanie ustawień** – klient trwale pamięta teraz wszystkie Twoje konfiguracje modów, pozycje na ekranie oraz wybrany język po ponownym uruchomieniu gry
+✓ **Poprawka menu sterowania** – dodano czytelne nazwy dla kategorii klienta i klawisza menu w ustawieniach klawiatury`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);

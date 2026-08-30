@@ -27,7 +27,7 @@ public class MooClient implements ClientModInitializer {
 
     public static final String MOD_ID = "mooclient";
     public static final String MOD_NAME = "Moo Client";
-    public static final String VERSION = "1.9.1_3";
+    public static final String VERSION = "1.9.2";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
 
     private static MooClient instance;
@@ -80,6 +80,12 @@ public class MooClient implements ClientModInitializer {
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             PermissionManager.fetchLocalPlayerPermissions();
             com.mooclient.emote.EmoteRemoteLoader.fetchRemoteEmotesAsync();
+        });
+
+        // Register client stopping lifecycle hook to save configuration on exit
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
+            MooConfig.save();
+            com.mooclient.util.EmoteWheelConfig.save();
         });
 
         // 8. Register Keybindings

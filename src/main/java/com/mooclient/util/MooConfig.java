@@ -30,7 +30,12 @@ public class MooConfig {
      */
     public static void save() {
         try {
+            if (CONFIG_PATH.getParent() != null && !Files.exists(CONFIG_PATH.getParent())) {
+                Files.createDirectories(CONFIG_PATH.getParent());
+            }
+
             JsonObject root = new JsonObject();
+            root.addProperty("language", MooLanguage.current);
 
             // Gamma / Fullbright Module
             JsonObject gamma = new JsonObject();
@@ -264,13 +269,21 @@ public class MooConfig {
             String json = Files.readString(CONFIG_PATH);
             JsonObject root = JsonParser.parseString(json).getAsJsonObject();
 
+            // Language
+            if (root.has("language")) {
+                String lang = root.get("language").getAsString();
+                if (MooLanguage.EN.equalsIgnoreCase(lang) || MooLanguage.PL.equalsIgnoreCase(lang)) {
+                    MooLanguage.current = lang.toLowerCase();
+                }
+            }
+
             // Gamma Module
             if (root.has("gamma")) {
                 JsonObject gamma = root.getAsJsonObject("gamma");
                 if (gamma.has("enabled")) {
                     boolean state = gamma.get("enabled").getAsBoolean();
                     FullbrightModule.setFullbrightActive(state);
-                    ModuleManager.getInstance().getModule("Gamma").ifPresent(m -> m.setEnabled(state));
+                    ModuleManager.getInstance().getModule("Gamma").ifPresent(m -> m.setEnabled(state, false));
                 }
             }
 
@@ -280,7 +293,7 @@ public class MooConfig {
                 if (fps.has("enabled")) {
                     boolean state = fps.get("enabled").getAsBoolean();
                     FpsModule.setFpsEnabled(state);
-                    ModuleManager.getInstance().getModule("FPS").ifPresent(m -> m.setEnabled(state));
+                    ModuleManager.getInstance().getModule("FPS").ifPresent(m -> m.setEnabled(state, false));
                 }
                 if (fps.has("style")) {
                     try {
@@ -811,6 +824,12 @@ public class MooConfig {
                     com.mooclient.module.modules.EmotesModule.setDeclineKeybind(
                             emotes.get("declineKeyCode").getAsInt(),
                             emotes.get("declineKeyName").getAsString(), declineIsMouse);
+                }
+                if (emotes.has("mode")) {
+                    try {
+                        com.mooclient.module.modules.EmotesModule.setMode(
+                                com.mooclient.module.modules.EmotesModule.ActivationMode.valueOf(emotes.get("mode").getAsString()));
+                    } catch (Exception ignored) {}
                 }
                 if (emotes.has("restorePerspective")) {
                     com.mooclient.module.modules.EmotesModule.setRestorePerspective(emotes.get("restorePerspective").getAsBoolean());

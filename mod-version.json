@@ -1,7 +1,7 @@
 {
-  "version": "1.9.1_3",
+  "version": "1.9.2",
   "minecraft": "1.21.4",
-  "name": "Moo Client 1.9.1_3",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.9.1_3/moo-client-1.9.1_3.jar",
-  "changelog": "🚀 Moo Client v1.9.1_3:\n✓ Drobne poprawki wizualne"
+  "name": "Moo Client 1.9.2",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.9.2/moo-client-1.9.2.jar",
+  "changelog": "🚀 Moo Client v1.9.2:\n✓ Poprawki emotek wieloosobowych – zwiększono zasięg, poprawiono celowanie w graczy i naprawiono błąd z brakiem uprawnień\n✓ Zapisywanie ustawień – klient trwale pamięta teraz wszystkie Twoje konfiguracje modów, pozycje na ekranie oraz wybrany język po ponownym uruchomieniu gry\n✓ Poprawka menu sterowania – dodano czytelne nazwy dla kategorii klienta i klawisza menu w ustawieniach klawiatury"
 }

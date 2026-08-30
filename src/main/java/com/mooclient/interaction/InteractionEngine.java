@@ -11,6 +11,7 @@ import com.mooclient.permissions.PermissionManager;
 import com.mooclient.security.MooSessionValidator;
 import com.mooclient.security.RateLimiter;
 import com.mooclient.util.MooLanguage;
+import com.mooclient.util.MooUserManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.entity.player.PlayerEntity;
@@ -79,11 +80,8 @@ public class InteractionEngine {
         String targetName = targetPlayer.getName().getString();
         UUID targetUuid = targetPlayer.getUuid();
 
-        // 3. Weryfikacja czy cel jest graczem Moo Client
-        if (!targetRes.isMooUser) {
-            sendClientMessage("§c" + targetName + " " + MooLanguage.get("interaction_not_moo_user"));
-            return;
-        }
+        // 3. Rejestracja celu w menedżerze graczy
+        MooUserManager.registerUser(targetName, targetUuid);
 
         // 4. Rate Limiting — ochrona przed spamem zaproszeń do tego samego gracza
         if (!RateLimiter.canSendInvitation(targetUuid)) {

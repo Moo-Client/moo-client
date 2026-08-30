@@ -38,20 +38,30 @@ public abstract class Module {
      * Toggles the module on/off.
      */
     public void toggle() {
-        this.enabled = !this.enabled;
-        if (this.enabled) {
-            onEnable();
-        } else {
-            onDisable();
-        }
+        setEnabled(!this.enabled, true);
     }
 
     /**
-     * Sets the enabled state directly.
+     * Sets the enabled state directly and saves config.
      */
     public void setEnabled(boolean enabled) {
+        setEnabled(enabled, true);
+    }
+
+    /**
+     * Sets the enabled state with optional config saving.
+     */
+    public void setEnabled(boolean enabled, boolean saveConfig) {
         if (this.enabled != enabled) {
-            toggle();
+            this.enabled = enabled;
+            if (this.enabled) {
+                onEnable();
+            } else {
+                onDisable();
+            }
+            if (saveConfig) {
+                com.mooclient.util.MooConfig.save();
+            }
         }
     }
 
@@ -75,10 +85,12 @@ public abstract class Module {
      * Module categories for organizing in the GUI menu.
      */
     public enum Category {
-        RENDER("Render"),
         HUD("HUD"),
-        PVP("PvP"),
-        MISC("Misc");
+        RENDER("Render"),
+        PLAYER("Player"),
+        UTILITY("Utility"),
+        MISC("Misc"),
+        ALL("All");
 
         private final String displayName;
 

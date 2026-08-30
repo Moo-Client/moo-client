@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Zaufany menedżer uprawnień do emotek (PermissionManager).
  * Integruje się z Supabase REST API dla tabel:
- * 1. public.users (uuid, nickname, role, all_emotes)
+ * 1. public.users (uuid, name, role, all_emotes, is_active)
  * 2. public.user_emotes (id, user_uuid, emote_id, purchased_at)
  */
 public class PermissionManager {
@@ -62,10 +62,6 @@ public class PermissionManager {
             return role;
         }
 
-        public boolean hasAllEmotes() {
-            return allEmotes;
-        }
-
         public boolean isStaffRole() {
             return "developer".equalsIgnoreCase(role)
                     || "dev".equalsIgnoreCase(role)
@@ -81,10 +77,14 @@ public class PermissionManager {
                     || "moderator".equalsIgnoreCase(role);
         }
 
+        public boolean hasAllEmotes() {
+            return allEmotes || isStaffRole();
+        }
+
         public boolean hasEmote(String emoteId) {
-            if (hasAllEmotes()) return true;
+            if (hasAllEmotes() || isStaffRole()) return true;
             if (emoteId == null) return false;
-            return unlockedEmoteIds.contains(emoteId.toLowerCase());
+            return unlockedEmoteIds.contains(emoteId.toLowerCase().trim());
         }
 
         public boolean isExpired(long ttlMs) {
@@ -97,7 +97,7 @@ public class PermissionManager {
     private static final Map<UUID, UserPermission> PERMISSION_CACHE = new ConcurrentHashMap<>();
     private static final Map<String, UserPermission> NAME_PERMISSION_CACHE = new ConcurrentHashMap<>();
     private static final Set<String> PENDING_REQUESTS = ConcurrentHashMap.newKeySet();
-    private static final long CACHE_TTL_MS = 5 * 60 * 1000L;
+    private static final long CACHE_TTL_MS = 5 * 60 * 1000L; // 5 minut TTL
 
     public static boolean hasAccess(UUID playerUuid, String emoteId) {
         if (emoteId == null) return false;
@@ -110,9 +110,11 @@ public class PermissionManager {
 
         UserPermission perm = null;
         if (playerUuid != null) perm = PERMISSION_CACHE.get(playerUuid);
-        if (perm == null && nickname != null) perm = NAME_PERMISSION_CACHE.get(nickname.toLowerCase());
+        if (perm == null && nickname != null && !nickname.trim().isEmpty()) {
+            perm = NAME_PERMISSION_CACHE.get(nickname.toLowerCase().trim());
+        }
 
-        if (perm != null && (perm.hasAllEmotes() || perm.hasEmote(emoteId))) {
+        if (perm != null && (perm.hasAllEmotes() || perm.isStaffRole() || perm.hasEmote(emoteId))) {
             return true;
         }
 
@@ -120,7 +122,7 @@ public class PermissionManager {
             fetchPermissionsAsync(playerUuid, nickname);
         }
 
-        return perm != null && (perm.hasAllEmotes() || perm.hasEmote(emoteId));
+        return perm != null && (perm.hasAllEmotes() || perm.isStaffRole() || perm.hasEmote(emoteId));
     }
 
     public static boolean hasAccessLocal(String emoteId) {
@@ -135,24 +137,34 @@ public class PermissionManager {
     }
 
     public static CompletableFuture<UserPermission> fetchPermissionsAsync(UUID playerUuid, String nickname) {
-        String reqKey = playerUuid != null ? playerUuid.toString() : (nickname != null ? nickname.toLowerCase() : null);
-        if (reqKey == null) {
+        String cleanNick = (nickname != null && !nickname.trim().isEmpty()) ? nickname.trim().toLowerCase() : null;
+
+        // 1. Sprawdź najpierw pamięć podręczną (Cache Hit)
+        UserPermission cached = playerUuid != null ? PERMISSION_CACHE.get(playerUuid) : null;
+        if (cached == null && cleanNick != null) {
+            cached = NAME_PERMISSION_CACHE.get(cleanNick);
+        }
+        if (cached != null && !cached.isExpired(CACHE_TTL_MS)) {
+            return CompletableFuture.completedFuture(cached);
+        }
+
+        String reqKey = (playerUuid != null ? playerUuid.toString() : "") + ":" + (cleanNick != null ? cleanNick : "");
+        if (reqKey.equals(":")) {
             return CompletableFuture.completedFuture(UserPermission.DEFAULT_USER);
         }
 
         if (!PENDING_REQUESTS.add(reqKey)) {
-            UserPermission cached = playerUuid != null ? PERMISSION_CACHE.get(playerUuid) : NAME_PERMISSION_CACHE.get(reqKey);
             return CompletableFuture.completedFuture(cached != null ? cached : UserPermission.DEFAULT_USER);
         }
 
         return CompletableFuture.supplyAsync(() -> {
             try {
-                UserPermission fetched = querySupabasePermissions(playerUuid, nickname);
+                UserPermission fetched = querySupabasePermissions(playerUuid, cleanNick);
                 if (playerUuid != null) {
                     PERMISSION_CACHE.put(playerUuid, fetched);
                 }
-                if (nickname != null && !nickname.isEmpty()) {
-                    NAME_PERMISSION_CACHE.put(nickname.toLowerCase(), fetched);
+                if (cleanNick != null && !cleanNick.isEmpty()) {
+                    NAME_PERMISSION_CACHE.put(cleanNick, fetched);
                 }
                 return fetched;
             } catch (Exception e) {
@@ -200,12 +212,22 @@ public class PermissionManager {
             }
 
             JsonObject userObj = arr.get(0).getAsJsonObject();
+
+            // Weryfikacja czy konto gracza jest aktywne w Supabase (is_active)
+            boolean isActive = true;
+            if (userObj.has("is_active") && !userObj.get("is_active").isJsonNull()) {
+                isActive = userObj.get("is_active").getAsBoolean();
+            }
+            if (!isActive) {
+                return UserPermission.DEFAULT_USER;
+            }
+
             String role = userObj.has("role") && !userObj.get("role").isJsonNull() ? userObj.get("role").getAsString() : "user";
             boolean allEmotes = userObj.has("all_emotes") && !userObj.get("all_emotes").isJsonNull() && userObj.get("all_emotes").getAsBoolean();
 
             // Jeśli gracz ma all_emotes lub rolę staff/twórcy/testera/developera, odblokuj wszystkie emotki
             UserPermission tempPerm = new UserPermission(role, allEmotes, Collections.emptyList());
-            if (tempPerm.hasAllEmotes()) {
+            if (tempPerm.hasAllEmotes() || tempPerm.isStaffRole()) {
                 return new UserPermission(role, true, Collections.emptyList());
             }
 
@@ -241,7 +263,7 @@ public class PermissionManager {
                         if (item.isJsonObject()) {
                             JsonObject obj = item.getAsJsonObject();
                             if (obj.has("emote_id") && !obj.get("emote_id").isJsonNull()) {
-                                unlockedEmotes.add(obj.get("emote_id").getAsString().toLowerCase());
+                                unlockedEmotes.add(obj.get("emote_id").getAsString().toLowerCase().trim());
                             }
                         }
                     }
@@ -261,7 +283,21 @@ public class PermissionManager {
             return CompletableFuture.completedFuture(true);
         }
 
-        return fetchPermissionsAsync(initiatorUuid, null).thenApply(perm -> perm != null && perm.hasEmote(emoteId));
+        String localName = MooSessionValidator.getLocalPlayerName();
+
+        // 1. Sprawdź najpierw pamięć podręczną lokalnego gracza
+        UserPermission cached = initiatorUuid != null ? PERMISSION_CACHE.get(initiatorUuid) : null;
+        if (cached == null && localName != null) {
+            cached = NAME_PERMISSION_CACHE.get(localName.toLowerCase().trim());
+        }
+        if (cached != null && (cached.hasAllEmotes() || cached.isStaffRole() || cached.hasEmote(emoteId))) {
+            return CompletableFuture.completedFuture(true);
+        }
+
+        // 2. Jeśli brak w cache — pobierz asynchronicznie sprawdzając zarówno UUID jak i Nick gracza
+        return fetchPermissionsAsync(initiatorUuid, localName).thenApply(perm ->
+                perm != null && (perm.hasAllEmotes() || perm.isStaffRole() || perm.hasEmote(emoteId))
+        );
     }
 
     public static void clearCache() {
@@ -286,17 +322,8 @@ public class PermissionManager {
                 try (InputStream is = conn.getInputStream()) {
                     return new String(is.readAllBytes(), StandardCharsets.UTF_8);
                 }
-            } else {
-                try (InputStream es = conn.getErrorStream()) {
-                    if (es != null) {
-                        String err = new String(es.readAllBytes(), StandardCharsets.UTF_8);
-                        System.err.println("[PermissionManager] Supabase HTTP " + code + " for " + urlString + ": " + err);
-                    }
-                } catch (Exception ignored) {}
             }
-        } catch (Exception e) {
-            System.err.println("[PermissionManager] Error fetching " + urlString + ": " + e.getMessage());
-        }
+        } catch (Exception ignored) {}
         return null;
     }
 }

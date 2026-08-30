@@ -2137,12 +2137,14 @@ public class MooClientScreen extends Screen {
             if (mouseX >= langX && mouseX <= langX + pillW && mouseY >= langY && mouseY <= langY + pillH) {
                 playClickSound();
                 MooLanguage.current = MooLanguage.PL;
+                com.mooclient.util.MooConfig.save();
                 return true;
             }
             if (mouseX >= langX + pillW + langGap && mouseX <= langX + (pillW * 2) + langGap && mouseY >= langY
                     && mouseY <= langY + pillH) {
                 playClickSound();
                 MooLanguage.current = MooLanguage.EN;
+                com.mooclient.util.MooConfig.save();
                 return true;
             }
 
@@ -2396,6 +2398,7 @@ public class MooClientScreen extends Screen {
                     if (styleClick >= 0) {
                         playClickSound();
                         FpsModule.setStyle(FpsModule.FpsStyle.values()[styleClick]);
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2404,6 +2407,7 @@ public class MooClientScreen extends Screen {
                             && mouseY <= rowY + 26) {
                         playClickSound();
                         FpsModule.toggleShowBackground();
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2412,6 +2416,7 @@ public class MooClientScreen extends Screen {
                             && mouseY <= rowY + 26) {
                         playClickSound();
                         FpsModule.toggleTextShadow();
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2420,6 +2425,7 @@ public class MooClientScreen extends Screen {
                             && mouseY <= rowY + 26) {
                         playClickSound();
                         FpsModule.toggleShowPrefix();
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
                 } else if (modName.equalsIgnoreCase("Ping")) {
@@ -2428,6 +2434,7 @@ public class MooClientScreen extends Screen {
                         playClickSound();
                         com.mooclient.module.modules.PingModule
                                 .setStyle(com.mooclient.module.modules.PingModule.PingStyle.values()[styleClick]);
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2436,6 +2443,7 @@ public class MooClientScreen extends Screen {
                             && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.PingModule.toggleShowBackground();
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2444,6 +2452,7 @@ public class MooClientScreen extends Screen {
                             && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.PingModule.toggleTextShadow();
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2452,6 +2461,7 @@ public class MooClientScreen extends Screen {
                             && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.PingModule.toggleShowPrefix();
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
                 } else if (modName.equalsIgnoreCase("CPS")) {
@@ -2461,6 +2471,7 @@ public class MooClientScreen extends Screen {
                         com.mooclient.module.modules.CpsModule
                                 .setDisplayMode(
                                         com.mooclient.module.modules.CpsModule.CpsDisplayMode.values()[modeClick]);
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2470,6 +2481,7 @@ public class MooClientScreen extends Screen {
                         playClickSound();
                         com.mooclient.module.modules.CpsModule
                                 .setStyle(com.mooclient.module.modules.CpsModule.CpsStyle.values()[styleClick]);
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2478,6 +2490,7 @@ public class MooClientScreen extends Screen {
                             && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.CpsModule.toggleShowBackground();
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2486,6 +2499,7 @@ public class MooClientScreen extends Screen {
                             && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.CpsModule.toggleTextShadow();
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2494,6 +2508,7 @@ public class MooClientScreen extends Screen {
                             && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.CpsModule.toggleShowPrefix();
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
                 } else if (modName.equalsIgnoreCase("Sprint")) {
@@ -2516,6 +2531,7 @@ public class MooClientScreen extends Screen {
                         playClickSound();
                         this.listeningForKeybind = false;
                         ToggleSprintModule.setStyle(ToggleSprintModule.SprintStyle.values()[styleClick]);
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2526,6 +2542,7 @@ public class MooClientScreen extends Screen {
                         playClickSound();
                         this.listeningForKeybind = false;
                         ToggleSprintModule.toggleShowBackground();
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2536,6 +2553,7 @@ public class MooClientScreen extends Screen {
                         playClickSound();
                         this.listeningForKeybind = false;
                         ToggleSprintModule.toggleTextShadow();
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
                 } else if (modName.equalsIgnoreCase("Freelook")) {
@@ -2558,6 +2576,7 @@ public class MooClientScreen extends Screen {
                         playClickSound();
                         this.listeningForKeybind = false;
                         FreelookModule.setMode(FreelookModule.ActivationMode.values()[modeClick]);
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2568,6 +2587,7 @@ public class MooClientScreen extends Screen {
                         playClickSound();
                         this.listeningForKeybind = false;
                         FreelookModule.toggleInvertPitch();
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
                 } else if (modName.equalsIgnoreCase("Potion Effects")) {
@@ -2576,6 +2596,7 @@ public class MooClientScreen extends Screen {
                     if (styleClick >= 0) {
                         playClickSound();
                         PotionEffectsModule.setStyle(PotionEffectsModule.PotionStyle.values()[styleClick]);
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2585,6 +2606,7 @@ public class MooClientScreen extends Screen {
                             && mouseY <= rowY + 26) {
                         playClickSound();
                         PotionEffectsModule.toggleShowBackground();
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2594,6 +2616,7 @@ public class MooClientScreen extends Screen {
                             && mouseY <= rowY + 26) {
                         playClickSound();
                         PotionEffectsModule.toggleTextShadow();
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
                 } else if (modName.equalsIgnoreCase("Nametags")) {
@@ -2667,6 +2690,7 @@ public class MooClientScreen extends Screen {
                         this.listeningForKeybind = false;
                         com.mooclient.module.modules.ZoomModule
                                 .setFactor(com.mooclient.module.modules.ZoomModule.ZoomFactor.values()[factorClick]);
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2678,6 +2702,7 @@ public class MooClientScreen extends Screen {
                         this.listeningForKeybind = false;
                         com.mooclient.module.modules.ZoomModule
                                 .setMode(com.mooclient.module.modules.ZoomModule.ActivationMode.values()[modeClick]);
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
 
@@ -2688,6 +2713,7 @@ public class MooClientScreen extends Screen {
                         playClickSound();
                         this.listeningForKeybind = false;
                         com.mooclient.module.modules.ZoomModule.toggleSmoothZoom();
+                        com.mooclient.util.MooConfig.save();
                         return true;
                     }
                 } else if (modName.equalsIgnoreCase("Chat")) {
