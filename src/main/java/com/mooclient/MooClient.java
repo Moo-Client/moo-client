@@ -1,9 +1,15 @@
 package com.mooclient;
 
 import com.mooclient.discord.DiscordRPC;
+import com.mooclient.emote.EmoteEngine;
+import com.mooclient.gui.InvitationUIManager;
 import com.mooclient.gui.MooClientScreen;
+import com.mooclient.interaction.Interaction;
+import com.mooclient.interaction.InteractionEngine;
+import com.mooclient.interaction.InteractionInputBlocker;
 import com.mooclient.module.ModuleManager;
 import com.mooclient.module.modules.ToggleSprintModule;
+import com.mooclient.permissions.PermissionManager;
 import com.mooclient.util.MooConfig;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -21,7 +27,7 @@ public class MooClient implements ClientModInitializer {
 
     public static final String MOD_ID = "mooclient";
     public static final String MOD_NAME = "Moo Client";
-    public static final String VERSION = "1.8.0_2";
+    public static final String VERSION = "1.9.1";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
 
     private static MooClient instance;
@@ -30,16 +36,17 @@ public class MooClient implements ClientModInitializer {
         return instance;
     }
 
-    /** Keybinding: Right Shift opens the client menu */
+    /** Keybindings */
     private static KeyBinding menuKeyBinding;
+
     private static boolean sprintKeyWasDown = false;
     private static boolean freelookKeyWasDown = false;
     private static boolean zoomKeyWasDown = false;
     private static boolean waypointKeyWasDown = false;
     private static boolean emoteKeyWasDown = false;
-    private static boolean frontflipKeyWasDown = false;
-    private static boolean backflipKeyWasDown = false;
     private static boolean wheelKeyWasDown = false;
+    private static boolean acceptKeyWasDown = false;
+    private static boolean declineKeyWasDown = false;
     private static int tickCounter = 0;
 
     @Override
@@ -49,40 +56,33 @@ public class MooClient implements ClientModInitializer {
         LOGGER.info("  {} v{} — Initializing...", MOD_NAME, VERSION);
         LOGGER.info("===========================================");
 
-        // Initialize the module system
+        // 1. Initialize the module system
         ModuleManager.getInstance().init();
         LOGGER.info("Loaded {} modules.", ModuleManager.getInstance().getModules().size());
 
-        // Load saved config from disk
+        // 2. Initialize Emote Engine & Registry
+        EmoteEngine.init();
+
+        // 3. Load saved config from disk
         MooConfig.load();
 
-        // Initialize Moo Client Network & Discovery Handler
+        // 4. Initialize Moo Client Network & Discovery Handler
         com.mooclient.network.MooNetworkHandler.init();
 
-        // Register Custom Network Payloads for Emotes
-        try {
-            net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.playS2C().register(com.mooclient.network.MooEmotePayload.ID, com.mooclient.network.MooEmotePayload.CODEC);
-            net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.playC2S().register(com.mooclient.network.MooEmotePayload.ID, com.mooclient.network.MooEmotePayload.CODEC);
-
-            net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(com.mooclient.network.MooEmotePayload.ID, (payload, context) -> {
-                context.client().execute(() -> {
-                    com.mooclient.module.modules.EmotesModule.handleIncomingPayload(payload.playerUuid(), payload.emoteType());
-                });
-            });
-        } catch (Throwable t) {
-            LOGGER.warn("Fabric custom payload registration: {}", t.getMessage());
-        }
-
-        // Initialize In-World Waypoint Renderer
+        // 5. Initialize In-World Waypoint Renderer
         com.mooclient.waypoint.WaypointRenderer.init();
 
-        // Initialize Discord Rich Presence
+        // 6. Initialize Discord Rich Presence
         DiscordRPC.getInstance().init();
 
-        // Fetch User Permissions and Roles asynchronously from API
-        com.mooclient.util.EmoteAccessManager.fetchLocalPlayerPermissions();
+        // 7. Fetch User Permissions and Roles asynchronously from Supabase
+        PermissionManager.fetchLocalPlayerPermissions();
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            PermissionManager.fetchLocalPlayerPermissions();
+            com.mooclient.emote.EmoteRemoteLoader.fetchRemoteEmotesAsync();
+        });
 
-        // Register the Right Shift keybinding for the client menu
+        // 8. Register Keybindings
         menuKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.mooclient.menu",
                 InputUtil.Type.KEYSYM,
@@ -90,20 +90,45 @@ public class MooClient implements ClientModInitializer {
                 "category.mooclient.general"
         ));
 
-        // Listen for ticks and input
+        // 9. Listen for ticks and input
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            // Check Accept / Decline keybinds for active invitations only when invitation is present
+            if (client.player != null && client.currentScreen == null && InvitationUIManager.getInstance().hasInvitation()) {
+                long window = client.getWindow().getHandle();
+                int acceptKey = com.mooclient.module.modules.EmotesModule.getAcceptKeyCode();
+                boolean acceptMouse = com.mooclient.module.modules.EmotesModule.isAcceptMouseButton();
+                boolean isAcceptDown = isInputPressed(window, acceptKey, acceptMouse);
+                if (isAcceptDown && !acceptKeyWasDown) {
+                    Interaction inv = InvitationUIManager.getInstance().getCurrentInvitation();
+                    if (inv != null) {
+                        InteractionEngine.getInstance().acceptInvitation(inv.getInteractionId());
+                    }
+                }
+                acceptKeyWasDown = isAcceptDown;
+
+                int declineKey = com.mooclient.module.modules.EmotesModule.getDeclineKeyCode();
+                boolean declineMouse = com.mooclient.module.modules.EmotesModule.isDeclineMouseButton();
+                boolean isDeclineDown = isInputPressed(window, declineKey, declineMouse);
+                if (isDeclineDown && !declineKeyWasDown) {
+                    Interaction inv = InvitationUIManager.getInstance().getCurrentInvitation();
+                    if (inv != null) {
+                        InteractionEngine.getInstance().declineInvitation(inv.getInteractionId());
+                    }
+                }
+                declineKeyWasDown = isDeclineDown;
+            } else {
+                acceptKeyWasDown = false;
+                declineKeyWasDown = false;
+            }
+
             // Menu key press - only open when no screen is open
             if (client.currentScreen == null) {
                 while (menuKeyBinding.wasPressed()) {
                     client.setScreen(new MooClientScreen());
                 }
             } else {
-                // Drain keypresses while in screens to prevent unwanted triggers
-                while (menuKeyBinding.wasPressed()) {
-                    // Do nothing
-                }
+                while (menuKeyBinding.wasPressed()) {}
 
-                // Ensure freelook and zoom are safely disengaged when inside any menu/GUI
                 if (com.mooclient.module.modules.FreelookModule.isActive()) {
                     com.mooclient.module.modules.FreelookModule.stop();
                 }
@@ -115,15 +140,13 @@ public class MooClient implements ClientModInitializer {
                 sprintKeyWasDown = false;
                 waypointKeyWasDown = false;
                 emoteKeyWasDown = false;
-                frontflipKeyWasDown = false;
-                backflipKeyWasDown = false;
                 wheelKeyWasDown = false;
                 if (com.mooclient.module.modules.EmotesModule.getMode() == com.mooclient.module.modules.EmotesModule.ActivationMode.HOLD) {
                     com.mooclient.module.modules.EmotesModule.setHandsUp(false);
                 }
             }
 
-            // In-game Toggle Sprint key detection
+            // In-game Input Handling
             if (client.player != null && client.currentScreen == null) {
                 long window = client.getWindow().getHandle();
 
@@ -149,7 +172,7 @@ public class MooClient implements ClientModInitializer {
                         } else {
                             com.mooclient.module.modules.FreelookModule.stop();
                         }
-                    } else { // TOGGLE mode
+                    } else {
                         if (isKeyDown && !freelookKeyWasDown) {
                             com.mooclient.module.modules.FreelookModule.toggleFreelookActive();
                         }
@@ -167,7 +190,7 @@ public class MooClient implements ClientModInitializer {
                         } else {
                             com.mooclient.module.modules.ZoomModule.stop();
                         }
-                    } else { // TOGGLE mode
+                    } else {
                         if (isKeyDown && !zoomKeyWasDown) {
                             com.mooclient.module.modules.ZoomModule.toggleZoomActive();
                         }
@@ -190,8 +213,10 @@ public class MooClient implements ClientModInitializer {
                 if (handsUpKey >= 0 && com.mooclient.module.modules.EmotesModule.isEmotesEnabled()) {
                     boolean isKeyDown = isInputPressed(window, handsUpKey, com.mooclient.module.modules.EmotesModule.isMouseButton());
                     if (com.mooclient.module.modules.EmotesModule.getMode() == com.mooclient.module.modules.EmotesModule.ActivationMode.HOLD) {
-                        com.mooclient.module.modules.EmotesModule.setHandsUp(isKeyDown);
-                    } else { // TOGGLE mode
+                        if (isKeyDown != emoteKeyWasDown) {
+                            com.mooclient.module.modules.EmotesModule.setHandsUp(isKeyDown);
+                        }
+                    } else {
                         if (isKeyDown && !emoteKeyWasDown) {
                             com.mooclient.module.modules.EmotesModule.toggleHandsUp();
                         }
@@ -216,11 +241,16 @@ public class MooClient implements ClientModInitializer {
 
                 // In-game Macro execution detection
                 com.mooclient.module.modules.MacroModule.onTick(client);
+
+                // Physical interruption check (damage, knockback, death)
+                InteractionInputBlocker.checkPlayerDamageAndInterruption(client.player);
             }
 
-            // Always tick Zoom and Emotes animation
+            // Always tick Zoom, Emote Engine & Interaction Engine
             com.mooclient.module.modules.ZoomModule.onTick();
             com.mooclient.module.modules.EmotesModule.onTick();
+            EmoteEngine.getInstance().onTick(client);
+            InteractionEngine.getInstance().onTick(client);
 
             // Update Discord RPC State every ~2 seconds (40 ticks)
             tickCounter++;

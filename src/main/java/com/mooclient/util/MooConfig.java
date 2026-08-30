@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mooclient.MooClient;
+import com.mooclient.gui.InvitationUIManager;
 import com.mooclient.module.ModuleManager;
 import com.mooclient.module.modules.FpsModule;
 import com.mooclient.module.modules.FullbrightModule;
@@ -16,7 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * Handles persistent config save/load for Moo Client module settings.
+ * Handles persistent config save/load for Moo Client module settings and global options.
  * Config file: .minecraft/config/mooclient.json
  */
 public class MooConfig {
@@ -217,7 +218,14 @@ public class MooConfig {
             emotes.addProperty("wheelKeyCode", com.mooclient.module.modules.EmotesModule.getWheelKeyCode());
             emotes.addProperty("wheelKeyName", com.mooclient.module.modules.EmotesModule.getWheelKeyName());
             emotes.addProperty("wheelIsMouseButton", com.mooclient.module.modules.EmotesModule.isWheelMouseButton());
+            emotes.addProperty("acceptKeyCode", com.mooclient.module.modules.EmotesModule.getAcceptKeyCode());
+            emotes.addProperty("acceptKeyName", com.mooclient.module.modules.EmotesModule.getAcceptKeyName());
+            emotes.addProperty("acceptIsMouseButton", com.mooclient.module.modules.EmotesModule.isAcceptMouseButton());
+            emotes.addProperty("declineKeyCode", com.mooclient.module.modules.EmotesModule.getDeclineKeyCode());
+            emotes.addProperty("declineKeyName", com.mooclient.module.modules.EmotesModule.getDeclineKeyName());
+            emotes.addProperty("declineIsMouseButton", com.mooclient.module.modules.EmotesModule.isDeclineMouseButton());
             emotes.addProperty("mode", com.mooclient.module.modules.EmotesModule.getMode().name());
+            emotes.addProperty("restorePerspective", com.mooclient.module.modules.EmotesModule.isRestorePerspective());
             root.add("emotes", emotes);
 
             // Global Client Settings
@@ -226,12 +234,14 @@ public class MooConfig {
             settings.addProperty("customRed", MooClientSettings.getCustomRed());
             settings.addProperty("customGreen", MooClientSettings.getCustomGreen());
             settings.addProperty("customBlue", MooClientSettings.getCustomBlue());
+
             settings.addProperty("hudSnapping", MooClientSettings.isHudSnapping());
             settings.addProperty("hudScale", MooClientSettings.getHudScale());
             settings.addProperty("globalTextShadow", MooClientSettings.isGlobalTextShadow());
             settings.addProperty("menuBackgroundDim", MooClientSettings.getMenuBackgroundDim());
             settings.addProperty("guiAnimations", MooClientSettings.isGuiAnimations());
             settings.addProperty("activeProfile", MooClientSettings.getActiveProfile().name());
+            settings.addProperty("invitationUiVariant", MooClientSettings.getInvitationUiVariant().name());
             root.add("settings", settings);
 
             Files.writeString(CONFIG_PATH, GSON.toJson(root));
@@ -403,7 +413,7 @@ public class MooConfig {
                 }
                 if (potions.has("showBackground")) {
                     com.mooclient.module.modules.PotionEffectsModule
-                            .setShowBackground(potions.get("showBackground").getAsBoolean());
+                                .setShowBackground(potions.get("showBackground").getAsBoolean());
                 }
                 if (potions.has("textShadow")) {
                     com.mooclient.module.modules.PotionEffectsModule
@@ -790,12 +800,20 @@ public class MooConfig {
                             emotes.get("wheelKeyCode").getAsInt(),
                             emotes.get("wheelKeyName").getAsString(), wheelIsMouse);
                 }
-                if (emotes.has("mode")) {
-                    try {
-                        com.mooclient.module.modules.EmotesModule.setMode(
-                                com.mooclient.module.modules.EmotesModule.ActivationMode.valueOf(emotes.get("mode").getAsString()));
-                    } catch (Exception ignored) {
-                    }
+                if (emotes.has("acceptKeyCode") && emotes.has("acceptKeyName")) {
+                    boolean acceptIsMouse = emotes.has("acceptIsMouseButton") && emotes.get("acceptIsMouseButton").getAsBoolean();
+                    com.mooclient.module.modules.EmotesModule.setAcceptKeybind(
+                            emotes.get("acceptKeyCode").getAsInt(),
+                            emotes.get("acceptKeyName").getAsString(), acceptIsMouse);
+                }
+                if (emotes.has("declineKeyCode") && emotes.has("declineKeyName")) {
+                    boolean declineIsMouse = emotes.has("declineIsMouseButton") && emotes.get("declineIsMouseButton").getAsBoolean();
+                    com.mooclient.module.modules.EmotesModule.setDeclineKeybind(
+                            emotes.get("declineKeyCode").getAsInt(),
+                            emotes.get("declineKeyName").getAsString(), declineIsMouse);
+                }
+                if (emotes.has("restorePerspective")) {
+                    com.mooclient.module.modules.EmotesModule.setRestorePerspective(emotes.get("restorePerspective").getAsBoolean());
                 }
             }
 
@@ -830,6 +848,11 @@ public class MooConfig {
                     MooClientSettings.setMenuBackgroundDim(settings.get("menuBackgroundDim").getAsInt());
                 if (settings.has("guiAnimations"))
                     MooClientSettings.setGuiAnimations(settings.get("guiAnimations").getAsBoolean());
+                if (settings.has("invitationUiVariant")) {
+                    try {
+                        MooClientSettings.setInvitationUiVariant(InvitationUIManager.UiVariant.valueOf(settings.get("invitationUiVariant").getAsString()));
+                    } catch (Exception ignored) {}
+                }
             }
 
             MooClient.LOGGER.info("Loaded config from {}", CONFIG_PATH);

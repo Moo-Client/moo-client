@@ -22,6 +22,7 @@ public class MooLanguage {
                 case "disabled" -> "WYŁĄCZONE";
                 case "esc_hint" -> "Wciśnij ESC lub PRAWY SHIFT, aby zamknąć";
                 case "mods_title" -> "MOO CLIENT • MODY";
+                case "mods_button", "mods" -> "MODY";
                 case "gamma_desc" -> "Maksymalna jasność w ciemnych jaskiniach";
                 case "fps_desc" -> "Licznik FPS na ekranie";
                 case "sprint_desc" -> "Automatyczny Toggle Sprint";
@@ -35,34 +36,29 @@ public class MooLanguage {
                 case "waypoints_desc" -> "Punkty nawigacyjne i promień w świecie";
                 case "cps_desc" -> "Licznik kliknięć na sekundę (CPS)";
                 case "emotes_name" -> "Emotki";
-                case "emotes_desc" -> "Animacje postaci (Gesty, Tańce, Salta)";
+                case "emotes_desc" -> "Animacje postaci (Salta, Gesty, Interakcje)";
                 case "emotes_opt_title" -> "EMOTKI";
                 case "emotes_opt_subtitle" -> "Wybór emotek z koła, gesty i animacje postaci.";
                 case "emotes_hands_up_label" -> "Klawisz rąk w górę";
                 case "emotes_frontflip_label" -> "Klawisz salta w przód";
                 case "emotes_backflip_label" -> "Klawisz salta w tył";
                 case "emotes_wheel_key_label" -> "Koło wyboru emotek (Wheel)";
+                case "interaction_accept_key_label" -> "Akceptacja zaproszenia";
+                case "interaction_decline_key_label" -> "Odrzucenie zaproszenia";
+                case "emotes_restore_perspective_label" -> "Powrót do 1st person po zakończeniu";
                 case "emotes_wheel_title" -> "WYBIERZ EMOTKĘ";
-                case "emotes_wheel_wave" -> "Pomachaj";
-                case "emotes_wheel_dance" -> "Tańcz";
-                case "emotes_wheel_laugh" -> "Śmiech";
-                case "emotes_wheel_sad" -> "Smutny";
-                case "emotes_wheel_point" -> "Wskaż";
-                case "emotes_wheel_bravo" -> "Brawo";
-                case "emotes_wheel_crawl" -> "Pełzaj";
-                case "emotes_wheel_victory" -> "Zwycięstwo";
-                case "emotes_wheel_angry" -> "Zły";
-                case "emotes_wheel_think" -> "Myśl";
-                case "emotes_wheel_clap" -> "Klaszcz";
-                case "emotes_wheel_salute" -> "Salut";
-                case "emotes_wheel_frontflip" -> "Salto w przód";
-                case "emotes_wheel_backflip" -> "Salto w tył";
-                case "emotes_wheel_meditation" -> "Medytacja";
-                case "emotes_wheel_friendly_wave" -> "Przyjazne machanie";
-                case "emotes_wheel_arm_wave" -> "Fala rękami";
-                case "emotes_wheel_facepalm" -> "Facepalm";
-                case "emotes_wheel_hands_up" -> "Ręce w górę";
+
+                // Aktywne Emotki Solo i Multiplayer
+                case "emotes_wheel_frontflip", "emote.mooclient.frontflip", "frontflip" -> "Salto w przód";
+                case "emotes_wheel_backflip", "emote.mooclient.backflip", "backflip" -> "Salto w tył";
+                case "emotes_wheel_hands_up", "emote.mooclient.hands_up", "hands_up" -> "Ręce w górę";
+                case "emotes_wheel_meditation", "emote.mooclient.meditation", "meditation" -> "Medytacja";
+                case "emotes_wheel_friendly_wave", "emote.mooclient.friendly_wave", "friendly_wave" -> "Przyjazne machanie";
+                case "emotes_wheel_facepalm", "emote.mooclient.facepalm", "facepalm" -> "Facepalm";
+                case "emotes_wheel_handshake", "emote.mooclient.handshake", "handshake" -> "Uścisk dłoni";
                 case "emotes_wheel_stop" -> "Zatrzymaj";
+
+                // UI & Editor
                 case "emotes_wheel_hint" -> "Wskaż emotkę myszą i puść klawisz lub kliknij";
                 case "emotes_edit_wheel_btn" -> "⚙ Edytuj koło";
                 case "emotes_editor_title" -> "KONFIGURATOR KOŁA EMOTEK";
@@ -83,6 +79,24 @@ public class MooLanguage {
                 case "emotes_store_required" -> "Wymaga zakupu w sklepie Moo Client";
                 case "emotes_dev_badge" -> "DEV MOO CLIENT";
                 case "emotes_tester_badge" -> "TESTER";
+
+                // Interaction Engine & Invitations
+                case "invitation_title" -> "ZAPROSZENIE DO INTERAKCJI";
+                case "invitation_accept_prompt" -> "Akceptuj";
+                case "invitation_decline_prompt" -> "Odrzuć";
+                case "interaction_requires_multiplayer" -> "Interakcje multiplayer wymagają gry wieloosobowej i innego gracza!";
+                case "interaction_no_target_found", "interaction_no_target" -> "Nie znaleziono gracza w zasięgu wzroku (< 3.0 bloków)!";
+                case "interaction_in_progress", "interaction_already_active" -> "Trwa już inna interakcja!";
+                case "interaction_cancelled" -> "Interakcja została anulowana.";
+                case "interaction_declined" -> "Gracz {target} odrzucił zaproszenie do interakcji.";
+                case "interaction_interrupted" -> "Interakcja przerwana przez ruch lub obrażenia!";
+                case "interaction_expired" -> "Zaproszenie do interakcji wygasło.";
+                case "interaction_cooldown", "interaction_rate_limited" -> "Poczekaj chwilę przed wysłaniem kolejnego zaproszenia!";
+                case "interaction_not_moo_user" -> "nie używa klienta Moo Client.";
+                case "interaction_no_permission" -> "Brak uprawnień do tej emotki multiplayer.";
+                case "interaction_sent", "interaction_invited" -> "Wysłano zaproszenie do interakcji {emote} dla gracza {target}.";
+
+                // General UI & Keybinds
                 case "keybind_label" -> "Klawisz aktywacji";
                 case "press_key_hint" -> "> WCIŚNIJ KLAWISZ <";
                 case "mode_hold" -> "Przytrzymaj";
@@ -186,6 +200,7 @@ public class MooLanguage {
                 case "disabled" -> "DISABLED";
                 case "esc_hint" -> "Press ESC or RIGHT SHIFT to close";
                 case "mods_title" -> "MOO CLIENT • MODS";
+                case "mods_button", "mods" -> "MODS";
                 case "gamma_desc" -> "Max brightness for dark caves";
                 case "fps_desc" -> "FPS Counter on HUD";
                 case "sprint_desc" -> "Automatic Toggle Sprint";
@@ -199,34 +214,29 @@ public class MooLanguage {
                 case "waypoints_desc" -> "In-world waypoints and beacon beams";
                 case "cps_desc" -> "Clicks Per Second (CPS) on HUD";
                 case "emotes_name" -> "Emotes";
-                case "emotes_desc" -> "Player animations (Gestures, Dances, Flips)";
+                case "emotes_desc" -> "Player animations (Flips, Gestures, Interactions)";
                 case "emotes_opt_title" -> "EMOTES";
                 case "emotes_opt_subtitle" -> "Perform flips, dances, gestures and animations.";
                 case "emotes_hands_up_label" -> "Hands Up Keybind";
                 case "emotes_frontflip_label" -> "Frontflip Keybind";
                 case "emotes_backflip_label" -> "Backflip Keybind";
                 case "emotes_wheel_key_label" -> "Emote Wheel Keybind";
+                case "interaction_accept_key_label" -> "Accept Invitation Key";
+                case "interaction_decline_key_label" -> "Decline Invitation Key";
+                case "emotes_restore_perspective_label" -> "Return to 1st Person on Finish";
                 case "emotes_wheel_title" -> "SELECT EMOTE";
-                case "emotes_wheel_wave" -> "Wave";
-                case "emotes_wheel_dance" -> "Dance";
-                case "emotes_wheel_laugh" -> "Laugh";
-                case "emotes_wheel_sad" -> "Sad";
-                case "emotes_wheel_point" -> "Point";
-                case "emotes_wheel_bravo" -> "Bravo";
-                case "emotes_wheel_crawl" -> "Crawl";
-                case "emotes_wheel_victory" -> "Victory";
-                case "emotes_wheel_angry" -> "Angry";
-                case "emotes_wheel_think" -> "Think";
-                case "emotes_wheel_clap" -> "Clap";
-                case "emotes_wheel_salute" -> "Salute";
-                case "emotes_wheel_frontflip" -> "Frontflip";
-                case "emotes_wheel_backflip" -> "Backflip";
-                case "emotes_wheel_meditation" -> "Meditation";
-                case "emotes_wheel_friendly_wave" -> "Friendly Wave";
-                case "emotes_wheel_arm_wave" -> "Wave";
-                case "emotes_wheel_facepalm" -> "Facepalm";
-                case "emotes_wheel_hands_up" -> "Hands Up";
+
+                // Active Solo & Multiplayer Emotes
+                case "emotes_wheel_frontflip", "emote.mooclient.frontflip", "frontflip" -> "Frontflip";
+                case "emotes_wheel_backflip", "emote.mooclient.backflip", "backflip" -> "Backflip";
+                case "emotes_wheel_hands_up", "emote.mooclient.hands_up", "hands_up" -> "Hands Up";
+                case "emotes_wheel_meditation", "emote.mooclient.meditation", "meditation" -> "Meditation";
+                case "emotes_wheel_friendly_wave", "emote.mooclient.friendly_wave", "friendly_wave" -> "Friendly Wave";
+                case "emotes_wheel_facepalm", "emote.mooclient.facepalm", "facepalm" -> "Facepalm";
+                case "emotes_wheel_handshake", "emote.mooclient.handshake", "handshake" -> "Handshake";
                 case "emotes_wheel_stop" -> "Stop";
+
+                // UI & Editor
                 case "emotes_wheel_hint" -> "Hover over emote and release key or click";
                 case "emotes_edit_wheel_btn" -> "⚙ Edit Wheel";
                 case "emotes_editor_title" -> "EMOTE WHEEL EDITOR";
@@ -247,6 +257,24 @@ public class MooLanguage {
                 case "emotes_store_required" -> "Requires Moo Client Store Unlock";
                 case "emotes_dev_badge" -> "DEV MOO CLIENT";
                 case "emotes_tester_badge" -> "TESTER";
+
+                // Interaction Engine & Invitations
+                case "invitation_title" -> "INTERACTION INVITATION";
+                case "invitation_accept_prompt" -> "Accept";
+                case "invitation_decline_prompt" -> "Decline";
+                case "interaction_requires_multiplayer" -> "Multiplayer interactions require multiplayer mode and another player!";
+                case "interaction_no_target_found", "interaction_no_target" -> "No Moo Client player found in crosshair sight (< 3.0 blocks)!";
+                case "interaction_in_progress", "interaction_already_active" -> "Another interaction is already in progress!";
+                case "interaction_cancelled" -> "Interaction cancelled.";
+                case "interaction_declined" -> "Player {target} declined the interaction.";
+                case "interaction_interrupted" -> "Interaction interrupted by movement or damage!";
+                case "interaction_expired" -> "Interaction invitation expired.";
+                case "interaction_cooldown", "interaction_rate_limited" -> "Please wait a moment before sending another invitation!";
+                case "interaction_not_moo_user" -> "is not using Moo Client.";
+                case "interaction_no_permission" -> "No permission for this multiplayer emote.";
+                case "interaction_sent", "interaction_invited" -> "Sent {emote} interaction invitation to {target}.";
+
+                // General UI & Keybinds
                 case "keybind_label" -> "Activation Keybind";
                 case "press_key_hint" -> "> PRESS ANY KEY <";
                 case "mode_hold" -> "Hold";

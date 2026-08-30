@@ -1,12 +1,16 @@
 package com.mooclient.mixin;
 
-import com.mooclient.module.modules.EmotesModule;
+import com.mooclient.emote.EmoteEngine;
+import com.mooclient.emote.EmotePlayerState;
+import com.mooclient.gui.InvitationUIManager;
 import com.mooclient.module.modules.NametagsModule;
-import com.mooclient.module.modules.PlayerEmoteState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.RotationAxis;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,6 +19,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin renderera gracza aplikujący czysto wizualne transformacje sceny (MatrixStack)
+ * dla salt, uniesień, medytacji i wzajemnego pozycjonowania interakcji multiplayer.
+ * WAŻNE: Hitbox i pozycja entity gracza w świecie pozostają w 100% nienaruszone.
+ */
 @Mixin(PlayerEntityRenderer.class)
 public class PlayerEntityRendererMixin {
 
@@ -25,7 +34,6 @@ public class PlayerEntityRendererMixin {
     )
     private Text mooClient$modifyNametagText(Text text, PlayerEntityRenderState state) {
         if (NametagsModule.isNametagsEnabled() && state != null && text != null) {
-            // Do NOT format if text is the scoreboard sub-label (e.g. "20 ❤")
             if (state.playerName != null && text == state.playerName) {
                 return text;
             }
@@ -38,37 +46,68 @@ public class PlayerEntityRendererMixin {
     }
 
     @Inject(
+        method = "renderLabelIfPresent(Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;Lnet/minecraft/text/Text;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V",
+        at = @At("TAIL")
+    )
+    private void mooClient$renderInWorldInvitationBillboard(PlayerEntityRenderState state, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
+        if (state == null) return;
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.world == null) return;
+
+        Entity entity = client.world.getEntityById(state.id);
+        if (entity instanceof PlayerEntity player) {
+            InvitationUIManager.getInstance().renderInWorldBillboard(player, matrices, vertexConsumers, light);
+        }
+    }
+
+    @Inject(
         method = "setupTransforms(Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;FF)V",
         at = @At("TAIL")
     )
-    private void mooClient$applyFlipRotation(PlayerEntityRenderState state, MatrixStack matrices, float bodyYaw, float baseTickDelta, CallbackInfo ci) {
-        if (state == null || !EmotesModule.isEmotesEnabled()) return;
+    private void mooClient$applyEmoteVisualTransforms(PlayerEntityRenderState state, MatrixStack matrices, float bodyYaw, float baseTickDelta, CallbackInfo ci) {
+        if (state == null) return;
 
-        PlayerEmoteState emoteState = EmotesModule.getPlayerState(state.id);
-        if (emoteState != null) {
-            MinecraftClient client = MinecraftClient.getInstance();
-            float delta = client.getRenderTickCounter().getTickDelta(true);
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.world == null) return;
 
-            if (emoteState.currentEmote == EmotesModule.EmoteType.MEDITATION) {
-                float medBlend = emoteState.getMeditationBlend(delta);
-                if (medBlend > 0.001F) {
-                    matrices.translate(0.0F, 0.55F * medBlend, 0.0F);
-                }
-            } else if (emoteState.isFlipping()) {
-                float flipAngle = emoteState.getFlipRotationDegrees(delta);
-                float jumpHeight = emoteState.getFlipJumpHeight(delta);
+        Entity entity = client.world.getEntityById(state.id);
+        if (!(entity instanceof PlayerEntity player)) return;
 
-                if (Math.abs(flipAngle) > 0.001F || jumpHeight > 0.001F) {
-                    // Czysto wizualny wyskok postaci w górę (MatrixStack translate bez zmiany hitboxa)
-                    matrices.translate(0.0F, jumpHeight, 0.0F);
-                    // Przesuwamy punkt obrotu na środek sylwetki gracza (~0.9m wysokości)
-                    matrices.translate(0.0F, 0.9F, 0.0F);
-                    // Płynna rotacja wokół osi X (pitch)
-                    matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(flipAngle));
-                    // Przesunięcie punktu obrotu z powrotem
-                    matrices.translate(0.0F, -0.9F, 0.0F);
-                }
+        EmotePlayerState emoteState = EmoteEngine.getInstance().getPlayerStateIfExists(player.getUuid());
+        if (emoteState == null || !emoteState.isRendering()) return;
+
+        float tickDelta = client.getRenderTickCounter().getTickDelta(true);
+
+        // 1. Czysto wizualne przesunięcie sceny multiplayerowej oraz kości root z pliku animacji
+        float sceneX = emoteState.getSceneOffsetX() + emoteState.getVisualXOffset(tickDelta);
+        float sceneY = emoteState.getSceneOffsetY() + emoteState.getVisualYOffset(tickDelta);
+        float sceneZ = emoteState.getSceneOffsetZ() + emoteState.getVisualZOffset(tickDelta);
+
+        if (sceneX != 0.0f || sceneY != 0.0f || sceneZ != 0.0f) {
+            matrices.translate(sceneX, sceneY, sceneZ);
+        }
+
+        // 2. Czysto wizualne rotacje całego ciała (pitch dla salta, yaw dla sceny, roll)
+        float pitch = emoteState.getVisualPitch(tickDelta);
+        float yaw = emoteState.getVisualYaw(tickDelta);
+        float roll = emoteState.getVisualRoll(tickDelta);
+
+        if (Math.abs(pitch) > 0.001f || Math.abs(yaw) > 0.001f || Math.abs(roll) > 0.001f) {
+            // Przesunięcie punktu obrotu na środek sylwetki gracza (~0.9m wysokości)
+            matrices.translate(0.0f, 0.9f, 0.0f);
+
+            if (Math.abs(yaw) > 0.001f) {
+                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(yaw));
             }
+            if (Math.abs(pitch) > 0.001f) {
+                matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(pitch));
+            }
+            if (Math.abs(roll) > 0.001f) {
+                matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(roll));
+            }
+
+            // Powrót z punktu obrotu
+            matrices.translate(0.0f, -0.9f, 0.0f);
         }
     }
 }

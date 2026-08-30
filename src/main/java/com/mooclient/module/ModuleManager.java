@@ -42,6 +42,7 @@ public class ModuleManager {
         register(new com.mooclient.module.modules.WaypointsModule()); // "Waypoints"
         register(new com.mooclient.module.modules.ScoreboardModule()); // "Scoreboard"
         register(new com.mooclient.module.modules.CpsModule()); // "CPS"
+        register(new com.mooclient.module.modules.EmotesModule()); // "Emotes"
     }
 
     public void register(Module module) {
@@ -56,5 +57,14 @@ public class ModuleManager {
         return modules.stream()
                 .filter(m -> m.getName().equalsIgnoreCase(name))
                 .findFirst();
+    }
+
+    public <T extends Module> T getModule(Class<T> clazz) {
+        for (Module m : modules) {
+            if (clazz.isInstance(m)) {
+                return clazz.cast(m);
+            }
+        }
+        return null;
     }
 }

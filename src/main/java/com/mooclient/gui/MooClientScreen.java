@@ -33,6 +33,7 @@ import java.util.List;
 public class MooClientScreen extends Screen {
 
     private static final Identifier COW_LOGO = Identifier.of("minecraft", "icons/icon_128x128.png");
+    private static final Identifier EMOTE_HUB_ICON = Identifier.of("mooclient", "textures/gui/emotes/dance.png");
 
     private enum View {
         HUB,
@@ -43,6 +44,7 @@ public class MooClientScreen extends Screen {
 
     private View currentView = View.HUB;
     private Module selectedModule = null;
+    private boolean openedFromHub = false;
     private boolean listeningForKeybind = false;
     private int listeningEmoteSlot = 0; // 0 = Hands Up, 1 = Frontflip, 2 = Backflip
     private int listeningMacroIndex = -1;
@@ -491,8 +493,13 @@ public class MooClientScreen extends Screen {
 
         int btnW = 140;
         int btnH = 32;
+        int gap = 8;
+        int emoteBtnW = 32;
+
         int btnX = centerX - btnW / 2;
         int btnY = centerY - btnH / 2;
+        int emoteBtnX = btnX + btnW + gap;
+        int emoteBtnY = btnY;
 
         int titleY = btnY - 18;
         String title = "MOO CLIENT";
@@ -504,12 +511,29 @@ public class MooClientScreen extends Screen {
                 logoSize, logoSize, logoSize);
         context.drawTextWithShadow(this.textRenderer, title, centerX - titleWidth / 2, titleY, COLOR_TEXT_WHITE);
 
+        // 1. MODS Button
         boolean hovered = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH;
         int bg = hovered ? 0x99202028 : 0x55000000;
         int border = hovered ? 0xEEFFFFFF : 0x55FFFFFF;
         context.fill(btnX, btnY, btnX + btnW, btnY + btnH, bg);
         drawBorder(context, btnX, btnY, btnW, btnH, border);
-        drawCenteredText(context, "MODS", centerX, btnY + (btnH - 8) / 2, COLOR_TEXT_WHITE);
+        drawCenteredText(context, MooLanguage.get("mods"), btnX + btnW / 2, btnY + (btnH - 8) / 2, COLOR_TEXT_WHITE);
+
+        // 2. EMOTES Button (right next to MODS)
+        boolean emoteHover = mouseX >= emoteBtnX && mouseX <= emoteBtnX + emoteBtnW && mouseY >= emoteBtnY && mouseY <= emoteBtnY + btnH;
+        int emoteBg = emoteHover ? 0x99202028 : 0x55000000;
+        int emoteBorder = emoteHover ? 0xEEFFFFFF : 0x55FFFFFF;
+        context.fill(emoteBtnX, emoteBtnY, emoteBtnX + emoteBtnW, emoteBtnY + btnH, emoteBg);
+        drawBorder(context, emoteBtnX, emoteBtnY, emoteBtnW, btnH, emoteBorder);
+
+        int iconSize = 20;
+        int iconX = emoteBtnX + (emoteBtnW - iconSize) / 2;
+        int iconY = emoteBtnY + (btnH - iconSize) / 2;
+        context.drawTexture(RenderLayer::getGuiTextured, EMOTE_HUB_ICON, iconX, iconY, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
+
+        if (emoteHover) {
+            context.drawTooltip(this.textRenderer, Text.of(MooLanguage.get("emotes_name")), (int) mouseX, (int) mouseY);
+        }
     }
 
     /**
@@ -539,22 +563,6 @@ public class MooClientScreen extends Screen {
         int titleW = this.textRenderer.getWidth(headerTitle);
         context.drawTextWithShadow(this.textRenderer, headerTitle, panelX + (panelW - titleW) / 2, panelY + 10,
                 COLOR_TEXT_WHITE);
-
-        // Settings Button on right side of header
-        int setBtnW = 96;
-        int setBtnH = 20;
-        int setBtnX = panelX + panelW - setBtnW - 14;
-        int setBtnY = panelY + 12;
-        boolean setBtnHover = mouseX >= setBtnX && mouseX <= setBtnX + setBtnW && mouseY >= setBtnY
-                && mouseY <= setBtnY + setBtnH;
-        int setBg = setBtnHover ? com.mooclient.util.MooClientSettings.getAccentGlowColor(0x35) : 0x44141420;
-        int setBorder = setBtnHover ? com.mooclient.util.MooClientSettings.getAccentColor() : 0x33FFFFFF;
-        context.fill(setBtnX, setBtnY, setBtnX + setBtnW, setBtnY + setBtnH, setBg);
-        drawBorder(context, setBtnX, setBtnY, setBtnW, setBtnH, setBorder);
-        String setLabel = "⚙ " + MooLanguage.get("settings");
-        int setLabelW = this.textRenderer.getWidth(setLabel);
-        context.drawTextWithShadow(this.textRenderer, setLabel, setBtnX + (setBtnW - setLabelW) / 2, setBtnY + 6,
-                setBtnHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
 
         // Search Bar under "MOO CLIENT"
         int searchW = 200;
@@ -590,7 +598,9 @@ public class MooClientScreen extends Screen {
 
         context.fill(panelX + 14, panelY + headerH, panelX + panelW - 14, panelY + headerH + 1, 0x22FFFFFF);
 
-        List<Module> allModules = ModuleManager.getInstance().getModules();
+        List<Module> allModules = ModuleManager.getInstance().getModules().stream()
+                .filter(m -> !(m instanceof com.mooclient.module.modules.EmotesModule))
+                .toList();
         List<Module> modules;
         if (searchFilter == null || searchFilter.trim().isEmpty()) {
             modules = allModules;
@@ -759,8 +769,9 @@ public class MooClientScreen extends Screen {
      * MOD OPTIONS SCREEN: Lunar Client styled options window
      */
     private void renderOptionsWindow(DrawContext context, int mouseX, int mouseY, float delta) {
+        String modName = selectedModule != null ? selectedModule.getName() : "FPS";
         int panelW = 480;
-        int panelH = 330;
+        int panelH = (modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) ? 365 : 330;
         int panelX = (this.width - panelW) / 2;
         int panelY = (this.height - panelH) / 2;
 
@@ -775,8 +786,6 @@ public class MooClientScreen extends Screen {
         boolean backHover = mouseX >= backX && mouseX <= backX + backW && mouseY >= backY && mouseY <= backY + backH;
         int backTextColor = backHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB;
         context.drawTextWithShadow(this.textRenderer, MooLanguage.get("back"), backX, backY + 3, backTextColor);
-
-        String modName = selectedModule != null ? selectedModule.getName() : "FPS";
         String optTitle;
         String optSubtitle;
         if (modName.equalsIgnoreCase("FPS")) {
@@ -1277,7 +1286,33 @@ public class MooClientScreen extends Screen {
             drawBorder(context, btnX1, btnY1, btnW, btnH, listening1 ? 0xFF55FFFF : (btnHover1 ? 0xAAFFFFFF : 0x44FFFFFF));
             drawCenteredText(context, keyText1, btnX1 + btnW / 2, btnY1 + 7, listening1 ? 0xFFFFFF55 : 0xFF55FFFF);
 
-            // Row 3: Open Emote Wheel Editor Button
+            // Row 3: Accept Invitation Keybind (default Y)
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("interaction_accept_key_label"));
+            boolean listening2 = this.listeningForKeybind && this.listeningEmoteSlot == 2;
+            String keyText2 = listening2 ? MooLanguage.get("press_key_hint")
+                    : "[ " + com.mooclient.module.modules.EmotesModule.getAcceptKeyName() + " ]";
+            int btnX2 = rowX + rowW - btnW - 10;
+            int btnY2 = rowY + 6;
+            boolean btnHover2 = mouseX >= btnX2 && mouseX <= btnX2 + btnW && mouseY >= btnY2 && mouseY <= btnY2 + btnH;
+            context.fill(btnX2, btnY2, btnX2 + btnW, btnY2 + btnH, listening2 ? 0xEE334466 : (btnHover2 ? 0xCC252535 : 0x88181824));
+            drawBorder(context, btnX2, btnY2, btnW, btnH, listening2 ? 0xFF55FFFF : (btnHover2 ? 0xAAFFFFFF : 0x44FFFFFF));
+            drawCenteredText(context, keyText2, btnX2 + btnW / 2, btnY2 + 7, listening2 ? 0xFFFFFF55 : 0xFF55FFFF);
+
+            // Row 4: Decline Invitation Keybind (default N)
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("interaction_decline_key_label"));
+            boolean listening3 = this.listeningForKeybind && this.listeningEmoteSlot == 3;
+            String keyText3 = listening3 ? MooLanguage.get("press_key_hint")
+                    : "[ " + com.mooclient.module.modules.EmotesModule.getDeclineKeyName() + " ]";
+            int btnX3 = rowX + rowW - btnW - 10;
+            int btnY3 = rowY + 6;
+            boolean btnHover3 = mouseX >= btnX3 && mouseX <= btnX3 + btnW && mouseY >= btnY3 && mouseY <= btnY3 + btnH;
+            context.fill(btnX3, btnY3, btnX3 + btnW, btnY3 + btnH, listening3 ? 0xEE334466 : (btnHover3 ? 0xCC252535 : 0x88181824));
+            drawBorder(context, btnX3, btnY3, btnW, btnH, listening3 ? 0xFF55FFFF : (btnHover3 ? 0xAAFFFFFF : 0x44FFFFFF));
+            drawCenteredText(context, keyText3, btnX3 + btnW / 2, btnY3 + 7, listening3 ? 0xFFFFFF55 : 0xFF55FFFF);
+
+            // Row 5: Open Emote Wheel Editor Button
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, "Układ koła emotek");
             int editBtnW = 140;
@@ -1288,17 +1323,17 @@ public class MooClientScreen extends Screen {
             drawBorder(context, editBtnX, editBtnY, editBtnW, btnH, editHover ? 0xFF55FFFF : 0x44FFFFFF);
             drawCenteredText(context, "⚙ Otwórz edytor", editBtnX + editBtnW / 2, editBtnY + 7, editHover ? 0xFFFFFFFF : 0xFFD0D0E0);
 
-            // Row 4: Activation Mode (Hold vs Toggle for Hands Up)
+            // Row 6: Activation Mode (Hold vs Toggle for Hands Up)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("mode_label"));
             renderModeSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY,
                     com.mooclient.module.modules.EmotesModule.getMode().ordinal());
 
-            // Row 5: Enable / Disable toggle
+            // Row 7: Restore 1st Person on Finish
             rowY += rowH + 6;
-            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("enabled"));
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("emotes_restore_perspective_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
-                    com.mooclient.module.modules.EmotesModule.isEmotesEnabled());
+                    com.mooclient.module.modules.EmotesModule.isRestorePerspective());
 
         } else {
             // Gamma Options
@@ -1344,10 +1379,9 @@ public class MooClientScreen extends Screen {
         String[] tabs = new String[] {
                 MooLanguage.get("tab_accent"),
                 MooLanguage.get("tab_hud"),
-                MooLanguage.get("tab_gui"),
-                MooLanguage.get("tab_emotes")
+                MooLanguage.get("tab_gui")
         };
-        int tabW = (panelW - 28) / 4;
+        int tabW = (panelW - 28) / 3;
 
         for (int i = 0; i < tabs.length; i++) {
             int tX = panelX + 14 + i * tabW;
@@ -1385,10 +1419,6 @@ public class MooClientScreen extends Screen {
         // --- Tab 2: GUI Appearance ---
         else if (settingsTab == 2) {
             renderGuiSettingsTab(context, panelX, contentY, panelW, mouseX, mouseY);
-        }
-        // --- Tab 3: Emotes Configuration ---
-        else if (settingsTab == 3) {
-            renderEmotesSettingsTab(context, panelX, contentY, panelW, mouseX, mouseY);
         }
 
         String hint = MooLanguage.get("esc_hint");
@@ -1693,6 +1723,12 @@ public class MooClientScreen extends Screen {
         drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("mode_label"));
         renderModeSelector(context, rowX + rowW - 206, rowY + 5, mouseX, mouseY,
                 com.mooclient.module.modules.EmotesModule.getMode().ordinal());
+
+        // Row 4: Restore 1st Person on Finish
+        rowY += rowH + 6;
+        drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("emotes_restore_perspective_label"));
+        drawOptionToggle(context, rowX + rowW - 44, rowY + 7, mouseX, mouseY,
+                com.mooclient.module.modules.EmotesModule.isRestorePerspective());
     }
 
     private void drawOptionRow(DrawContext context, int x, int y, int w, int h, String title) {
@@ -2073,6 +2109,10 @@ public class MooClientScreen extends Screen {
             } else if (selectedModule != null && (selectedModule.getName().equalsIgnoreCase("Emotki") || selectedModule.getName().equalsIgnoreCase("Emotes"))) {
                 if (listeningEmoteSlot == 1) {
                     com.mooclient.module.modules.EmotesModule.setWheelKeybind(button, mouseName, true);
+                } else if (listeningEmoteSlot == 2) {
+                    com.mooclient.module.modules.EmotesModule.setAcceptKeybind(button, mouseName, true);
+                } else if (listeningEmoteSlot == 3) {
+                    com.mooclient.module.modules.EmotesModule.setDeclineKeybind(button, mouseName, true);
                 } else {
                     com.mooclient.module.modules.EmotesModule.setKeybind(button, mouseName, true);
                 }
@@ -2190,12 +2230,31 @@ public class MooClientScreen extends Screen {
                 int centerY = this.height / 2;
                 int btnW = 140;
                 int btnH = 32;
+                int gap = 8;
+                int emoteBtnW = 32;
+
                 int btnX = centerX - btnW / 2;
                 int btnY = centerY - btnH / 2;
+                int emoteBtnX = btnX + btnW + gap;
+                int emoteBtnY = btnY;
 
+                // Kliknięcie w przycisk MODS
                 if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
                     playClickSound();
                     this.currentView = View.MODS;
+                    return true;
+                }
+
+                // Kliknięcie w przycisk EMOTES (otwiera opcje emotek)
+                if (mouseX >= emoteBtnX && mouseX <= emoteBtnX + emoteBtnW && mouseY >= emoteBtnY && mouseY <= emoteBtnY + btnH) {
+                    playClickSound();
+                    com.mooclient.module.Module emotesMod = com.mooclient.module.ModuleManager.getInstance().getModule(com.mooclient.module.modules.EmotesModule.class);
+                    if (emotesMod != null) {
+                        this.selectedModule = emotesMod;
+                    }
+                    this.openedFromHub = true;
+                    this.listeningForKeybind = false;
+                    this.currentView = View.OPTIONS;
                     return true;
                 }
             }
@@ -2214,19 +2273,6 @@ public class MooClientScreen extends Screen {
                 if (mouseX >= backX && mouseX <= backX + backW && mouseY >= backY && mouseY <= backY + backH) {
                     playClickSound();
                     this.currentView = View.HUB;
-                    this.searching = false;
-                    return true;
-                }
-
-                // Settings Button Click
-                int setBtnW = 96;
-                int setBtnH = 20;
-                int setBtnX = panelX + panelW - setBtnW - 14;
-                int setBtnY = panelY + 12;
-                if (mouseX >= setBtnX && mouseX <= setBtnX + setBtnW && mouseY >= setBtnY
-                        && mouseY <= setBtnY + setBtnH) {
-                    playClickSound();
-                    this.currentView = View.SETTINGS;
                     this.searching = false;
                     return true;
                 }
@@ -2250,7 +2296,9 @@ public class MooClientScreen extends Screen {
                     searching = false;
                 }
 
-                List<Module> allModules = ModuleManager.getInstance().getModules();
+                List<Module> allModules = ModuleManager.getInstance().getModules().stream()
+                        .filter(m -> !(m instanceof com.mooclient.module.modules.EmotesModule))
+                        .toList();
                 List<Module> modules;
                 if (searchFilter == null || searchFilter.trim().isEmpty()) {
                     modules = allModules;
@@ -2315,8 +2363,9 @@ public class MooClientScreen extends Screen {
             }
             // 4. Options View Clicks
             else if (currentView == View.OPTIONS) {
+                String modName = selectedModule != null ? selectedModule.getName() : "FPS";
                 int panelW = 480;
-                int panelH = 330;
+                int panelH = (modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) ? 365 : 330;
                 int panelX = (this.width - panelW) / 2;
                 int panelY = (this.height - panelH) / 2;
 
@@ -2327,11 +2376,15 @@ public class MooClientScreen extends Screen {
                 if (mouseX >= backX && mouseX <= backX + backW && mouseY >= backY && mouseY <= backY + backH) {
                     playClickSound();
                     this.listeningForKeybind = false;
-                    this.currentView = View.MODS;
+                    if (this.openedFromHub) {
+                        this.currentView = View.HUB;
+                        this.openedFromHub = false;
+                    } else {
+                        this.currentView = View.MODS;
+                    }
                     return true;
                 }
 
-                String modName = selectedModule != null ? selectedModule.getName() : "FPS";
                 int headerH = 46;
                 int rowY = panelY + headerH + 14;
                 int rowH = 34;
@@ -2875,6 +2928,8 @@ public class MooClientScreen extends Screen {
                     int btnX = rowX + rowW - btnW - 10;
                     int btnY = rowY + 6;
 
+
+
                     // Row 1: Hands Up Keybind click
                     if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
                         playClickSound();
@@ -2895,7 +2950,29 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 3: Open Emote Wheel Editor Button
+                    // Row 3: Accept Invitation Keybind click
+                    rowY += rowH + 6;
+                    btnY = rowY + 6;
+                    if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
+                        playClickSound();
+                        boolean wasListening = this.listeningForKeybind && this.listeningEmoteSlot == 2;
+                        this.listeningForKeybind = !wasListening;
+                        this.listeningEmoteSlot = 2;
+                        return true;
+                    }
+
+                    // Row 4: Decline Invitation Keybind click
+                    rowY += rowH + 6;
+                    btnY = rowY + 6;
+                    if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
+                        playClickSound();
+                        boolean wasListening = this.listeningForKeybind && this.listeningEmoteSlot == 3;
+                        this.listeningForKeybind = !wasListening;
+                        this.listeningEmoteSlot = 3;
+                        return true;
+                    }
+
+                    // Row 5: Open Emote Wheel Editor Button
                     rowY += rowH + 6;
                     int editBtnW = 140;
                     int editBtnX = rowX + rowW - editBtnW - 10;
@@ -2909,7 +2986,7 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 4: Mode Selector (Hold vs Toggle)
+                    // Row 6: Mode Selector (Hold vs Toggle)
                     rowY += rowH + 6;
                     int modeClick = getModeSelectorClick(rowX + rowW - 206, rowY + 6, (int) mouseX, (int) mouseY);
                     if (modeClick >= 0) {
@@ -2921,17 +2998,13 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 5: Enable Toggle
+                    // Row 7: Restore 1st Person Toggle
                     rowY += rowH + 6;
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {
                         playClickSound();
                         this.listeningForKeybind = false;
-                        boolean newState = !com.mooclient.module.modules.EmotesModule.isEmotesEnabled();
-                        com.mooclient.module.modules.EmotesModule.setEmotesEnabled(newState);
-                        if (selectedModule != null) {
-                            selectedModule.setEnabled(newState);
-                        }
+                        com.mooclient.module.modules.EmotesModule.toggleRestorePerspective();
                         com.mooclient.util.MooConfig.save();
                         return true;
                     }
@@ -2966,8 +3039,8 @@ public class MooClientScreen extends Screen {
                 // Tabs Click
                 int tabY = panelY + 34;
                 int tabH = 22;
-                int tabW = (panelW - 28) / 4;
-                for (int i = 0; i < 4; i++) {
+                int tabW = (panelW - 28) / 3;
+                for (int i = 0; i < 3; i++) {
                     int tX = panelX + 14 + i * tabW;
                     if (mouseX >= tX && mouseX <= tX + tabW && mouseY >= tabY && mouseY <= tabY + tabH) {
                         playClickSound();
@@ -3112,59 +3185,6 @@ public class MooClientScreen extends Screen {
                         playClickSound();
                         com.mooclient.util.MooClientSettings.toggleGuiAnimations();
                         return true;
-                    }
-                }
-                // Tab 3: Emotes Configuration
-                else if (settingsTab == 3) {
-                    int rowX = panelX + 18;
-                    int rowY = contentY + 2;
-                    int rowW = panelW - 36;
-                    int rowH = 32;
-                    int btnW = 150;
-                    int btnH = 22;
-
-                    // Row 1: Hands Up keybind
-                    int btnX0 = rowX + rowW - btnW - 10;
-                    int btnY0 = rowY + 5;
-                    if (mouseX >= btnX0 && mouseX <= btnX0 + btnW && mouseY >= btnY0 && mouseY <= btnY0 + btnH) {
-                        boolean wasListening = this.listeningForKeybind && this.listeningEmoteSlot == 0;
-                        this.listeningForKeybind = !wasListening;
-                        this.listeningEmoteSlot = 0;
-                        playClickSound();
-                        return true;
-                    }
-
-                    // Row 2: Wheel keybind
-                    rowY += rowH + 6;
-                    int btnX1 = rowX + rowW - btnW - 10;
-                    int btnY1 = rowY + 5;
-                    if (mouseX >= btnX1 && mouseX <= btnX1 + btnW && mouseY >= btnY1 && mouseY <= btnY1 + btnH) {
-                        boolean wasListening = this.listeningForKeybind && this.listeningEmoteSlot == 1;
-                        this.listeningForKeybind = !wasListening;
-                        this.listeningEmoteSlot = 1;
-                        playClickSound();
-                        return true;
-                    }
-
-                    // Row 3: Mode selector
-                    rowY += rowH + 6;
-                    int modeW = 96;
-                    int modeH = 22;
-                    int modeX1 = rowX + rowW - 206;
-                    int modeX2 = modeX1 + modeW + 4;
-                    if (mouseY >= rowY + 5 && mouseY <= rowY + 5 + modeH) {
-                        if (mouseX >= modeX1 && mouseX <= modeX1 + modeW) {
-                            com.mooclient.module.modules.EmotesModule.setMode(com.mooclient.module.modules.EmotesModule.ActivationMode.HOLD);
-                            com.mooclient.util.MooConfig.save();
-                            playClickSound();
-                            return true;
-                        }
-                        if (mouseX >= modeX2 && mouseX <= modeX2 + modeW) {
-                            com.mooclient.module.modules.EmotesModule.setMode(com.mooclient.module.modules.EmotesModule.ActivationMode.TOGGLE);
-                            com.mooclient.util.MooConfig.save();
-                            playClickSound();
-                            return true;
-                        }
                     }
                 }
             }
@@ -3492,6 +3512,10 @@ public class MooClientScreen extends Screen {
             } else if (selectedModule != null && (selectedModule.getName().equalsIgnoreCase("Emotki") || selectedModule.getName().equalsIgnoreCase("Emotes"))) {
                 if (listeningEmoteSlot == 1) {
                     com.mooclient.module.modules.EmotesModule.setWheelKeybind(keyCode, keyName, false);
+                } else if (listeningEmoteSlot == 2) {
+                    com.mooclient.module.modules.EmotesModule.setAcceptKeybind(keyCode, keyName, false);
+                } else if (listeningEmoteSlot == 3) {
+                    com.mooclient.module.modules.EmotesModule.setDeclineKeybind(keyCode, keyName, false);
                 } else {
                     com.mooclient.module.modules.EmotesModule.setKeybind(keyCode, keyName, false);
                 }
@@ -3512,7 +3536,12 @@ public class MooClientScreen extends Screen {
 
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             if (currentView == View.OPTIONS || currentView == View.SETTINGS) {
-                this.currentView = View.MODS;
+                if (this.openedFromHub && currentView == View.OPTIONS) {
+                    this.currentView = View.HUB;
+                    this.openedFromHub = false;
+                } else {
+                    this.currentView = View.MODS;
+                }
                 return true;
             } else if (currentView == View.MODS) {
                 this.currentView = View.HUB;

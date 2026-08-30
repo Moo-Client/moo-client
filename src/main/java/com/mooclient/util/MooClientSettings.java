@@ -1,5 +1,6 @@
 package com.mooclient.util;
 
+import com.mooclient.gui.InvitationUIManager;
 import com.mooclient.module.ModuleManager;
 import com.mooclient.module.modules.FpsModule;
 import com.mooclient.module.modules.FullbrightModule;
@@ -16,7 +17,7 @@ import java.awt.Color;
 
 /**
  * Global settings manager for Moo Client (Accent Colors, HUD Snapping/Reset,
- * GUI Appearance, Profiles).
+ * GUI Appearance, Profiles, Invitation UI Variants).
  */
 public class MooClientSettings {
 
@@ -84,6 +85,7 @@ public class MooClientSettings {
     private static int menuBackgroundDim = 1; // 0 = 30% (Light), 1 = 50% (Medium), 2 = 75% (Dark)
     private static boolean guiAnimations = true;
     private static ProfileType activeProfile = ProfileType.DEFAULT;
+    private static InvitationUIManager.UiVariant invitationUiVariant = InvitationUIManager.UiVariant.FLOATING_CENTER;
 
     // --- Accent Color Getters ---
 
@@ -259,6 +261,17 @@ public class MooClientSettings {
 
     public static void toggleGuiAnimations() {
         setGuiAnimations(!guiAnimations);
+    }
+
+    public static InvitationUIManager.UiVariant getInvitationUiVariant() {
+        return invitationUiVariant != null ? invitationUiVariant : InvitationUIManager.UiVariant.FLOATING_CENTER;
+    }
+
+    public static void setInvitationUiVariant(InvitationUIManager.UiVariant variant) {
+        if (variant != null) {
+            invitationUiVariant = variant;
+            MooConfig.save();
+        }
     }
 
     public static ProfileType getActiveProfile() {

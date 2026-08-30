@@ -11,8 +11,7 @@ base {
 }
 
 repositories {
-    // Add repositories to retrieve artifacts from in here.
-    // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
+    mavenCentral()
 }
 
 dependencies {
@@ -23,6 +22,10 @@ dependencies {
 
     // Fabric API
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // JUnit 5 Testing
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 processResources {
@@ -39,11 +42,12 @@ tasks.withType(JavaCompile).configureEach {
     it.options.compilerArgs << "-Xlint:-processing"
 }
 
-java {
-    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-    // if it is present.
-    withSourcesJar()
+test {
+    useJUnitPlatform()
+}
 
+java {
+    withSourcesJar()
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
 }

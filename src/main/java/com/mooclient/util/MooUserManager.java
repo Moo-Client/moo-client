@@ -64,7 +64,6 @@ public class MooUserManager {
     public static String cleanName(String name) {
         if (name == null || name.isEmpty()) return "";
 
-        // Fast path: if string contains no formatting codes, just trim and lowercase
         if (name.indexOf('§') == -1 && !name.startsWith("literal{")) {
             return name.trim().toLowerCase();
         }
@@ -72,6 +71,18 @@ public class MooUserManager {
         return name.replaceAll("(?i)§[0-9a-fk-or]", "")
                    .replaceAll("(?i)literal\\{text='(.*?)'\\}", "$1")
                    .trim().toLowerCase();
+    }
+
+    public static boolean isMooUser(UUID uuid) {
+        if (uuid == null) return false;
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player != null && uuid.equals(client.player.getUuid())) return true;
+        return MOO_USERS_UUIDS.contains(uuid);
+    }
+
+    public static boolean isMooUser(String name) {
+        if (name == null || name.isEmpty()) return false;
+        return isMooUser(name, -1);
     }
 
     /**
@@ -125,9 +136,6 @@ public class MooUserManager {
      */
     public static boolean isMooUser(String playerName, int entityId) {
         if (playerName == null || playerName.isEmpty()) return false;
-        if (!com.mooclient.module.modules.NametagsModule.isNametagsEnabled() || !com.mooclient.module.modules.NametagsModule.isShowLogo()) {
-            return false;
-        }
 
         MinecraftClient client = MinecraftClient.getInstance();
 

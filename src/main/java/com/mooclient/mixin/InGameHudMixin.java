@@ -1,5 +1,6 @@
 package com.mooclient.mixin;
 
+import com.mooclient.gui.InvitationUIManager;
 import com.mooclient.module.modules.CpsModule;
 import com.mooclient.module.modules.FpsModule;
 import com.mooclient.module.modules.PingModule;
@@ -35,7 +36,7 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Mixin to render in-game HUD modules (FPS, Sprint, Potion Effects, Scoreboard)
+ * Mixin to render in-game HUD modules (FPS, Sprint, Potion Effects, Scoreboard, Multiplayer Invitations)
  * at customizable positions.
  */
 @Mixin(InGameHud.class)
@@ -165,7 +166,6 @@ public class InGameHudMixin {
                 int count = effects.isEmpty() ? 3 : effects.size();
                 int totalH = count * rowH + (count - 1) * rowGap;
 
-                // Calculate max width for accurate bounding box
                 if (effects.isEmpty() && isMenu) {
                     maxW = 110;
                 } else {
@@ -183,7 +183,7 @@ public class InGameHudMixin {
                             int nameW = client.textRenderer.getWidth(name);
                             int timeW = client.textRenderer.getWidth(duration);
                             itemW = (showIcon ? 22 : 0) + Math.max(nameW, timeW)
-                                    + (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT ? 12 : 6);
+                                     + (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT ? 12 : 6);
                         }
                         maxW = Math.max(maxW, itemW);
                     }
@@ -206,7 +206,6 @@ public class InGameHudMixin {
                 }
 
                 if (effects.isEmpty() && isMenu) {
-                    // Preview dummy effects in MooClientScreen menu
                     List<RegistryEntry<StatusEffect>> sampleEffects = List.of(
                             StatusEffects.SPEED,
                             StatusEffects.POISON,
@@ -235,13 +234,11 @@ public class InGameHudMixin {
 
                         if (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT) {
                             context.fill(startX - 2, curY - 2, startX + itemW, curY + rowH, 0x77000000);
-                            context.fill(startX - 2, curY - 2, startX, curY + rowH, effectColor); // Colored accent bar
-                                                                                                  // on left
+                            context.fill(startX - 2, curY - 2, startX, curY + rowH, effectColor);
                         } else if (bg) {
                             context.fill(startX - 2, curY - 2, startX + itemW, curY + rowH, 0x66000000);
                         }
 
-                        // 1. Draw Potion Icon
                         int textX = startX + (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT ? 4 : 0);
                         if (showIcon) {
                             try {
@@ -260,7 +257,6 @@ public class InGameHudMixin {
                             textX += (pStyle == PotionEffectsModule.PotionStyle.COMPACT) ? 16 : 22;
                         }
 
-                        // 2. Draw Text
                         if (pStyle == PotionEffectsModule.PotionStyle.COMPACT) {
                             context.drawText(client.textRenderer, name + " §7" + time, textX, curY + 2, 0xFFFFFFFF,
                                     shadow);
@@ -268,7 +264,6 @@ public class InGameHudMixin {
                             context.drawText(client.textRenderer, name, textX, curY + 1, 0xFFFFFFFF, shadow);
                             context.drawText(client.textRenderer, "§7" + time, textX, curY + 10, 0xFFAAAAAA, shadow);
                         } else {
-                            // SIMPLE
                             context.drawText(client.textRenderer, name, textX, curY + 1, 0xFFFFFFFF, shadow);
                             context.drawText(client.textRenderer, time, textX, curY + 10, 0xFFFFFFFF, shadow);
                         }
@@ -297,13 +292,11 @@ public class InGameHudMixin {
 
                         if (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT) {
                             context.fill(startX - 2, curY - 2, startX + itemW, curY + rowH, 0x77000000);
-                            context.fill(startX - 2, curY - 2, startX, curY + rowH, color); // Colored accent bar on
-                                                                                            // left
+                            context.fill(startX - 2, curY - 2, startX, curY + rowH, color);
                         } else if (bg) {
                             context.fill(startX - 2, curY - 2, startX + itemW, curY + rowH, 0x66000000);
                         }
 
-                        // 1. Draw Potion Icon
                         int textX = startX + (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT ? 4 : 0);
                         if (showIcon) {
                             try {
@@ -322,7 +315,6 @@ public class InGameHudMixin {
                             textX += (pStyle == PotionEffectsModule.PotionStyle.COMPACT) ? 16 : 22;
                         }
 
-                        // 2. Draw Text
                         if (pStyle == PotionEffectsModule.PotionStyle.COMPACT) {
                             context.drawText(client.textRenderer, name + " §7" + duration, textX, curY + 2, 0xFFFFFFFF,
                                     shadow);
@@ -331,7 +323,6 @@ public class InGameHudMixin {
                             context.drawText(client.textRenderer, "§7" + duration, textX, curY + 10, 0xFFAAAAAA,
                                     shadow);
                         } else {
-                            // SIMPLE
                             context.drawText(client.textRenderer, name, textX, curY + 1, 0xFFFFFFFF, shadow);
                             context.drawText(client.textRenderer, duration, textX, curY + 10, 0xFFFFFFFF, shadow);
                         }
@@ -441,6 +432,9 @@ public class InGameHudMixin {
                 context.getMatrices().pop();
             }
         }
+
+        // 6. Multiplayer Invitation UI (4 switchable HUD variants)
+        InvitationUIManager.getInstance().renderHud(context, scaledWidth, scaledHeight, tickCounter.getTickDelta(true));
     }
 
     @Inject(method = "renderMiscOverlays", at = @At("TAIL"))
@@ -449,8 +443,6 @@ public class InGameHudMixin {
         if (client == null || client.options.hudHidden || client.getDebugHud().shouldShowDebugHud()) {
             return;
         }
-        // Render waypoints BEFORE crosshair and main HUD so crosshair is always visible
-        // in front
         WaypointRenderer.renderHudWaypoints(context, client, tickCounter.getTickDelta(true));
     }
 
@@ -534,9 +526,7 @@ public class InGameHudMixin {
         int bodyBg = client.options.getTextBackgroundColor(0.3F);
 
         if (showBg) {
-            // Title background
             context.fill(startX - 2, startY - 2, startX + totalWidth + 2, startY + lineHeight - 1, titleBg);
-            // Body background
             if (entryCount > 0) {
                 context.fill(startX - 2, startY + lineHeight - 1, startX + totalWidth + 2, startY + totalHeight + 1,
                         bodyBg);
@@ -545,11 +535,9 @@ public class InGameHudMixin {
 
         boolean shadow = ScoreboardModule.isTextShadow();
 
-        // Draw title centered
         int titleX = startX + (totalWidth - titleWidth) / 2;
         context.drawText(client.textRenderer, titleText, titleX, startY, 0xFFFFFFFF, shadow);
 
-        // Draw entries
         for (int i = 0; i < entryCount; i++) {
             ScoreboardEntry entry = filtered.get(i);
             Team team = scoreboard.getScoreHolderTeam(entry.owner());

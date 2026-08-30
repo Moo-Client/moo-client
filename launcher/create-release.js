@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.8.0_2';
+const VERSION = '1.9.1';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -64,7 +64,18 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);
     let release;
 
-    const CHANGELOG_BODY = '🚀 **Moo Client v1.8.0_2**\n\n✓ **Poprawiono kierunki salt (przód / tył)**\n✓ **Pełna synchronizacja emotek w trybie Multiplayer**\n✓ **Usprawnienia systemu uprawnień konta (wsparcie statusu aktywności)**\n✓ **Optymalizacje stabilności i działania klienta**';
+    const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION} — Nowości i Usprawnienia**
+
+🤸 **Poprawki płynności animacji:**
+✓ Wyeliminowano obrót powrotny postaci po zakończeniu salta w przód / w tył.
+
+👥 **Interakcje Multiplayer:**
+✓ Dodano nową emotkę dwuosobową: **Uścisk dłoni (Handshake)**.
+✓ Poprawiono i przetłumaczono komunikaty zaproszeń do interakcji na czacie.
+✓ Bindowalne klawisze akceptacji i odrzucenia zaproszeń w menu EMOTKI.
+
+⚙️ **Usprawnienia interfejsu (GUI):**
+✓ Uporządkowano menu modów oraz ułatwiono dostęp do ustawień emotek bezpośrednio z Hubu pod Prawym Shiftem.`;
 
     if (res.status === 200) {
         release = res.data;

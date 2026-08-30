@@ -1,5 +1,6 @@
 package com.mooclient.mixin;
 
+import com.mooclient.interaction.InteractionInputBlocker;
 import com.mooclient.module.modules.ToggleSprintModule;
 import com.mooclient.module.modules.WaypointsModule;
 import com.mooclient.waypoint.WaypointManager;
@@ -12,7 +13,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Mixin into ClientPlayerEntity to implement Toggle Sprint and Auto Death Waypoint detection.
+ * Mixin into ClientPlayerEntity to implement Toggle Sprint, Auto Death Waypoint,
+ * and movement input blocking during active multiplayer interactions.
  */
 @Mixin(ClientPlayerEntity.class)
 public class ClientPlayerEntityMixin {
@@ -23,6 +25,11 @@ public class ClientPlayerEntityMixin {
     @Inject(method = "tickMovement", at = @At("HEAD"))
     private void mooClient$autoSprint(CallbackInfo ci) {
         ClientPlayerEntity player = (ClientPlayerEntity) (Object) this;
+
+        if (player.input != null) {
+            InteractionInputBlocker.processPlayerInput(player.input);
+        }
+
         if (ToggleSprintModule.shouldSprint()
                 && !player.isSneaking()
                 && !player.hasStatusEffect(StatusEffects.BLINDNESS)

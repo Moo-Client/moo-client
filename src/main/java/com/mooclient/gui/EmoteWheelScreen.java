@@ -1,7 +1,11 @@
 package com.mooclient.gui;
 
+import com.mooclient.emote.Emote;
+import com.mooclient.emote.EmoteEngine;
+import com.mooclient.emote.EmoteRegistry;
+import com.mooclient.interaction.InteractionEngine;
 import com.mooclient.module.modules.EmotesModule;
-import com.mooclient.util.EmoteAccessManager;
+import com.mooclient.permissions.PermissionManager;
 import com.mooclient.util.EmoteWheelConfig;
 import com.mooclient.util.MooClientSettings;
 import com.mooclient.util.MooLanguage;
@@ -14,7 +18,8 @@ import org.lwjgl.glfw.GLFW;
 
 /**
  * 12-Slot Pixel-Art Emote Wheel matching user reference design 1:1,
- * with clean steel-blue outlines, #1..#12 clock slots, and prominent emote titles.
+ * with clean steel-blue outlines, #1..#12 clock slots, prominent emote titles,
+ * multiplayer 👥 badges, and direct interaction trigger.
  */
 public class EmoteWheelScreen extends Screen {
 
@@ -39,7 +44,7 @@ public class EmoteWheelScreen extends Screen {
     protected void init() {
         super.init();
         EmoteWheelConfig.load();
-        EmoteAccessManager.fetchLocalPlayerPermissions();
+        PermissionManager.fetchLocalPlayerPermissions();
     }
 
     @Override
@@ -93,10 +98,10 @@ public class EmoteWheelScreen extends Screen {
         for (int i = 0; i < 12; i++) {
             boolean isSelected = (i == selectedSlot);
             String emoteId = EmoteWheelConfig.getSlot(i);
-            boolean hasEmote = (emoteId != null);
+            boolean hasEmote = (emoteId != null && !"hands_up".equalsIgnoreCase(emoteId));
 
-            EmoteWheelConfig.EmoteDefinition def = hasEmote ? EmoteWheelConfig.getDefinition(emoteId) : null;
-            boolean isUnlocked = def != null && def.isUnlocked();
+            Emote emote = hasEmote ? EmoteRegistry.get(emoteId) : null;
+            boolean isUnlocked = emote != null && (emote.isFree() || PermissionManager.hasAccessLocal(emote.getId()));
 
             double centerDeg = -90.0 + i * 30.0;
             double spanDeg = 28.5;
@@ -120,26 +125,29 @@ public class EmoteWheelScreen extends Screen {
             int snW = this.textRenderer.getWidth(slotNum);
             context.drawTextWithShadow(this.textRenderer, slotNum, snX - (snW / 2), snY - 4, isSelected ? 0xFFFFFFFF : 0xFFA0B4C8);
 
-            if (hasEmote && def != null) {
+            if (hasEmote && emote != null && emote.getAnimation() != null) {
                 // Render 2D Pixel-Art Icon
                 int iconRadius = (int) (rIn + 42);
                 int iconCenterX = (int) (cx + Math.cos(midAngleRad) * iconRadius);
                 int iconCenterY = (int) (cy + Math.sin(midAngleRad) * iconRadius);
                 int iconSize = isSelected ? 34 : 30;
 
-                if (def.icon() != null) {
+                if (emote.getIcon() != null) {
                     int ix = iconCenterX - (iconSize / 2);
                     int iy = iconCenterY - (iconSize / 2);
-                    context.drawTexture(RenderLayer::getGuiTextured, def.icon(), ix, iy, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
+                    context.drawTexture(RenderLayer::getGuiTextured, emote.getIcon(), ix, iy, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
                 }
 
-                // Render Emote Name in All-Caps
+                // Render Emote Name (with multiplayer badge 👥)
                 int nameRadius = (int) (rIn + 68);
                 int nameCenterX = (int) (cx + Math.cos(midAngleRad) * nameRadius);
                 int nameCenterY = (int) (cy + Math.sin(midAngleRad) * nameRadius);
-                String displayName = def.getDisplayName().toUpperCase();
+                String displayName = emote.getDisplayName().toUpperCase();
+                if (emote.isMultiplayer()) {
+                    displayName = (emote.getParticipantCount() > 2 ? "👥👤 " : "👥 ") + displayName;
+                }
                 int dnW = this.textRenderer.getWidth(displayName);
-                context.drawTextWithShadow(this.textRenderer, displayName, nameCenterX - (dnW / 2), nameCenterY - 4, 0xFFFFFFFF);
+                context.drawTextWithShadow(this.textRenderer, displayName, nameCenterX - (dnW / 2), nameCenterY - 4, isUnlocked ? 0xFFFFFFFF : 0xFFAAAAAA);
 
                 // Lock badge overlay
                 if (!isUnlocked) {
@@ -203,12 +211,9 @@ public class EmoteWheelScreen extends Screen {
             int minDx = (dySq < rInSq) ? (int) Math.ceil(Math.sqrt(rInSq - dySq)) : 0;
 
             if (minDx > 0) {
-                // Left arc span
                 context.fill(cx - maxDx, y, cx - minDx + 1, y + 1, color);
-                // Right arc span
                 context.fill(cx + minDx, y, cx + maxDx + 1, y + 1, color);
             } else {
-                // Full span across center
                 context.fill(cx - maxDx, y, cx + maxDx + 1, y + 1, color);
             }
         }
@@ -254,7 +259,6 @@ public class EmoteWheelScreen extends Screen {
             }
         }
 
-        // Draw crisp border outlines
         drawArcOutline(context, cx, cy, (int) rOut, startDeg, endDeg, borderColor);
         drawArcOutline(context, cx, cy, (int) rIn, startDeg, endDeg, borderColor);
 
@@ -361,25 +365,36 @@ public class EmoteWheelScreen extends Screen {
 
     private void executeAction() {
         if (selectedSlot < 0) return;
-        EmoteWheelConfig.EmoteDefinition def = EmoteWheelConfig.getSlotDefinition(selectedSlot);
-        if (def == null) return;
+        String emoteId = EmoteWheelConfig.getSlot(selectedSlot);
+        if (emoteId == null) return;
 
-        if (!def.isUnlocked()) {
+        Emote emote = EmoteRegistry.get(emoteId);
+        if (emote == null || emote.getAnimation() == null) return;
+
+        boolean isUnlocked = emote.isFree() || PermissionManager.hasAccessLocal(emote.getId());
+        if (!isUnlocked) {
             if (this.client != null && this.client.player != null) {
-                this.client.player.sendMessage(Text.literal("§c[Moo Client] " + MooLanguage.get("emotes_store_required")), true);
+                this.client.player.sendMessage(Text.literal("§c" + MooLanguage.get("emotes_store_required")), true);
             }
             return;
         }
 
-        if (def.triggerAction() != null) {
-            def.triggerAction().run();
+        if (emote.isMultiplayer()) {
+            if (this.client != null && this.client.isInSingleplayer()) {
+                if (this.client.player != null) {
+                    this.client.player.sendMessage(Text.literal("§c" + MooLanguage.get("interaction_requires_multiplayer")), true);
+                }
+                return;
+            }
+            InteractionEngine.getInstance().initiateInteraction(emote.getId());
+        } else {
+            EmoteEngine.getInstance().playLocalEmote(emote.getId());
         }
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
-            // Check "Edit Wheel" button
             int editBtnX = this.width - 130;
             int editBtnY = 16;
             if (mouseX >= editBtnX && mouseX <= editBtnX + 114 && mouseY >= editBtnY && mouseY <= editBtnY + 22) {
