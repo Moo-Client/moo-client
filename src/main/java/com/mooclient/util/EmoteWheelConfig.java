@@ -113,14 +113,6 @@ public class EmoteWheelConfig {
 
     public static synchronized void resetDefaults() {
         Arrays.fill(slots, null);
-        List<Emote> available = EmoteRegistry.getAll();
-        int slot = 0;
-        for (Emote e : available) {
-            if (slot >= TOTAL_SLOTS) break;
-            if (e != null && e.getId() != null && !"hands_up".equalsIgnoreCase(e.getId())) {
-                slots[slot++] = e.getId().toLowerCase();
-            }
-        }
         save();
     }
 

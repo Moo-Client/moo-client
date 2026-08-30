@@ -119,7 +119,6 @@ public class EmoteRemoteLoader {
                         anim, sceneConfig
                 );
                 EmoteRegistry.register(newEmote);
-                assignToFirstEmptySlot(id);
                 MooClient.LOGGER.info("Zarejestrowano nową dynamiczną emotkę z pliku {}: {}", fileName, id);
             }
         } catch (Exception ignored) {}
@@ -249,7 +248,6 @@ public class EmoteRemoteLoader {
                         anim, sceneConfig
                 );
                 EmoteRegistry.register(emote);
-                assignToFirstEmptySlot(id);
                 MooClient.LOGGER.info("Pomyślnie zsynchronizowano nową emotkę z chmury: {}", id);
             }
         } catch (Exception e) {
@@ -259,17 +257,6 @@ public class EmoteRemoteLoader {
 
     private static Identifier resolveIcon(String id) {
         return Identifier.of("mooclient", "textures/gui/emotes/" + id + ".png");
-    }
-
-    private static void assignToFirstEmptySlot(String emoteId) {
-        if (emoteId == null || emoteId.trim().isEmpty()) return;
-        if (EmoteWheelConfig.hasEmoteInAnySlot(emoteId)) return;
-        for (int i = 0; i < EmoteWheelConfig.TOTAL_SLOTS; i++) {
-            if (EmoteWheelConfig.getSlot(i) == null) {
-                EmoteWheelConfig.setSlot(i, emoteId);
-                break;
-            }
-        }
     }
 
     /**
