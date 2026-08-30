@@ -803,7 +803,7 @@ public class MooClientScreen extends Screen {
         int panelW = 480;
         int panelH = (modName.equalsIgnoreCase("Armor") || modName.equalsIgnoreCase("Armor HUD")) ? 410
                 : ((modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) ? 365
-                : ((modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) ? 230 : 330));
+                : ((modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) ? 280 : 330));
         int panelX = (this.width - panelW) / 2;
         int panelY = (this.height - panelH) / 2;
 
@@ -1344,18 +1344,30 @@ public class MooClientScreen extends Screen {
                     ArmorModule.isShowOffhand());
 
         } else if (modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) {
-            // Row 1: Color-Matched Border
+            // Row 1: Enable / Disable
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shulker_enabled_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.ShulkerTooltipModule.isShulkerEnabled());
+
+            // Row 2: Item Inspection (SHIFT Lock)
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shulker_inspect_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.ShulkerTooltipModule.isInspectEnabled());
+
+            // Row 3: Color-Matched Border
+            rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shulker_color_border_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     com.mooclient.module.modules.ShulkerTooltipModule.isColorMatchedBorder());
 
-            // Row 2: Show Empty Slots
+            // Row 4: Show Empty Slots
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shulker_empty_slots_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     com.mooclient.module.modules.ShulkerTooltipModule.isShowEmptySlots());
 
-            // Row 3: Require SHIFT Key
+            // Row 5: Require SHIFT Key
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shulker_require_shift_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
@@ -2677,7 +2689,7 @@ public class MooClientScreen extends Screen {
                 int panelW = 480;
                 int panelH = (modName.equalsIgnoreCase("Armor") || modName.equalsIgnoreCase("Armor HUD")) ? 410
                         : ((modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) ? 365
-                        : ((modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) ? 230 : 330));
+                        : ((modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) ? 280 : 330));
                 int panelX = (this.width - panelW) / 2;
                 int panelY = (this.height - panelH) / 2;
 
@@ -3354,7 +3366,30 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
                 } else if (modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) {
-                    // Row 1: Color Matched Border
+                    // Row 1: Enable / Disable
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        com.mooclient.module.modules.ShulkerTooltipModule.toggleShulkerEnabled();
+                        if (selectedModule != null) {
+                            selectedModule.setEnabled(com.mooclient.module.modules.ShulkerTooltipModule.isShulkerEnabled());
+                        }
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 2: Item Inspection (SHIFT Lock)
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        com.mooclient.module.modules.ShulkerTooltipModule.toggleInspectEnabled();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 3: Color Matched Border
+                    rowY += rowH + 6;
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {
                         playClickSound();
@@ -3363,7 +3398,7 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 2: Show Empty Slots
+                    // Row 4: Show Empty Slots
                     rowY += rowH + 6;
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {
@@ -3373,7 +3408,7 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 3: Require SHIFT Key
+                    // Row 5: Require SHIFT Key
                     rowY += rowH + 6;
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {

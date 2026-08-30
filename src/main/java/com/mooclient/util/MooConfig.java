@@ -23,15 +23,25 @@ import java.nio.file.Path;
 public class MooConfig {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("mooclient.json");
+
+    public static Path getConfigPath() {
+        try {
+            if (FabricLoader.getInstance() != null && FabricLoader.getInstance().getConfigDir() != null) {
+                return FabricLoader.getInstance().getConfigDir().resolve("mooclient.json");
+            }
+        } catch (Throwable ignored) {
+        }
+        return Path.of("config", "mooclient.json");
+    }
 
     /**
      * Save all module settings to disk.
      */
     public static void save() {
         try {
-            if (CONFIG_PATH.getParent() != null && !Files.exists(CONFIG_PATH.getParent())) {
-                Files.createDirectories(CONFIG_PATH.getParent());
+            Path configPath = getConfigPath();
+            if (configPath.getParent() != null && !Files.exists(configPath.getParent())) {
+                Files.createDirectories(configPath.getParent());
             }
 
             JsonObject root = new JsonObject();
@@ -234,6 +244,7 @@ public class MooConfig {
             // Shulker Tooltip Module
             JsonObject shulker = new JsonObject();
             shulker.addProperty("enabled", com.mooclient.module.modules.ShulkerTooltipModule.isShulkerEnabled());
+            shulker.addProperty("inspectEnabled", com.mooclient.module.modules.ShulkerTooltipModule.isInspectEnabled());
             shulker.addProperty("colorMatchedBorder", com.mooclient.module.modules.ShulkerTooltipModule.isColorMatchedBorder());
             shulker.addProperty("showEmptySlots", com.mooclient.module.modules.ShulkerTooltipModule.isShowEmptySlots());
             shulker.addProperty("requireShift", com.mooclient.module.modules.ShulkerTooltipModule.isRequireShift());
@@ -278,9 +289,9 @@ public class MooConfig {
             settings.addProperty("invitationUiVariant", MooClientSettings.getInvitationUiVariant().name());
             root.add("settings", settings);
 
-            Files.writeString(CONFIG_PATH, GSON.toJson(root));
-            MooClient.LOGGER.info("Saved config to {}", CONFIG_PATH);
-        } catch (IOException e) {
+            Files.writeString(getConfigPath(), GSON.toJson(root));
+            MooClient.LOGGER.info("Saved config to {}", getConfigPath());
+        } catch (Exception e) {
             MooClient.LOGGER.error("Failed to save config", e);
         }
     }
@@ -289,13 +300,14 @@ public class MooConfig {
      * Load all module settings from disk.
      */
     public static void load() {
-        if (!Files.exists(CONFIG_PATH)) {
+        Path configPath = getConfigPath();
+        if (!Files.exists(configPath)) {
             MooClient.LOGGER.info("No config file found, using defaults.");
             return;
         }
 
         try {
-            String json = Files.readString(CONFIG_PATH);
+            String json = Files.readString(configPath);
             JsonObject root = JsonParser.parseString(json).getAsJsonObject();
 
             // Language
@@ -890,6 +902,9 @@ public class MooConfig {
                     com.mooclient.module.modules.ShulkerTooltipModule.setShulkerEnabled(state);
                     ModuleManager.getInstance().getModule("Shulker Tooltip").ifPresent(m -> m.setEnabled(state, false));
                 }
+                if (shulker.has("inspectEnabled")) {
+                    com.mooclient.module.modules.ShulkerTooltipModule.setInspectEnabled(shulker.get("inspectEnabled").getAsBoolean());
+                }
                 if (shulker.has("colorMatchedBorder")) {
                     com.mooclient.module.modules.ShulkerTooltipModule.setColorMatchedBorder(shulker.get("colorMatchedBorder").getAsBoolean());
                 }
@@ -992,7 +1007,7 @@ public class MooConfig {
                 }
             }
 
-            MooClient.LOGGER.info("Loaded config from {}", CONFIG_PATH);
+            MooClient.LOGGER.info("Loaded config from {}", getConfigPath());
         } catch (Exception e) {
             MooClient.LOGGER.error("Failed to load config", e);
         }

@@ -22,7 +22,8 @@
     "ChatHudMixin",
     "PlayerListHudMixin",
     "ItemStackMixin",
-    "TooltipComponentMixin"
+    "TooltipComponentMixin",
+    "HandledScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

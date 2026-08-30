@@ -177,9 +177,11 @@ public class MooLanguage {
                 case "shulker_desc" -> "Podgląd zawartości Shulker Boxów w ekwipunku";
                 case "shulker_opt_title" -> "SHULKER TOOLTIP";
                 case "shulker_opt_subtitle" -> "Podgląd zawartości Shulker Boxów bezpośrednio w okienku tooltip.";
+                case "shulker_enabled_label" -> "Włącz moduł";
+                case "shulker_inspect_label" -> "Inspekcja przedmiotów (SHIFT)";
                 case "shulker_color_border_label" -> "Kolor ramki wg shulkera";
-                case "shulker_require_shift_label" -> "Wymagaj klawisza SHIFT";
                 case "shulker_empty_slots_label" -> "Wyświetlaj puste sloty";
+                case "shulker_require_shift_label" -> "Wymagaj SHIFT do otwarcia";
                 case "show_offhand_label" -> "Druga ręka (Offhand)";
                 case "show_mainhand_label" -> "Główna ręka";
                 case "mode_label" -> "Tryb aktywacji";
@@ -377,9 +379,11 @@ public class MooLanguage {
                 case "shulker_desc" -> "Preview Shulker Box inventory in tooltips";
                 case "shulker_opt_title" -> "SHULKER TOOLTIP";
                 case "shulker_opt_subtitle" -> "Preview Shulker Box contents directly in item tooltips.";
+                case "shulker_enabled_label" -> "Enable Module";
+                case "shulker_inspect_label" -> "Item Inspection (SHIFT Lock)";
                 case "shulker_color_border_label" -> "Color-Matched Border";
-                case "shulker_require_shift_label" -> "Require SHIFT Key";
                 case "shulker_empty_slots_label" -> "Show Empty Slots";
+                case "shulker_require_shift_label" -> "Require SHIFT to Open";
                 case "show_offhand_label" -> "Show Offhand";
                 case "show_mainhand_label" -> "Show Main Hand";
                 case "mode_label" -> "Activation Mode";

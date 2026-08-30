@@ -1,6 +1,7 @@
 package com.mooclient.mixin;
 
 import com.mooclient.module.modules.ShulkerTooltipModule;
+import com.mooclient.tooltip.ShulkerLockManager;
 import com.mooclient.tooltip.ShulkerTooltipData;
 import com.mooclient.tooltip.ShulkerTooltipUtil;
 import net.minecraft.client.gui.screen.Screen;
@@ -26,6 +27,10 @@ public class ItemStackMixin {
 
     @Inject(method = "getTooltipData", at = @At("HEAD"), cancellable = true)
     private void mooClient$getShulkerTooltipData(CallbackInfoReturnable<Optional<TooltipData>> cir) {
+        if (ShulkerLockManager.isRenderingInnerTooltip()) {
+            return;
+        }
+
         if (!ShulkerTooltipModule.isShulkerEnabled()) {
             return;
         }
@@ -42,6 +47,10 @@ public class ItemStackMixin {
 
     @Inject(method = "getTooltip", at = @At("RETURN"))
     private void mooClient$cleanShulkerTooltipText(Item.TooltipContext context, PlayerEntity player, TooltipType type, CallbackInfoReturnable<List<Text>> cir) {
+        if (ShulkerLockManager.isRenderingInnerTooltip()) {
+            return;
+        }
+
         if (!ShulkerTooltipModule.isShulkerEnabled()) {
             return;
         }

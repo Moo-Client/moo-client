@@ -8,10 +8,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.collection.DefaultedList;
 
 public class ShulkerBoxTooltipComponent implements TooltipComponent {
-    private static final int COLUMNS = 9;
-    private static final int ROWS = 3;
-    private static final int SLOT_SIZE = 18;
-    private static final int PADDING = 3;
+    public static final int COLUMNS = 9;
+    public static final int ROWS = 3;
+    public static final int SLOT_SIZE = 18;
+    public static final int PADDING = 3;
 
     private final ShulkerTooltipData data;
 
@@ -43,6 +43,8 @@ public class ShulkerBoxTooltipComponent implements TooltipComponent {
         int totalW = getWidth(textRenderer);
         int totalH = getHeight(textRenderer);
 
+        ShulkerLockManager.updateGridPosition(x, y, totalW, totalH);
+
         int borderColor = ShulkerTooltipModule.isColorMatchedBorder()
                 ? ShulkerTooltipUtil.getBorderColor(data.getShulkerStack())
                 : 0xFFB0D8EA;
@@ -51,18 +53,36 @@ public class ShulkerBoxTooltipComponent implements TooltipComponent {
         context.fill(x, y, x + totalW, y + totalH, 0xEE12121A);
         drawBorder(context, x, y, totalW, totalH, borderColor);
 
-        // 2. Draw Slots & Items
+        // 2. Determine hovered slot
         int startX = x + PADDING;
         int startY = y + PADDING;
+        int curMouseX = ShulkerLockManager.getGuiMouseX();
+        int curMouseY = ShulkerLockManager.getGuiMouseY();
 
+        int hoveredSlot = -1;
+        if (ShulkerTooltipModule.isInspectEnabled() && ShulkerLockManager.isLocked()) {
+            int relX = curMouseX - startX;
+            int relY = curMouseY - startY;
+            if (relX >= 0 && relX < COLUMNS * SLOT_SIZE && relY >= 0 && relY < ROWS * SLOT_SIZE) {
+                int col = relX / SLOT_SIZE;
+                int row = relY / SLOT_SIZE;
+                hoveredSlot = row * COLUMNS + col;
+            }
+        }
+
+        // 3. Draw Slots & Items
         for (int i = 0; i < 27; i++) {
             int col = i % COLUMNS;
             int row = i / COLUMNS;
             int slotX = startX + col * SLOT_SIZE;
             int slotY = startY + row * SLOT_SIZE;
+            boolean isHovered = (i == hoveredSlot);
 
             // Slot Background
-            if (ShulkerTooltipModule.isShowEmptySlots() || (i < items.size() && !items.get(i).isEmpty())) {
+            if (isHovered) {
+                context.fill(slotX, slotY, slotX + 17, slotY + 17, 0x5538BDF8);
+                drawBorder(context, slotX, slotY, 17, 17, 0xFF38BDF8);
+            } else if (ShulkerTooltipModule.isShowEmptySlots() || (i < items.size() && !items.get(i).isEmpty())) {
                 context.fill(slotX, slotY, slotX + 17, slotY + 17, 0x33000000);
                 drawBorder(context, slotX, slotY, 17, 17, 0x1FFFFFFF);
             }
@@ -72,6 +92,9 @@ public class ShulkerBoxTooltipComponent implements TooltipComponent {
                 if (!stack.isEmpty()) {
                     context.drawItem(stack, slotX + 1, slotY + 1);
                     context.drawStackOverlay(textRenderer, stack, slotX + 1, slotY + 1);
+                    if (isHovered && ShulkerTooltipModule.isInspectEnabled()) {
+                        ShulkerLockManager.setHoveredInnerItem(stack, i);
+                    }
                 }
             }
         }
