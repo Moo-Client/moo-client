@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.9.1_1';
+const VERSION = '1.9.1_2';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -65,29 +65,34 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
 ✓ **Drobne poprawki wizualne**`;
 
-    // Delete existing release and tag if already present
-    let checkRes = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);
-    if (checkRes.status === 200 && checkRes.data && checkRes.data.id) {
-        console.log('Deleting existing release:', checkRes.data.html_url);
-        await apiRequest('DELETE', `/repos/Moo-Client/moo-client/releases/${checkRes.data.id}`, token);
-        try {
-            await apiRequest('DELETE', `/repos/Moo-Client/moo-client/git/refs/tags/v${VERSION}`, token);
-        } catch (ignored) {}
+    let release;
+    let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);
+    if (res.status === 200 && res.data && res.data.upload_url) {
+        release = res.data;
+        console.log('Found existing release:', release.html_url);
+        await apiRequest('PATCH', `/repos/Moo-Client/moo-client/releases/${release.id}`, token, {
+            name: `Moo Client v${VERSION}`,
+            body: CHANGELOG_BODY
+        });
+    } else {
+        res = await apiRequest('POST', '/repos/Moo-Client/moo-client/releases', token, {
+            tag_name: `v${VERSION}`,
+            name: `Moo Client v${VERSION}`,
+            body: CHANGELOG_BODY,
+            draft: false,
+            prerelease: false
+        });
+        if (res.status === 201 || res.status === 200) {
+            release = res.data;
+            console.log('Created clean release:', release.html_url);
+        } else {
+            console.error('Error creating release:', res.data);
+            process.exit(1);
+        }
     }
 
-    // Create fresh clean release
-    let res = await apiRequest('POST', '/repos/Moo-Client/moo-client/releases', token, {
-        tag_name: `v${VERSION}`,
-        name: `Moo Client v${VERSION}`,
-        body: CHANGELOG_BODY,
-        draft: false,
-        prerelease: false
-    });
-    let release = res.data;
-    console.log('Created clean release:', release.html_url);
-
     // Delete old assets if any
-    if (release.assets) {
+    if (release.assets && release.assets.length > 0) {
         for (const asset of release.assets) {
             console.log('Deleting old asset:', asset.name);
             await apiRequest('DELETE', `/repos/Moo-Client/moo-client/releases/assets/${asset.id}`, token);
