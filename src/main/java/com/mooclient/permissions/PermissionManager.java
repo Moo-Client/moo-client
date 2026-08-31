@@ -244,9 +244,22 @@ public class PermissionManager {
             String role = userObj.has("role") && !userObj.get("role").isJsonNull() ? userObj.get("role").getAsString() : "user";
             boolean allEmotes = userObj.has("all_emotes") && !userObj.get("all_emotes").isJsonNull() && userObj.get("all_emotes").getAsBoolean();
 
+            String dbUuid = userObj.has("uuid") && !userObj.get("uuid").isJsonNull() ? userObj.get("uuid").getAsString().trim() : null;
+            String dbName = userObj.has("name") && !userObj.get("name").isJsonNull() ? userObj.get("name").getAsString().trim() : null;
+
             // Jeśli w bazie all_emotes jest TRUE, gracz ma odblokowane wszystkie emotki
             if (allEmotes) {
-                return new UserPermission(role, true, Collections.emptyList());
+                UserPermission fullPerm = new UserPermission(role, true, Collections.emptyList());
+                if (dbUuid != null && !dbUuid.isEmpty()) {
+                    try {
+                        String dashed = dbUuid.contains("-") ? dbUuid : dbUuid.replaceFirst("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5");
+                        PERMISSION_CACHE.put(UUID.fromString(dashed), fullPerm);
+                    } catch (Exception ignored) {}
+                }
+                if (dbName != null && !dbName.isEmpty()) {
+                    NAME_PERMISSION_CACHE.put(dbName.toLowerCase(), fullPerm);
+                }
+                return fullPerm;
             }
 
             // Jeśli all_emotes jest FALSE, pobieramy tylko przypisane emotki z tabeli user_emotes
@@ -261,12 +274,23 @@ public class PermissionManager {
                 emoteOr.add("user_uuid.eq." + undashed);
             }
 
-            String dbUuid = userObj.has("uuid") && !userObj.get("uuid").isJsonNull() ? userObj.get("uuid").getAsString().trim() : null;
             if (dbUuid != null && !dbUuid.isEmpty()) {
                 String dashed = dbUuid.contains("-") ? dbUuid : dbUuid.replaceFirst("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5");
                 String undashed = dbUuid.replace("-", "");
                 emoteOr.add("user_uuid.eq." + dashed.toLowerCase());
                 emoteOr.add("user_uuid.eq." + undashed.toLowerCase());
+            }
+
+            if (nickname != null && !nickname.trim().isEmpty()) {
+                String encodedNick = URLEncoder.encode(nickname.trim(), StandardCharsets.UTF_8);
+                emoteOr.add("user_uuid.eq." + encodedNick);
+                emoteOr.add("user_uuid.ilike." + encodedNick);
+            }
+
+            if (dbName != null && !dbName.isEmpty()) {
+                String encodedDbName = URLEncoder.encode(dbName, StandardCharsets.UTF_8);
+                emoteOr.add("user_uuid.eq." + encodedDbName);
+                emoteOr.add("user_uuid.ilike." + encodedDbName);
             }
 
             if (!emoteOr.isEmpty()) {
@@ -288,7 +312,18 @@ public class PermissionManager {
                 }
             }
 
-            return new UserPermission(role, false, unlockedEmotes);
+            UserPermission specificPerm = new UserPermission(role, false, unlockedEmotes);
+            if (dbUuid != null && !dbUuid.isEmpty()) {
+                try {
+                    String dashed = dbUuid.contains("-") ? dbUuid : dbUuid.replaceFirst("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5");
+                    PERMISSION_CACHE.put(UUID.fromString(dashed), specificPerm);
+                } catch (Exception ignored) {}
+            }
+            if (dbName != null && !dbName.isEmpty()) {
+                NAME_PERMISSION_CACHE.put(dbName.toLowerCase(), specificPerm);
+            }
+
+            return specificPerm;
         } catch (Exception e) {
             return UserPermission.DEFAULT_USER;
         }

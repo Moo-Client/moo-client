@@ -454,12 +454,23 @@ public class EmoteWheelEditScreen extends Screen {
                     workingSlots[dragSourceSlotIndex] = null;
                 }
             } else if (hoveredWheelSlot >= 0 && hoveredWheelSlot < 12) {
-                if (dragSourceSlotIndex >= 0) {
-                    String temp = workingSlots[dragSourceSlotIndex];
-                    workingSlots[dragSourceSlotIndex] = workingSlots[hoveredWheelSlot];
-                    workingSlots[hoveredWheelSlot] = temp;
+                Emote emote = EmoteRegistry.get(draggingEmoteId);
+                boolean isUnlocked = emote != null && (emote.isFree() || PermissionManager.hasAccessLocal(emote.getId()));
+                if (!isUnlocked) {
+                    if (this.client != null && this.client.player != null) {
+                        this.client.player.sendMessage(Text.literal("§c" + MooLanguage.get("emotes_store_required")), true);
+                    }
+                    if (dragSourceSlotIndex >= 0) {
+                        workingSlots[dragSourceSlotIndex] = null;
+                    }
                 } else {
-                    workingSlots[hoveredWheelSlot] = draggingEmoteId;
+                    if (dragSourceSlotIndex >= 0) {
+                        String temp = workingSlots[dragSourceSlotIndex];
+                        workingSlots[dragSourceSlotIndex] = workingSlots[hoveredWheelSlot];
+                        workingSlots[hoveredWheelSlot] = temp;
+                    } else {
+                        workingSlots[hoveredWheelSlot] = draggingEmoteId;
+                    }
                 }
             } else if (mouseY >= this.height - 110) {
                 if (dragSourceSlotIndex >= 0) {
@@ -499,6 +510,15 @@ public class EmoteWheelEditScreen extends Screen {
     }
 
     private void applyAndClose() {
+        for (int i = 0; i < EmoteWheelConfig.TOTAL_SLOTS; i++) {
+            String slotId = workingSlots[i];
+            if (slotId != null) {
+                Emote emote = EmoteRegistry.get(slotId);
+                if (emote != null && !emote.isFree() && !PermissionManager.hasAccessLocal(emote.getId())) {
+                    workingSlots[i] = null;
+                }
+            }
+        }
         EmoteWheelConfig.setActiveSlots(Arrays.asList(workingSlots));
         if (this.client != null) {
             this.client.setScreen(parentScreen);
