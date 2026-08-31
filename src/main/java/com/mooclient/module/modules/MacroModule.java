@@ -60,7 +60,17 @@ public class MacroModule extends Module {
     }
 
     public MacroModule() {
-        super("Macro", "Automatyczne komendy i wiadomości pod klawiszami", Category.MISC);
+        super("Macro", "Automatyczne komendy i wiadomości pod klawiszami", Category.MISC, false);
+    }
+
+    @Override
+    public void onEnable() {
+        enabled = true;
+    }
+
+    @Override
+    public void onDisable() {
+        enabled = false;
     }
 
     @Override
@@ -69,8 +79,9 @@ public class MacroModule extends Module {
     }
 
     @Override
-    public void setEnabled(boolean value) {
-        enabled = value;
+    public void setEnabled(boolean enabled, boolean saveConfig) {
+        super.setEnabled(enabled, saveConfig);
+        MacroModule.enabled = enabled;
     }
 
     public static boolean isMacroEnabled() {
@@ -79,6 +90,14 @@ public class MacroModule extends Module {
 
     public static void setMacroEnabled(boolean value) {
         enabled = value;
+        MacroModule m = com.mooclient.module.ModuleManager.getInstance().getModule(MacroModule.class);
+        if (m != null) {
+            m.setEnabled(value, false);
+        }
+    }
+
+    public static void toggleMacroEnabled() {
+        setMacroEnabled(!enabled);
     }
 
     public static List<MacroEntry> getMacros() {

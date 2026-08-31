@@ -125,31 +125,82 @@ public class MooNetworkHandler implements IMooTransport {
 
                 if (instance != null) instance.sendPresence();
 
-                // 3. Listener loop
-                byte[] buffer = new byte[8192];
+                // 3. Robust buffered stream listener loop
+                ByteArrayOutputStream incomingStream = new ByteArrayOutputStream();
+                byte[] readBuf = new byte[8192];
+
                 while (!socket.isClosed() && socket.isConnected()) {
-                    int len = in.read(buffer);
-                    if (len <= 0) break;
+                    int bytesRead = in.read(readBuf);
+                    if (bytesRead <= 0) break;
+                    incomingStream.write(readBuf, 0, bytesRead);
 
-                    for (int i = 0; i < len; i++) {
-                        if ((buffer[i] & 0xF0) == 0x30) {
-                            if (i + 1 >= len) break;
-                            int packetRemain = buffer[i + 1] & 0xFF;
-                            if (i + 2 + packetRemain <= len) {
-                                int topicLen = ((buffer[i + 2] & 0xFF) << 8) | (buffer[i + 3] & 0xFF);
-                                if (i + 4 + topicLen <= len) {
-                                    String topic = new String(buffer, i + 4, topicLen, StandardCharsets.UTF_8);
-                                    int payloadStart = i + 4 + topicLen;
-                                    int payloadLen = (i + 2 + packetRemain) - payloadStart;
+                    byte[] data = incomingStream.toByteArray();
+                    int offset = 0;
 
-                                    if (payloadLen > 0 && payloadStart + payloadLen <= len) {
-                                        String jsonStr = new String(buffer, payloadStart, payloadLen, StandardCharsets.UTF_8);
-                                        dispatchIncomingPacket(topic, jsonStr);
-                                    }
-                                }
-                                i += 1 + packetRemain;
+                    while (offset < data.length) {
+                        int headerByte = data[offset] & 0xFF;
+                        int packetType = headerByte & 0xF0;
+
+                        // Decode variable length integer for remaining length
+                        int multiplier = 1;
+                        int packetBodyLen = 0;
+                        int lenBytes = 0;
+                        int cursor = offset + 1;
+                        boolean completeLength = false;
+
+                        while (cursor < data.length && lenBytes < 4) {
+                            int encodedByte = data[cursor] & 0xFF;
+                            packetBodyLen += (encodedByte & 0x7F) * multiplier;
+                            multiplier *= 128;
+                            lenBytes++;
+                            cursor++;
+                            if ((encodedByte & 0x80) == 0) {
+                                completeLength = true;
+                                break;
                             }
                         }
+
+                        if (!completeLength) {
+                            // Waiting for more remaining length bytes from stream
+                            break;
+                        }
+
+                        int totalPacketLen = 1 + lenBytes + packetBodyLen;
+                        if (offset + totalPacketLen > data.length) {
+                            // Waiting for rest of packet payload from stream
+                            break;
+                        }
+
+                        // Complete MQTT packet ready
+                        if (packetType == 0x30) { // PUBLISH QoS 0 or QoS 1
+                            int topicStart = cursor;
+                            if (topicStart + 2 <= data.length) {
+                                int topicLen = ((data[topicStart] & 0xFF) << 8) | (data[topicStart + 1] & 0xFF);
+                                int payloadStart = topicStart + 2 + topicLen;
+                                int qos = (headerByte & 0x06) >> 1;
+                                if (qos > 0) {
+                                    payloadStart += 2; // skip Packet Identifier for QoS > 0
+                                }
+                                int payloadEnd = offset + totalPacketLen;
+                                int payloadLen = payloadEnd - payloadStart;
+
+                                if (topicStart + 2 + topicLen <= payloadEnd && payloadLen >= 0) {
+                                    String topic = new String(data, topicStart + 2, topicLen, StandardCharsets.UTF_8);
+                                    String jsonStr = new String(data, payloadStart, payloadLen, StandardCharsets.UTF_8);
+                                    dispatchIncomingPacket(topic, jsonStr);
+                                }
+                            }
+                        }
+
+                        offset += totalPacketLen;
+                    }
+
+                    // Keep remaining unparsed bytes in stream buffer
+                    if (offset > 0) {
+                        byte[] remaining = new byte[data.length - offset];
+                        System.arraycopy(data, offset, remaining, 0, remaining.length);
+                        incomingStream.reset();
+                        incomingStream.write(remaining);
                     }
                 }
             } catch (Exception ignored) {
@@ -197,27 +248,33 @@ public class MooNetworkHandler implements IMooTransport {
         if (client == null) return;
 
         UUID senderUuid = null;
-        if (obj.has("uuid")) {
+        if (obj.has("uuid") && !obj.get("uuid").isJsonNull()) {
             try {
-                senderUuid = UUID.fromString(obj.get("uuid").getAsString());
+                String idStr = obj.get("uuid").getAsString();
+                if (!idStr.isEmpty()) senderUuid = UUID.fromString(idStr);
             } catch (Exception ignored) {}
         }
-        if (senderUuid == null) return;
+        String senderName = obj.has("u") && !obj.get("u").isJsonNull() ? obj.get("u").getAsString() : null;
+
+        if (senderUuid == null && senderName == null) return;
 
         // Ignoruj własne pakiety
         UUID localUuid = MooSessionValidator.getLocalPlayerUuid();
-        if (senderUuid.equals(localUuid)) return;
+        String localName = MooSessionValidator.getLocalPlayerName();
+        if (senderUuid != null && localUuid != null && senderUuid.equals(localUuid)) return;
+        if (senderName != null && localName != null && senderName.equalsIgnoreCase(localName)) return;
 
-        String emoteId = obj.has("e") ? obj.get("e").getAsString() : null;
+        if (senderName != null) {
+            MooUserManager.registerUser(senderName, senderUuid);
+        }
+
+        String emoteId = obj.has("e") && !obj.get("e").isJsonNull() ? obj.get("e").getAsString() : null;
         boolean play = !obj.has("play") || obj.get("play").getAsBoolean();
 
         UUID finalSenderUuid = senderUuid;
+        String finalSenderName = senderName;
         client.execute(() -> {
-            if (play && emoteId != null) {
-                EmoteEngine.getInstance().playRemoteEmote(finalSenderUuid, emoteId, 0, System.currentTimeMillis());
-            } else {
-                EmoteEngine.getInstance().stopRemoteEmote(finalSenderUuid);
-            }
+            EmoteEngine.getInstance().handleNetworkEmote(finalSenderUuid, finalSenderName, emoteId, play);
         });
     }
 
@@ -407,7 +464,18 @@ public class MooNetworkHandler implements IMooTransport {
 
             ByteArrayOutputStream pubPacket = new ByteArrayOutputStream();
             pubPacket.write(0x30);
-            pubPacket.write(remain);
+
+            // Encode variable length integer (MQTT 3.1.1 spec)
+            int val = remain;
+            do {
+                int digit = val % 128;
+                val = val / 128;
+                if (val > 0) {
+                    digit |= 0x80;
+                }
+                pubPacket.write(digit);
+            } while (val > 0);
+
             pubPacket.write((topicBytes.length >> 8) & 0xFF);
             pubPacket.write(topicBytes.length & 0xFF);
             pubPacket.write(topicBytes);

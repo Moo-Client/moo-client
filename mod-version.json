@@ -1,7 +1,7 @@
 {
-  "version": "1.9.4",
+  "version": "1.9.5",
   "minecraft": "1.21.4",
-  "name": "Moo Client 1.9.4",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.9.4/moo-client-1.9.4.jar",
-  "changelog": "🚀 Moo Client v1.9.4:\n✓ Interaktywna inspekcja Shulker Box (Shift Lock & Hover) – przytrzymaj SHIFT, aby zablokować tooltip i najechać kursorem na każdy z 27 slotów wewnątrz shulkera\n✓ Pełne zagnieżdżone tooltipy przedmiotów – wyświetlanie pełnego opisu, zaklęć, lore i durability dla wskazanego itemka z izolacją warstw Z-Index\n✓ Płynne anulowanie blokady – puszczenie klawisza SHIFT natychmiastowo i bezbłędnie zwalnia blokadę\n✓ Poprawka menu opcji Shulker Tooltip – dodano włącznik modułu i powiększono panel, aby wszystkie 5 wierszy mieściło się w ramce"
+  "name": "Moo Client 1.9.5",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.9.5/moo-client-1.9.5.jar",
+  "changelog": "🚀 Moo Client v1.9.5:\n✓ Nowa ikona emotki Tornado – dodano autorską teksturę pixel-art wiru powietrznego w kole emotek\n✓ Udoskonalona synchronizacja i widoczność emotek – pełna obsługa sieciowa MQTT dla wszystkich graczy Moo Client\n✓ Kolejka odtwarzania emotek w tle – natychmiastowe odtworzenie animacji po jej pobraniu z chmury\n✓ Usprawnienie włącznika Macro – dodano przełącznik główny modułu w menu graficznym"
 }

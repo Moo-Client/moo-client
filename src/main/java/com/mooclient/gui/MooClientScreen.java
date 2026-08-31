@@ -1125,10 +1125,15 @@ public class MooClientScreen extends Screen {
                     com.mooclient.module.modules.ChatModule.isTextShadow());
 
         } else if (modName.equalsIgnoreCase("Macro")) {
+            // Row 1: Enable / Disable Macro Module
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("macro_enabled_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.MacroModule.isMacroEnabled());
+
             java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> macroList = com.mooclient.module.modules.MacroModule
                     .getMacros();
             int mRowH = 28;
-            int curY = panelY + headerH + 10;
+            int curY = rowY + rowH + 6;
 
             for (int i = 0; i < Math.min(5, macroList.size()); i++) {
                 com.mooclient.module.modules.MacroModule.MacroEntry m = macroList.get(i);
@@ -3078,10 +3083,22 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
                 } else if (modName.equalsIgnoreCase("Macro")) {
+                    // Row 1: Enable / Disable Macro Module
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        com.mooclient.module.modules.MacroModule.toggleMacroEnabled();
+                        if (selectedModule != null) {
+                            selectedModule.setEnabled(com.mooclient.module.modules.MacroModule.isMacroEnabled());
+                        }
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
                     java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> macroList = com.mooclient.module.modules.MacroModule
                             .getMacros();
                     int mRowH = 28;
-                    int curY = panelY + headerH + 10;
+                    int curY = rowY + rowH + 6;
 
                     // If listening for mouse button keybind
                     if (button != 0 && this.listeningMacroIndex >= 0 && this.listeningMacroIndex < macroList.size()) {

@@ -73,6 +73,8 @@ public class EmoteRegistry {
         } else {
             if (!SOLO_EMOTES.contains(emote)) SOLO_EMOTES.add(emote);
         }
+
+        EmoteEngine.getInstance().onEmoteRegistered(emote);
     }
 
     public static void unregister(String id) {

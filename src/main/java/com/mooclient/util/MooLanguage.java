@@ -137,6 +137,7 @@ public class MooLanguage {
                 case "zoom_opt_subtitle" -> "Dostosuj klawisz i mnożnik przybliżenia.";
                 case "macro_opt_title" -> "MAKRA / AUTOTEXT";
                 case "macro_opt_subtitle" -> "Wysyłaj komendy i wiadomości klawiszami.";
+                case "macro_enabled_label" -> "Włącz moduł";
                 case "chat_opt_title" -> "CZAT";
                 case "chat_opt_subtitle" -> "Przezroczyste tło, nieskończona historia i animacja";
                 case "chat_transparent_label" -> "Przezroczyste tło";
@@ -339,6 +340,7 @@ public class MooLanguage {
                 case "zoom_opt_subtitle" -> "Customize zoom keybind and magnification factor.";
                 case "macro_opt_title" -> "MACRO / AUTOTEXT";
                 case "macro_opt_subtitle" -> "Execute commands & messages using custom keybinds.";
+                case "macro_enabled_label" -> "Enable Module";
                 case "chat_opt_title" -> "CHAT";
                 case "chat_opt_subtitle" -> "Transparent background, unlimited history & smooth slide animation";
                 case "chat_transparent_label" -> "Transparent Background";

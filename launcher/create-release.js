@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.9.4';
+const VERSION = '1.9.5';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,10 +63,10 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-✓ **Interaktywna inspekcja Shulker Box (Shift Lock & Hover)** – przytrzymaj SHIFT na shulkerze, aby zablokować okienko podglądu i najechać kursorem na każdy z 27 slotów wewnątrz
-✓ **Pełne zagnieżdżone tooltipy przedmiotów** – wyświetlanie pełnego opisu, zaklęć, lore i durability dla wskazanego itemka z izolacją warstw Z-Index (brak przebijania sprite'ów)
-✓ **Płynne anulowanie blokady** – puszczenie klawisza SHIFT natychmiastowo i bezbłędnie zwalnia blokadę
-✓ **Poprawka menu opcji Shulker Tooltip** – dodano włącznik modułu i powiększono panel, aby wszystkie 5 wierszy mieściło się estetycznie wewnątrz ramki`;
+✓ **Nowa ikona emotki Tornado** – dodano autorską teksturę pixel-art wiru powietrznego w kole emotek
+✓ **Udoskonalona synchronizacja i widoczność emotek** – pełna obsługa sieciowa MQTT dla wszystkich graczy Moo Client
+✓ **Kolejka odtwarzania emotek w tle** – natychmiastowe odtworzenie animacji po jej pobraniu z chmury
+✓ **Usprawnienie włącznika Macro** – dodano przełącznik główny modułu w menu graficznym`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);

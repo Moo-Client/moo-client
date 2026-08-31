@@ -53,7 +53,7 @@ public abstract class PlayerEntityModelMixin extends BipedEntityModel<PlayerEnti
         Entity entity = client.world.getEntityById(state.id);
         if (!(entity instanceof PlayerEntity player)) return;
 
-        EmotePlayerState emoteState = EmoteEngine.getInstance().getPlayerStateIfExists(player.getUuid());
+        EmotePlayerState emoteState = EmoteEngine.getInstance().getPlayerStateIfExists(player);
         if (emoteState == null || !emoteState.isRendering()) return;
 
         float tickDelta = client.getRenderTickCounter().getTickDelta(true);
