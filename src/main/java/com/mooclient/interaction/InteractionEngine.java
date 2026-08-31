@@ -257,18 +257,6 @@ public class InteractionEngine {
             localState.setCustomSceneTransform(interaction.getSceneConfig().getSlotTransform(localSlot));
         }
         localState.startEmote(emote, localSlot, startEpochMs);
-
-        // Ustawienie transformacji sceny dla drugiego gracza
-        UUID partnerUuid = (localSlot == 0) ? interaction.getTargetUuid() : interaction.getInitiatorUuid();
-        int partnerSlot = (localSlot == 0) ? 1 : 0;
-
-        EmotePlayerState partnerState = EmoteEngine.getInstance().getPlayerState(partnerUuid);
-        if (partnerState != null) {
-            if (interaction.getSceneConfig() != null) {
-                partnerState.setCustomSceneTransform(interaction.getSceneConfig().getSlotTransform(partnerSlot));
-            }
-            partnerState.startEmote(emote, partnerSlot, startEpochMs);
-        }
     }
 
     /**

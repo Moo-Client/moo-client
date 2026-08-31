@@ -26,6 +26,15 @@ public class MouseMixin {
 
     @Inject(method = "updateMouse", at = @At("HEAD"), cancellable = true)
     private void mooClient$onUpdateMouse(double timeDelta, CallbackInfo ci) {
+        // Blokada obrotu kamery podczas aktywnej interakcji multiplayerowej (np. handshake)
+        if (this.client.currentScreen == null
+                && com.mooclient.interaction.InteractionEngine.getInstance().hasActiveInteraction()) {
+            this.cursorDeltaX = 0.0;
+            this.cursorDeltaY = 0.0;
+            ci.cancel();
+            return;
+        }
+
         if (this.client.currentScreen == null && FreelookModule.isActive()) {
             double dx = this.cursorDeltaX;
             double dy = this.cursorDeltaY;

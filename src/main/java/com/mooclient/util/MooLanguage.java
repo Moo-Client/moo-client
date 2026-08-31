@@ -86,8 +86,11 @@ public class MooLanguage {
 
                 // Interaction Engine & Invitations
                 case "invitation_title" -> "ZAPROSZENIE DO INTERAKCJI";
-                case "invitation_accept_prompt" -> "Akceptuj";
-                case "invitation_decline_prompt" -> "Odrzuć";
+                case "invitation_accept_prompt", "invitation_accept" -> "Akceptuj";
+                case "invitation_decline_prompt", "invitation_decline" -> "Odrzuć";
+                case "invitation_desc" -> "zaprasza do";
+                case "invitation_header" -> "INTERAKCJA MOO CLIENT";
+                case "invitation_offers" -> "oferuje";
                 case "interaction_requires_multiplayer" -> "Interakcje multiplayer wymagają gry wieloosobowej i innego gracza!";
                 case "interaction_no_target_found", "interaction_no_target" -> "Nie znaleziono gracza w zasięgu wzroku (< 3.0 bloków)!";
                 case "interaction_in_progress", "interaction_already_active" -> "Trwa już inna interakcja!";
@@ -289,8 +292,11 @@ public class MooLanguage {
 
                 // Interaction Engine & Invitations
                 case "invitation_title" -> "INTERACTION INVITATION";
-                case "invitation_accept_prompt" -> "Accept";
-                case "invitation_decline_prompt" -> "Decline";
+                case "invitation_accept_prompt", "invitation_accept" -> "Accept";
+                case "invitation_decline_prompt", "invitation_decline" -> "Decline";
+                case "invitation_desc" -> "invites you to";
+                case "invitation_header" -> "MOO CLIENT INTERACTION";
+                case "invitation_offers" -> "offers";
                 case "interaction_requires_multiplayer" -> "Multiplayer interactions require multiplayer mode and another player!";
                 case "interaction_no_target_found", "interaction_no_target" -> "No Moo Client player found in crosshair sight (< 3.0 blocks)!";
                 case "interaction_in_progress", "interaction_already_active" -> "Another interaction is already in progress!";

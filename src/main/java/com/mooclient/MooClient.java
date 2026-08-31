@@ -260,6 +260,7 @@ public class MooClient implements ClientModInitializer {
             com.mooclient.module.modules.EmotesModule.onTick();
             EmoteEngine.getInstance().onTick(client);
             InteractionEngine.getInstance().onTick(client);
+            InvitationUIManager.getInstance().onTick();
 
             // Update Discord RPC State every ~2 seconds (40 ticks)
             tickCounter++;
