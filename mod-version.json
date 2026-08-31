@@ -1,7 +1,7 @@
 {
-  "version": "1.9.6",
+  "version": "1.9.7",
   "minecraft": "1.21.4",
-  "name": "Moo Client 1.9.6",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.9.6/moo-client-1.9.6.jar",
-  "changelog": "🚀 Moo Client v1.9.6:\n✓ Poprawa działania uprawnień do emotek – natychmiastowe egzekwowanie blokady po ustawieniu false w bazie Supabase\n✓ Usunięcie nieuprawnionego omijania ról – pełna kontrola nad dostępem do emotek z poziomu tabeli users\n✓ Automatyczne dynamiczne odświeżanie uprawnień gracza w tle przy otwarciu koła emotek"
+  "name": "Moo Client 1.9.7",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.9.7/moo-client-1.9.7.jar",
+  "changelog": "🚀 Moo Client v1.9.7:\n✓ Pełna integracja uprawnień z bazą Supabase (obsługa all_emotes oraz pojedynczych emotek w tabeli user_emotes)\n✓ Wzmocniona weryfikacja uprawnień gracza i blokada nieodblokowanych emotek w kole oraz edytorze\n✓ Automatyczne czyszczenie niedostępnych emotek ze slotów koła"
 }
