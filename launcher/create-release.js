@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.9.7';
+const VERSION = '1.9.8';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,9 +63,9 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-✓ **Pełna integracja uprawnień z bazą Supabase** – obsługa all_emotes oraz pojedynczych emotek w tabeli user_emotes
-✓ **Wzmocniona weryfikacja uprawnień gracza** – blokada nieodblokowanych emotek w kole oraz edytorze
-✓ **Automatyczne czyszczenie niedostępnych emotek** ze slotów koła przy zapisie konfiguracji`;
+✓ **Poprawka blokady ruchu i obrotu kamery** podczas animacji interakcji multiplayer (handshake)
+✓ **Automatyczne wygasanie zaproszeń** – brak wiszących powiadomień na ekranie HUD
+✓ **Usprawniony interfejs zaproszeń** – dynamiczny layout zapobiegający nakładaniu się tekstu oraz pełne wsparcie PL / EN`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);
