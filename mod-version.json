@@ -1,7 +1,7 @@
 {
-  "version": "1.9.5",
+  "version": "1.9.6",
   "minecraft": "1.21.4",
-  "name": "Moo Client 1.9.5",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.9.5/moo-client-1.9.5.jar",
-  "changelog": "🚀 Moo Client v1.9.5:\n✓ Nowa ikona emotki Tornado – dodano autorską teksturę pixel-art wiru powietrznego w kole emotek\n✓ Udoskonalona synchronizacja i widoczność emotek – pełna obsługa sieciowa MQTT dla wszystkich graczy Moo Client\n✓ Kolejka odtwarzania emotek w tle – natychmiastowe odtworzenie animacji po jej pobraniu z chmury\n✓ Usprawnienie włącznika Macro – dodano przełącznik główny modułu w menu graficznym"
+  "name": "Moo Client 1.9.6",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.9.6/moo-client-1.9.6.jar",
+  "changelog": "🚀 Moo Client v1.9.6:\n✓ Poprawa działania uprawnień do emotek – natychmiastowe egzekwowanie blokady po ustawieniu false w bazie Supabase\n✓ Usunięcie nieuprawnionego omijania ról – pełna kontrola nad dostępem do emotek z poziomu tabeli users\n✓ Automatyczne dynamiczne odświeżanie uprawnień gracza w tle przy otwarciu koła emotek"
 }

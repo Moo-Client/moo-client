@@ -44,7 +44,7 @@ public class EmoteWheelScreen extends Screen {
     protected void init() {
         super.init();
         EmoteWheelConfig.load();
-        PermissionManager.fetchLocalPlayerPermissions();
+        PermissionManager.fetchLocalPlayerPermissions(true);
     }
 
     @Override

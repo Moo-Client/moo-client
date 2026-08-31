@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.9.5';
+const VERSION = '1.9.6';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,10 +63,9 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-✓ **Nowa ikona emotki Tornado** – dodano autorską teksturę pixel-art wiru powietrznego w kole emotek
-✓ **Udoskonalona synchronizacja i widoczność emotek** – pełna obsługa sieciowa MQTT dla wszystkich graczy Moo Client
-✓ **Kolejka odtwarzania emotek w tle** – natychmiastowe odtworzenie animacji po jej pobraniu z chmury
-✓ **Usprawnienie włącznika Macro** – dodano przełącznik główny modułu w menu graficznym`;
+✓ **Poprawa działania uprawnień do emotek** – natychmiastowe egzekwowanie blokady po ustawieniu false w bazie Supabase
+✓ **Usunięcie nieuprawnionego omijania ról** – pełna kontrola nad dostępem do emotek z poziomu tabeli users
+✓ **Automatyczne dynamiczne odświeżanie uprawnień gracza** w tle przy otwarciu koła emotek`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);

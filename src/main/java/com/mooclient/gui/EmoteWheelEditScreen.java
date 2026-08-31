@@ -53,7 +53,7 @@ public class EmoteWheelEditScreen extends Screen {
     protected void init() {
         super.init();
         EmoteWheelConfig.load();
-        PermissionManager.fetchLocalPlayerPermissions();
+        PermissionManager.fetchLocalPlayerPermissions(true);
         for (int i = 0; i < EmoteWheelConfig.TOTAL_SLOTS; i++) {
             String slot = EmoteWheelConfig.getSlot(i);
             workingSlots[i] = "hands_up".equalsIgnoreCase(slot) ? null : slot;
@@ -430,6 +430,14 @@ public class EmoteWheelEditScreen extends Screen {
 
             // 6. Dock item drag start
             if (hoveredDockEmoteId != null) {
+                Emote emote = EmoteRegistry.get(hoveredDockEmoteId);
+                boolean isUnlocked = emote != null && (emote.isFree() || PermissionManager.hasAccessLocal(emote.getId()));
+                if (!isUnlocked) {
+                    if (this.client != null && this.client.player != null) {
+                        this.client.player.sendMessage(Text.literal("§c" + MooLanguage.get("emotes_store_required")), true);
+                    }
+                    return true;
+                }
                 draggingEmoteId = hoveredDockEmoteId;
                 dragSourceSlotIndex = -1;
                 return true;

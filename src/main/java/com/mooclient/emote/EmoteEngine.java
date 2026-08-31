@@ -3,10 +3,13 @@ package com.mooclient.emote;
 import com.mooclient.MooClient;
 import com.mooclient.module.modules.EmotesModule;
 import com.mooclient.network.MooNetworkHandler;
+import com.mooclient.permissions.PermissionManager;
+import com.mooclient.util.MooLanguage;
 import com.mooclient.util.MooUserManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.text.Text;
 
 import java.util.List;
 import java.util.Map;
@@ -103,6 +106,12 @@ public class EmoteEngine {
 
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null) return;
+
+        // Weryfikacja uprawnień gracza do emotki
+        if (!emote.isFree() && !PermissionManager.hasAccessLocal(emote.getId())) {
+            client.player.sendMessage(Text.literal("§c" + MooLanguage.get("emotes_store_required")), true);
+            return;
+        }
 
         // Włączenie perspektywy F5 (trzecia osoba z tyłu), jeśli emotka tego wymaga
         if (client.options != null && emote.isForcesThirdPerson()) {

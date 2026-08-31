@@ -53,7 +53,11 @@ public class PermissionManager {
             this.role = role != null ? role.trim().toLowerCase() : "user";
             this.allEmotes = allEmotes;
             if (unlockedEmotes != null) {
-                this.unlockedEmoteIds.addAll(unlockedEmotes);
+                for (String e : unlockedEmotes) {
+                    if (e != null && !e.trim().isEmpty()) {
+                        this.unlockedEmoteIds.add(e.trim().toLowerCase());
+                    }
+                }
             }
             this.fetchedTimeMs = System.currentTimeMillis();
         }
@@ -78,13 +82,17 @@ public class PermissionManager {
         }
 
         public boolean hasAllEmotes() {
-            return allEmotes || isStaffRole();
+            return allEmotes;
         }
 
         public boolean hasEmote(String emoteId) {
-            if (hasAllEmotes() || isStaffRole()) return true;
+            if (allEmotes) return true;
             if (emoteId == null) return false;
             return unlockedEmoteIds.contains(emoteId.toLowerCase().trim());
+        }
+
+        public Set<String> getUnlockedEmoteIds() {
+            return Collections.unmodifiableSet(unlockedEmoteIds);
         }
 
         public boolean isExpired(long ttlMs) {
@@ -97,7 +105,7 @@ public class PermissionManager {
     private static final Map<UUID, UserPermission> PERMISSION_CACHE = new ConcurrentHashMap<>();
     private static final Map<String, UserPermission> NAME_PERMISSION_CACHE = new ConcurrentHashMap<>();
     private static final Set<String> PENDING_REQUESTS = ConcurrentHashMap.newKeySet();
-    private static final long CACHE_TTL_MS = 5 * 60 * 1000L; // 5 minut TTL
+    private static final long CACHE_TTL_MS = 60 * 1000L; // 60 sekund TTL
 
     public static boolean hasAccess(UUID playerUuid, String emoteId) {
         if (emoteId == null) return false;
@@ -114,15 +122,18 @@ public class PermissionManager {
             perm = NAME_PERMISSION_CACHE.get(nickname.toLowerCase().trim());
         }
 
-        if (perm != null && (perm.hasAllEmotes() || perm.isStaffRole() || perm.hasEmote(emoteId))) {
+        if (perm != null && perm.hasEmote(emoteId)) {
+            if (perm.isExpired(CACHE_TTL_MS)) {
+                fetchPermissionsAsync(playerUuid, nickname, false);
+            }
             return true;
         }
 
         if (perm == null || perm.isExpired(CACHE_TTL_MS)) {
-            fetchPermissionsAsync(playerUuid, nickname);
+            fetchPermissionsAsync(playerUuid, nickname, false);
         }
 
-        return perm != null && (perm.hasAllEmotes() || perm.isStaffRole() || perm.hasEmote(emoteId));
+        return perm != null && perm.hasEmote(emoteId);
     }
 
     public static boolean hasAccessLocal(String emoteId) {
@@ -131,20 +142,28 @@ public class PermissionManager {
     }
 
     public static void fetchLocalPlayerPermissions() {
+        fetchLocalPlayerPermissions(false);
+    }
+
+    public static CompletableFuture<UserPermission> fetchLocalPlayerPermissions(boolean force) {
         UUID localUuid = MooSessionValidator.getLocalPlayerUuid();
         String nickname = MooSessionValidator.getLocalPlayerName();
-        fetchPermissionsAsync(localUuid, nickname);
+        return fetchPermissionsAsync(localUuid, nickname, force);
     }
 
     public static CompletableFuture<UserPermission> fetchPermissionsAsync(UUID playerUuid, String nickname) {
+        return fetchPermissionsAsync(playerUuid, nickname, false);
+    }
+
+    public static CompletableFuture<UserPermission> fetchPermissionsAsync(UUID playerUuid, String nickname, boolean force) {
         String cleanNick = (nickname != null && !nickname.trim().isEmpty()) ? nickname.trim().toLowerCase() : null;
 
-        // 1. Sprawdź najpierw pamięć podręczną (Cache Hit)
+        // 1. Sprawdź najpierw pamięć podręczną (Cache Hit) jeśli nie wymuszono odświeżenia
         UserPermission cached = playerUuid != null ? PERMISSION_CACHE.get(playerUuid) : null;
         if (cached == null && cleanNick != null) {
             cached = NAME_PERMISSION_CACHE.get(cleanNick);
         }
-        if (cached != null && !cached.isExpired(CACHE_TTL_MS)) {
+        if (!force && cached != null && !cached.isExpired(CACHE_TTL_MS)) {
             return CompletableFuture.completedFuture(cached);
         }
 
@@ -225,13 +244,12 @@ public class PermissionManager {
             String role = userObj.has("role") && !userObj.get("role").isJsonNull() ? userObj.get("role").getAsString() : "user";
             boolean allEmotes = userObj.has("all_emotes") && !userObj.get("all_emotes").isJsonNull() && userObj.get("all_emotes").getAsBoolean();
 
-            // Jeśli gracz ma all_emotes lub rolę staff/twórcy/testera/developera, odblokuj wszystkie emotki
-            UserPermission tempPerm = new UserPermission(role, allEmotes, Collections.emptyList());
-            if (tempPerm.hasAllEmotes() || tempPerm.isStaffRole()) {
+            // Jeśli w bazie all_emotes jest TRUE, gracz ma odblokowane wszystkie emotki
+            if (allEmotes) {
                 return new UserPermission(role, true, Collections.emptyList());
             }
 
-            // Pobranie przypisanych indywidualnych emotek z tabeli user_emotes
+            // Jeśli all_emotes jest FALSE, pobieramy tylko przypisane emotki z tabeli user_emotes
             Set<String> unlockedEmotes = new HashSet<>();
             StringBuilder emotesUrlBuilder = new StringBuilder(apiBaseUrl).append("/user_emotes?select=*");
             List<String> emoteOr = new ArrayList<>();
@@ -290,13 +308,13 @@ public class PermissionManager {
         if (cached == null && localName != null) {
             cached = NAME_PERMISSION_CACHE.get(localName.toLowerCase().trim());
         }
-        if (cached != null && (cached.hasAllEmotes() || cached.isStaffRole() || cached.hasEmote(emoteId))) {
+        if (cached != null && !cached.isExpired(CACHE_TTL_MS) && cached.hasEmote(emoteId)) {
             return CompletableFuture.completedFuture(true);
         }
 
         // 2. Jeśli brak w cache — pobierz asynchronicznie sprawdzając zarówno UUID jak i Nick gracza
         return fetchPermissionsAsync(initiatorUuid, localName).thenApply(perm ->
-                perm != null && (perm.hasAllEmotes() || perm.isStaffRole() || perm.hasEmote(emoteId))
+                perm != null && perm.hasEmote(emoteId)
         );
     }
 
