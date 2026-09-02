@@ -52,12 +52,18 @@ public class ArmorModuleTest {
 
         // With text mode enabled (adds 10px on top)
         ArmorModule.setDurabilityTextMode(ArmorModule.DurabilityTextMode.VALUE);
+        ArmorModule.setShowMaxDurability(false);
         assertEquals(86, ArmorModule.calculateUnscaledWidth());
         assertEquals(30, ArmorModule.calculateUnscaledHeight());
 
+        // With showMaxDurability enabled (adds 18px on top for 2 stacked lines)
+        ArmorModule.setShowMaxDurability(true);
+        assertEquals(86, ArmorModule.calculateUnscaledWidth());
+        assertEquals(38, ArmorModule.calculateUnscaledHeight());
+
         // With scale 1.5
         assertEquals(Math.round(86 * 1.5f), ArmorModule.calculateBoxWidth(1.5f));
-        assertEquals(Math.round(30 * 1.5f), ArmorModule.calculateBoxHeight(1.5f));
+        assertEquals(Math.round(38 * 1.5f), ArmorModule.calculateBoxHeight(1.5f));
     }
 
     @Test
@@ -70,6 +76,25 @@ public class ArmorModuleTest {
         // 4 slots of 20px each + 3 gaps of 2px = 20px width, 86px height
         assertEquals(20, ArmorModule.calculateUnscaledWidth());
         assertEquals(86, ArmorModule.calculateUnscaledHeight());
+
+        // With text mode enabled (adds 28px width in vertical)
+        ArmorModule.setDurabilityTextMode(ArmorModule.DurabilityTextMode.VALUE);
+        ArmorModule.setShowMaxDurability(false);
+        assertEquals(48, ArmorModule.calculateUnscaledWidth());
+
+        // With showMaxDurability enabled (adds 56px width in vertical for 250/528 format)
+        ArmorModule.setShowMaxDurability(true);
+        assertEquals(76, ArmorModule.calculateUnscaledWidth());
+    }
+
+    @Test
+    public void testShowMaxDurabilityToggle() {
+        ArmorModule.setShowMaxDurability(false);
+        assertFalse(ArmorModule.isShowMaxDurability());
+        ArmorModule.toggleShowMaxDurability();
+        assertTrue(ArmorModule.isShowMaxDurability());
+        ArmorModule.toggleShowMaxDurability();
+        assertFalse(ArmorModule.isShowMaxDurability());
     }
 
     @Test
@@ -125,6 +150,7 @@ public class ArmorModuleTest {
 
         assertFalse(ArmorModule.checkAndTriggerWarning(null));
         assertFalse(ArmorModule.checkAndTriggerWarning(java.util.Collections.emptyList()));
+        assertFalse(ArmorModule.isItemCritical(null));
     }
 
     @Test

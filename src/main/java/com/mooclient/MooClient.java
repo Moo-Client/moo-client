@@ -27,7 +27,7 @@ public class MooClient implements ClientModInitializer {
 
     public static final String MOD_ID = "mooclient";
     public static final String MOD_NAME = "Moo Client";
-    public static final String VERSION = "1.9.8";
+    public static final String VERSION = "1.9.9";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
 
     private static MooClient instance;
@@ -45,6 +45,7 @@ public class MooClient implements ClientModInitializer {
     private static boolean waypointKeyWasDown = false;
     private static boolean emoteKeyWasDown = false;
     private static boolean wheelKeyWasDown = false;
+    private static boolean invViewKeyWasDown = false;
     private static boolean acceptKeyWasDown = false;
     private static boolean declineKeyWasDown = false;
     private static int tickCounter = 0;
@@ -150,6 +151,10 @@ public class MooClient implements ClientModInitializer {
                 waypointKeyWasDown = false;
                 emoteKeyWasDown = false;
                 wheelKeyWasDown = false;
+                invViewKeyWasDown = false;
+                if (com.mooclient.module.modules.InventoryViewModule.getMode() == com.mooclient.module.modules.InventoryViewModule.ActivationMode.HOLD) {
+                    com.mooclient.module.modules.InventoryViewModule.setHolding(false);
+                }
                 if (com.mooclient.module.modules.EmotesModule.getMode() == com.mooclient.module.modules.EmotesModule.ActivationMode.HOLD) {
                     com.mooclient.module.modules.EmotesModule.setHandsUp(false);
                 }
@@ -246,6 +251,22 @@ public class MooClient implements ClientModInitializer {
                         }
                     }
                     wheelKeyWasDown = isKeyDown;
+                }
+
+                // 7. Inventory View (Default: I)
+                int invViewKeyCode = com.mooclient.module.modules.InventoryViewModule.getKeyCode();
+                if (invViewKeyCode >= 0 && com.mooclient.module.modules.InventoryViewModule.isModuleEnabled()) {
+                    boolean isMouse = com.mooclient.module.modules.InventoryViewModule.isMouseButton();
+                    boolean isKeyDown = isInputPressed(window, invViewKeyCode, isMouse);
+                    if (com.mooclient.module.modules.InventoryViewModule.getMode() == com.mooclient.module.modules.InventoryViewModule.ActivationMode.HOLD) {
+                        com.mooclient.module.modules.InventoryViewModule.setHolding(isKeyDown);
+                    } else {
+                        if (isKeyDown && !invViewKeyWasDown) {
+                            com.mooclient.module.modules.InventoryViewModule.toggleActive();
+                            com.mooclient.util.MooConfig.save();
+                        }
+                    }
+                    invViewKeyWasDown = isKeyDown;
                 }
 
                 // In-game Macro execution detection

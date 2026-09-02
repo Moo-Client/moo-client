@@ -325,7 +325,23 @@ public class MooClientScreen extends Screen {
             renderWidgetBoundingBox(context, x, y, boxW, boxH, hovered, isDragging);
         }
 
-        // 8. Render Active Alignment Guidelines (Smart Magnetic Snapping)
+        // 8. Draggable Inventory View HUD Widget Preview
+        if (com.mooclient.module.modules.InventoryViewModule.isModuleEnabled()) {
+            int boxW = com.mooclient.module.modules.InventoryViewModule.calculateBoxWidth(hudScale);
+            int boxH = com.mooclient.module.modules.InventoryViewModule.calculateBoxHeight(hudScale);
+            com.mooclient.module.modules.InventoryViewModule.width = boxW;
+            com.mooclient.module.modules.InventoryViewModule.height = boxH;
+
+            int x = com.mooclient.module.modules.InventoryViewModule.position.calculateX(boxW, this.width);
+            int y = com.mooclient.module.modules.InventoryViewModule.position.calculateY(boxH, this.height);
+
+            boolean hovered = mouseX >= x && mouseX <= x + boxW && mouseY >= y && mouseY <= y + boxH;
+            boolean isDragging = "INVENTORY_VIEW".equals(draggingWidget);
+
+            renderWidgetBoundingBox(context, x, y, boxW, boxH, hovered, isDragging);
+        }
+
+        // 9. Render Active Alignment Guidelines (Smart Magnetic Snapping)
         if (draggingWidget != null && activeGuideLines != null
                 && com.mooclient.util.MooClientSettings.isHudSnapping()) {
             for (com.mooclient.util.MooHudPositionHelper.GuideLine line : activeGuideLines) {
@@ -385,6 +401,12 @@ public class MooClientScreen extends Screen {
                     ArmorModule.position.calculateX(ArmorModule.width, this.width),
                     ArmorModule.position.calculateY(ArmorModule.height, this.height),
                     ArmorModule.width, ArmorModule.height));
+        }
+        if (!"INVENTORY_VIEW".equals(currentWidgetId) && com.mooclient.module.modules.InventoryViewModule.isModuleEnabled()) {
+            list.add(new WidgetRect("INVENTORY_VIEW",
+                    com.mooclient.module.modules.InventoryViewModule.position.calculateX(com.mooclient.module.modules.InventoryViewModule.width, this.width),
+                    com.mooclient.module.modules.InventoryViewModule.position.calculateY(com.mooclient.module.modules.InventoryViewModule.height, this.height),
+                    com.mooclient.module.modules.InventoryViewModule.width, com.mooclient.module.modules.InventoryViewModule.height));
         }
         return list;
     }
@@ -792,7 +814,26 @@ public class MooClientScreen extends Screen {
             return MooLanguage.get("shulker_desc");
         if (name.equalsIgnoreCase("Emotki") || name.equalsIgnoreCase("Emotes"))
             return MooLanguage.get("emotes_desc");
+        if (name.equalsIgnoreCase("Inventory View") || name.equalsIgnoreCase("InventoryView"))
+            return MooLanguage.get("invview_desc");
         return MooLanguage.get("macro_desc");
+    }
+
+    private int getOptionsPanelHeight(String modName) {
+        if (modName.equalsIgnoreCase("Armor") || modName.equalsIgnoreCase("Armor HUD")) {
+            return 450;
+        } else if (modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) {
+            return 365;
+        } else if (modName.equalsIgnoreCase("Inventory View") || modName.equalsIgnoreCase("InventoryView")) {
+            return 315;
+        } else if (modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) {
+            return 280;
+        } else if (modName.equalsIgnoreCase("Macro")) {
+            int count = com.mooclient.module.modules.MacroModule.getMacros().size();
+            return 112 + count * 29 + 32;
+        } else {
+            return 330;
+        }
     }
 
     /**
@@ -801,9 +842,7 @@ public class MooClientScreen extends Screen {
     private void renderOptionsWindow(DrawContext context, int mouseX, int mouseY, float delta) {
         String modName = selectedModule != null ? selectedModule.getName() : "FPS";
         int panelW = 480;
-        int panelH = (modName.equalsIgnoreCase("Armor") || modName.equalsIgnoreCase("Armor HUD")) ? 410
-                : ((modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) ? 365
-                : ((modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) ? 280 : 330));
+        int panelH = getOptionsPanelHeight(modName);
         int panelX = (this.width - panelW) / 2;
         int panelY = (this.height - panelH) / 2;
 
@@ -865,6 +904,9 @@ public class MooClientScreen extends Screen {
         } else if (modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) {
             optTitle = MooLanguage.get("emotes_opt_title");
             optSubtitle = MooLanguage.get("emotes_opt_subtitle");
+        } else if (modName.equalsIgnoreCase("Inventory View") || modName.equalsIgnoreCase("InventoryView")) {
+            optTitle = MooLanguage.get("invview_opt_title");
+            optSubtitle = MooLanguage.get("invview_opt_subtitle");
         } else {
             optTitle = MooLanguage.get("gamma_opt_title");
             optSubtitle = MooLanguage.get("gamma_opt_subtitle");
@@ -1132,24 +1174,24 @@ public class MooClientScreen extends Screen {
 
             java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> macroList = com.mooclient.module.modules.MacroModule
                     .getMacros();
-            int mRowH = 28;
+            int mRowH = 26;
             int curY = rowY + rowH + 6;
 
-            for (int i = 0; i < Math.min(5, macroList.size()); i++) {
+            for (int i = 0; i < macroList.size(); i++) {
                 com.mooclient.module.modules.MacroModule.MacroEntry m = macroList.get(i);
                 context.fill(rowX, curY, rowX + rowW, curY + mRowH, 0x5515151E);
                 drawBorder(context, rowX, curY, rowW, mRowH, 0x22FFFFFF);
 
-                // Slot title
-                String slotName = "Slot " + (i + 1);
-                context.drawTextWithShadow(this.textRenderer, slotName, rowX + 8, curY + (mRowH - 8) / 2,
+                // Slot title (#1 .. #10)
+                String slotName = "#" + (i + 1);
+                context.drawTextWithShadow(this.textRenderer, slotName, rowX + 6, curY + (mRowH - 8) / 2,
                         m.isEnabled() ? COLOR_TEXT_WHITE : COLOR_TEXT_MUTED);
 
                 // Command Box (Editable)
-                int cmdBoxX = rowX + 54;
-                int cmdBoxW = rowW - 54 - 110 - 44;
-                int cmdBoxY = curY + 4;
-                int cmdBoxH = mRowH - 8;
+                int cmdBoxX = rowX + 28;
+                int cmdBoxW = rowW - 28 - 92 - 38 - 26 - 12;
+                int cmdBoxY = curY + 3;
+                int cmdBoxH = mRowH - 6;
                 boolean isEditingCmd = (this.editingMacroIndex == i);
                 boolean cmdHover = mouseX >= cmdBoxX && mouseX <= cmdBoxX + cmdBoxW && mouseY >= cmdBoxY
                         && mouseY <= cmdBoxY + cmdBoxH;
@@ -1170,10 +1212,10 @@ public class MooClientScreen extends Screen {
                         isEditingCmd ? 0xFF38BDF8 : (m.isEnabled() ? 0xFF55FFFF : COLOR_TEXT_MUTED));
 
                 // Keybind Button
-                int kBtnX = cmdBoxX + cmdBoxW + 6;
-                int kBtnW = 96;
-                int kBtnY = curY + 4;
-                int kBtnH = mRowH - 8;
+                int kBtnX = cmdBoxX + cmdBoxW + 5;
+                int kBtnW = 90;
+                int kBtnY = curY + 3;
+                int kBtnH = mRowH - 6;
                 boolean isListeningKey = (this.listeningMacroIndex == i);
                 boolean kBtnHover = mouseX >= kBtnX && mouseX <= kBtnX + kBtnW && mouseY >= kBtnY
                         && mouseY <= kBtnY + kBtnH;
@@ -1188,11 +1230,40 @@ public class MooClientScreen extends Screen {
                         isListeningKey ? 0xFFFFFF55 : (m.isEnabled() ? 0xFF55FFFF : COLOR_TEXT_MUTED));
 
                 // Enable / Disable toggle
-                int tX = rowX + rowW - 40;
-                int tY = curY + 5;
+                int tX = kBtnX + kBtnW + 5;
+                int tY = curY + 4;
                 drawOptionToggle(context, tX, tY, mouseX, mouseY, m.isEnabled());
 
-                curY += mRowH + 4;
+                // Delete Button
+                int delX = tX + 38;
+                int delY = curY + 3;
+                int delW = 22;
+                int delH = mRowH - 6;
+                boolean delHover = mouseX >= delX && mouseX <= delX + delW && mouseY >= delY
+                        && mouseY <= delY + delH;
+                context.fill(delX, delY, delX + delW, delY + delH, delHover ? 0xDD7F1D1D : 0x66331111);
+                drawBorder(context, delX, delY, delW, delH, delHover ? 0xFFFF4444 : 0x66FF5555);
+                drawCenteredText(context, "✕", delX + delW / 2, delY + (delH - 8) / 2, delHover ? 0xFFFFFFFF : 0xFFFF7777);
+
+                curY += mRowH + 3;
+            }
+
+            // Add New Macro Button
+            int addBtnY = curY + 2;
+            int addBtnH = 24;
+            boolean canAdd = macroList.size() < com.mooclient.module.modules.MacroModule.MAX_MACROS;
+            if (canAdd) {
+                boolean addHover = mouseX >= rowX && mouseX <= rowX + rowW && mouseY >= addBtnY && mouseY <= addBtnY + addBtnH;
+                context.fill(rowX, addBtnY, rowX + rowW, addBtnY + addBtnH, addHover ? 0xCC1E3A8A : 0x66181824);
+                drawBorder(context, rowX, addBtnY, rowW, addBtnH, addHover ? 0xFF38BDF8 : 0x5538BDF8);
+                String addText = "+ " + String.format(MooLanguage.get("macro_add_btn"), macroList.size());
+                drawCenteredText(context, addText, rowX + rowW / 2, addBtnY + (addBtnH - 8) / 2,
+                        addHover ? COLOR_TEXT_WHITE : 0xFF38BDF8);
+            } else {
+                context.fill(rowX, addBtnY, rowX + rowW, addBtnY + addBtnH, 0x33181824);
+                drawBorder(context, rowX, addBtnY, rowW, addBtnH, 0x22FFFFFF);
+                drawCenteredText(context, MooLanguage.get("macro_max_reached"), rowX + rowW / 2, addBtnY + (addBtnH - 8) / 2,
+                        COLOR_TEXT_MUTED);
             }
 
         } else if (modName.equalsIgnoreCase("Waypoints")) {
@@ -1318,31 +1389,37 @@ public class MooClientScreen extends Screen {
             renderArmorDurabilitySelector(context, rowX + rowW - 170, rowY + 6, mouseX, mouseY,
                     ArmorModule.getDurabilityTextMode().ordinal());
 
-            // Row 4: Durability Bar (Bottom)
+            // Row 4: Show Max Durability (Value Mode)
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("show_max_durability_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    ArmorModule.isShowMaxDurability());
+
+            // Row 5: Durability Bar (Bottom)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("durability_bar_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     ArmorModule.isShowDurabilityBar());
 
-            // Row 5: Low Durability Warning Sound (<= 50)
+            // Row 6: Low Durability Warning Sound (<= 50)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("durability_warning_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     ArmorModule.isLowDurabilityWarning());
 
-            // Row 6: Show Background
+            // Row 7: Show Background
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("bg_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     ArmorModule.isShowBackground());
 
-            // Row 7: Show Empty Slots
+            // Row 8: Show Empty Slots
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("show_empty_slots_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     ArmorModule.isShowEmptySlots());
 
-            // Row 8: Show Offhand (Shield / Totem)
+            // Row 9: Show Offhand (Shield / Totem)
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("show_offhand_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
@@ -1456,15 +1533,53 @@ public class MooClientScreen extends Screen {
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     com.mooclient.module.modules.EmotesModule.isRestorePerspective());
 
+        } else if (modName.equalsIgnoreCase("Inventory View") || modName.equalsIgnoreCase("InventoryView")) {
+            // Row 1: Keybind (Interactive Keybind Selector - Default: I)
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("invview_keybind_label"));
+            String keyText = listeningForKeybind ? MooLanguage.get("press_key_hint")
+                    : "[ " + com.mooclient.module.modules.InventoryViewModule.getKeyName() + " ]";
+            int btnW = 140;
+            int btnH = 22;
+            int btnX = rowX + rowW - btnW - 10;
+            int btnY = rowY + 6;
+            boolean btnHover = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH;
+            int btnBg = listeningForKeybind ? 0xEE334466 : (btnHover ? 0xCC252535 : 0x88181824);
+            int btnBorder = listeningForKeybind ? 0xFF55FFFF : (btnHover ? 0xAAFFFFFF : 0x44FFFFFF);
+            int textColor = listeningForKeybind ? 0xFFFFFF55 : 0xFF55FFFF;
+            context.fill(btnX, btnY, btnX + btnW, btnY + btnH, btnBg);
+            drawBorder(context, btnX, btnY, btnW, btnH, btnBorder);
+            drawCenteredText(context, keyText, btnX + btnW / 2, btnY + 7, textColor);
+
+            // Row 2: Activation Mode (Toggle vs Hold)
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("mode_label"));
+            renderModeSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY,
+                    com.mooclient.module.modules.InventoryViewModule.getMode().ordinal());
+
+            // Row 3: Appearance Style (Moo Client / Compact / Vanilla)
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("style_label"));
+            renderInventoryStyleSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY,
+                    com.mooclient.module.modules.InventoryViewModule.getStyle().ordinal());
+
+            // Row 4: Show Background
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("bg_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.InventoryViewModule.isShowBackground());
+
+            // Row 5: Show Empty Slots
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("show_empty_slots_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.InventoryViewModule.isShowEmptySlots());
+
         } else {
             // Gamma Options
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("fullbright_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     selectedModule != null && selectedModule.isEnabled());
         }
-
-        String hint = MooLanguage.get("esc_hint");
-        drawCenteredText(context, hint, this.width / 2, this.height - 20, 0x66FFFFFF);
     }
 
     /**
@@ -1541,9 +1656,6 @@ public class MooClientScreen extends Screen {
         else if (settingsTab == 2) {
             renderGuiSettingsTab(context, panelX, contentY, panelW, mouseX, mouseY);
         }
-
-        String hint = MooLanguage.get("esc_hint");
-        drawCenteredText(context, hint, this.width / 2, this.height - 14, 0x66FFFFFF);
     }
 
     private void renderAccentColorTab(DrawContext context, int panelX, int contentY, int panelW, int mouseX,
@@ -2071,6 +2183,52 @@ public class MooClientScreen extends Screen {
         return -1;
     }
 
+    private void renderInventoryStyleSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
+            int selectedOrdinal) {
+        String[] labels = new String[] { "Moo Client", "Compact", "Vanilla" };
+        if (MooLanguage.current.equals(MooLanguage.PL)) {
+            labels = new String[] { "Moo Client", "Kompaktowy", "Vanilla" };
+        }
+        int[] widths = MooLanguage.current.equals(MooLanguage.PL) ? new int[] { 74, 76, 56 } : new int[] { 74, 66, 56 };
+        int gap = 4;
+        int curX = startX;
+        int h = 22;
+
+        for (int i = 0; i < labels.length; i++) {
+            int w = widths[i];
+            boolean selected = (i == selectedOrdinal);
+            boolean hover = mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h;
+
+            int bg = selected ? com.mooclient.util.MooClientSettings.getAccentColor()
+                    : (hover ? 0xCC252535 : 0x66141420);
+            int border = selected ? com.mooclient.util.MooClientSettings.getAccentHoverColor()
+                    : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
+            int textColor = selected ? 0xFF0A2514 : (hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
+
+            context.fill(curX, y, curX + w, y + h, bg);
+            drawBorder(context, curX, y, w, h, border);
+            drawCenteredText(context, labels[i], curX + w / 2, y + 7, textColor);
+
+            curX += w + gap;
+        }
+    }
+
+    private int getInventoryStyleClick(int startX, int y, int mouseX, int mouseY) {
+        int[] widths = MooLanguage.current.equals(MooLanguage.PL) ? new int[] { 74, 76, 56 } : new int[] { 74, 66, 56 };
+        int gap = 4;
+        int curX = startX;
+        int h = 22;
+
+        for (int i = 0; i < widths.length; i++) {
+            int w = widths[i];
+            if (mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h) {
+                return i;
+            }
+            curX += w + gap;
+        }
+        return -1;
+    }
+
     private void renderArmorOrientationSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
             int selectedOrdinal) {
         String[] labels = MooLanguage.current.equals(MooLanguage.PL)
@@ -2325,6 +2483,10 @@ public class MooClientScreen extends Screen {
                 } else {
                     com.mooclient.module.modules.EmotesModule.setKeybind(button, mouseName, true);
                 }
+            } else if (selectedModule != null && (selectedModule.getName().equalsIgnoreCase("Inventory View") || selectedModule.getName().equalsIgnoreCase("InventoryView"))) {
+                com.mooclient.module.modules.InventoryViewModule.setKeyCode(button);
+                com.mooclient.module.modules.InventoryViewModule.setKeyName(mouseName);
+                com.mooclient.module.modules.InventoryViewModule.setMouseButton(true);
             } else {
                 ToggleSprintModule.setKeybind(button, mouseName, true);
             }
@@ -2430,6 +2592,20 @@ public class MooClientScreen extends Screen {
                 if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
                     playClickSound();
                     this.selectedModule = ModuleManager.getInstance().getModule("Scoreboard").orElse(null);
+                    this.openedFromHub = true;
+                    this.listeningForKeybind = false;
+                    this.currentView = View.OPTIONS;
+                    return true;
+                }
+            }
+            if (com.mooclient.module.modules.InventoryViewModule.isModuleEnabled()) {
+                int w = com.mooclient.module.modules.InventoryViewModule.width;
+                int h = com.mooclient.module.modules.InventoryViewModule.height;
+                int x = com.mooclient.module.modules.InventoryViewModule.position.calculateX(w, this.width);
+                int y = com.mooclient.module.modules.InventoryViewModule.position.calculateY(h, this.height);
+                if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
+                    playClickSound();
+                    this.selectedModule = ModuleManager.getInstance().getModule("Inventory View").orElse(null);
                     this.openedFromHub = true;
                     this.listeningForKeybind = false;
                     this.currentView = View.OPTIONS;
@@ -2547,6 +2723,19 @@ public class MooClientScreen extends Screen {
                     int y = ArmorModule.position.calculateY(h, this.height);
                     if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
                         draggingWidget = "ARMOR";
+                        dragOffsetX = (int) mouseX - x;
+                        dragOffsetY = (int) mouseY - y;
+                        return true;
+                    }
+                }
+
+                if (com.mooclient.module.modules.InventoryViewModule.isModuleEnabled()) {
+                    int w = com.mooclient.module.modules.InventoryViewModule.width;
+                    int h = com.mooclient.module.modules.InventoryViewModule.height;
+                    int x = com.mooclient.module.modules.InventoryViewModule.position.calculateX(w, this.width);
+                    int y = com.mooclient.module.modules.InventoryViewModule.position.calculateY(h, this.height);
+                    if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
+                        draggingWidget = "INVENTORY_VIEW";
                         dragOffsetX = (int) mouseX - x;
                         dragOffsetY = (int) mouseY - y;
                         return true;
@@ -2692,9 +2881,7 @@ public class MooClientScreen extends Screen {
             else if (currentView == View.OPTIONS) {
                 String modName = selectedModule != null ? selectedModule.getName() : "FPS";
                 int panelW = 480;
-                int panelH = (modName.equalsIgnoreCase("Armor") || modName.equalsIgnoreCase("Armor HUD")) ? 410
-                        : ((modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) ? 365
-                        : ((modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) ? 280 : 330));
+                int panelH = getOptionsPanelHeight(modName);
                 int panelX = (this.width - panelW) / 2;
                 int panelY = (this.height - panelH) / 2;
 
@@ -3097,7 +3284,7 @@ public class MooClientScreen extends Screen {
 
                     java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> macroList = com.mooclient.module.modules.MacroModule
                             .getMacros();
-                    int mRowH = 28;
+                    int mRowH = 26;
                     int curY = rowY + rowH + 6;
 
                     // If listening for mouse button keybind
@@ -3112,20 +3299,37 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    for (int i = 0; i < Math.min(5, macroList.size()); i++) {
+                    for (int i = 0; i < macroList.size(); i++) {
                         com.mooclient.module.modules.MacroModule.MacroEntry m = macroList.get(i);
-                        int cmdBoxX = rowX + 54;
-                        int cmdBoxW = rowW - 54 - 110 - 44;
-                        int cmdBoxY = curY + 4;
-                        int cmdBoxH = mRowH - 8;
+                        int cmdBoxX = rowX + 28;
+                        int cmdBoxW = rowW - 28 - 92 - 38 - 26 - 12;
+                        int cmdBoxY = curY + 3;
+                        int cmdBoxH = mRowH - 6;
 
-                        int kBtnX = cmdBoxX + cmdBoxW + 6;
-                        int kBtnW = 96;
-                        int kBtnY = curY + 4;
-                        int kBtnH = mRowH - 8;
+                        int kBtnX = cmdBoxX + cmdBoxW + 5;
+                        int kBtnW = 90;
+                        int kBtnY = curY + 3;
+                        int kBtnH = mRowH - 6;
 
-                        int tX = rowX + rowW - 40;
-                        int tY = curY + 5;
+                        int tX = kBtnX + kBtnW + 5;
+                        int tY = curY + 4;
+
+                        int delX = tX + 38;
+                        int delY = curY + 3;
+                        int delW = 22;
+                        int delH = mRowH - 6;
+
+                        // Click Delete Button
+                        if (mouseX >= delX && mouseX <= delX + delW && mouseY >= delY && mouseY <= delY + delH) {
+                            playClickSound();
+                            com.mooclient.module.modules.MacroModule.removeMacro(i);
+                            if (this.editingMacroIndex == i) this.editingMacroIndex = -1;
+                            else if (this.editingMacroIndex > i) this.editingMacroIndex--;
+                            if (this.listeningMacroIndex == i) this.listeningMacroIndex = -1;
+                            else if (this.listeningMacroIndex > i) this.listeningMacroIndex--;
+                            com.mooclient.util.MooConfig.save();
+                            return true;
+                        }
 
                         // Click Command Box
                         if (mouseX >= cmdBoxX && mouseX <= cmdBoxX + cmdBoxW && mouseY >= cmdBoxY
@@ -3152,7 +3356,21 @@ public class MooClientScreen extends Screen {
                             return true;
                         }
 
-                        curY += mRowH + 4;
+                        curY += mRowH + 3;
+                    }
+
+                    // Click Add Macro Button
+                    int addBtnY = curY + 2;
+                    int addBtnH = 24;
+                    if (mouseX >= rowX && mouseX <= rowX + rowW && mouseY >= addBtnY && mouseY <= addBtnY + addBtnH) {
+                        if (com.mooclient.module.modules.MacroModule.canAddMacro()) {
+                            playClickSound();
+                            com.mooclient.module.modules.MacroModule.addMacro("", 0, "[NONE]", false, true);
+                            this.editingMacroIndex = com.mooclient.module.modules.MacroModule.getMacros().size() - 1;
+                            this.listeningMacroIndex = -1;
+                            com.mooclient.util.MooConfig.save();
+                            return true;
+                        }
                     }
                 } else if (modName.equalsIgnoreCase("Waypoints")) {
                     int btnW = 140;
@@ -3317,7 +3535,17 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 4: Durability Bar Toggle
+                    // Row 4: Show Max Durability Toggle
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        ArmorModule.toggleShowMaxDurability();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 5: Durability Bar Toggle
                     rowY += rowH + 6;
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {
@@ -3327,7 +3555,7 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 5: Low Durability Warning Sound Toggle
+                    // Row 6: Low Durability Warning Sound Toggle
                     rowY += rowH + 6;
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {
@@ -3353,7 +3581,7 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 6: Show Background
+                    // Row 7: Show Background
                     rowY += rowH + 6;
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {
@@ -3363,7 +3591,7 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 7: Show Empty Slots
+                    // Row 8: Show Empty Slots
                     rowY += rowH + 6;
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {
@@ -3373,7 +3601,7 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 8: Show Offhand
+                    // Row 9: Show Offhand
                     rowY += rowH + 6;
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {
@@ -3517,6 +3745,64 @@ public class MooClientScreen extends Screen {
                         playClickSound();
                         this.listeningForKeybind = false;
                         com.mooclient.module.modules.EmotesModule.toggleRestorePerspective();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+                } else if (modName.equalsIgnoreCase("Inventory View") || modName.equalsIgnoreCase("InventoryView")) {
+                    int btnW = 140;
+                    int btnH = 22;
+                    int btnX = rowX + rowW - btnW - 10;
+                    int btnY = rowY + 6;
+
+                    // Row 1: Keybind click
+                    if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
+                        playClickSound();
+                        this.listeningForKeybind = !this.listeningForKeybind;
+                        return true;
+                    }
+
+                    // Row 2: Mode Selector click (Toggle vs Hold)
+                    rowY += rowH + 6;
+                    int modeClick = getModeSelectorClick(rowX + rowW - 206, rowY + 6, (int) mouseX, (int) mouseY);
+                    if (modeClick >= 0 && modeClick < com.mooclient.module.modules.InventoryViewModule.ActivationMode.values().length) {
+                        playClickSound();
+                        this.listeningForKeybind = false;
+                        com.mooclient.module.modules.InventoryViewModule.setMode(
+                                com.mooclient.module.modules.InventoryViewModule.ActivationMode.values()[modeClick]);
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 3: Style Selector click (Moo Client / Compact / Vanilla)
+                    rowY += rowH + 6;
+                    int styleClick = getInventoryStyleClick(rowX + rowW - 206, rowY + 6, (int) mouseX, (int) mouseY);
+                    if (styleClick >= 0 && styleClick < com.mooclient.module.modules.InventoryViewModule.InventoryStyle.values().length) {
+                        playClickSound();
+                        this.listeningForKeybind = false;
+                        com.mooclient.module.modules.InventoryViewModule.setStyle(
+                                com.mooclient.module.modules.InventoryViewModule.InventoryStyle.values()[styleClick]);
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 4: Show Background
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        this.listeningForKeybind = false;
+                        com.mooclient.module.modules.InventoryViewModule.toggleShowBackground();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 5: Show Empty Slots
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        this.listeningForKeybind = false;
+                        com.mooclient.module.modules.InventoryViewModule.toggleShowEmptySlots();
                         com.mooclient.util.MooConfig.save();
                         return true;
                     }
@@ -3876,6 +4162,16 @@ public class MooClientScreen extends Screen {
                 ArmorModule.posX = res.snappedX;
                 ArmorModule.posY = res.snappedY;
                 return true;
+            } else if ("INVENTORY_VIEW".equals(draggingWidget)) {
+                MooHudPositionHelper.SnapResult res = MooHudPositionHelper.calculateSmartSnap(
+                        rawX, rawY, com.mooclient.module.modules.InventoryViewModule.width,
+                        com.mooclient.module.modules.InventoryViewModule.height, this.width, this.height, others,
+                        snapping, accent);
+                this.activeGuideLines = res.guideLines;
+                com.mooclient.module.modules.InventoryViewModule.position.setFromScreenCoords(res.snappedX, res.snappedY,
+                        com.mooclient.module.modules.InventoryViewModule.width,
+                        com.mooclient.module.modules.InventoryViewModule.height, this.width, this.height);
+                return true;
             }
         }
         if ((currentView == View.SETTINGS || currentView == View.OPTIONS) && draggingSlider >= 0) {
@@ -4041,6 +4337,10 @@ public class MooClientScreen extends Screen {
                 } else {
                     com.mooclient.module.modules.EmotesModule.setKeybind(keyCode, keyName, false);
                 }
+            } else if (selectedModule != null && (selectedModule.getName().equalsIgnoreCase("Inventory View") || selectedModule.getName().equalsIgnoreCase("InventoryView"))) {
+                com.mooclient.module.modules.InventoryViewModule.setKeyCode(keyCode);
+                com.mooclient.module.modules.InventoryViewModule.setKeyName(keyName);
+                com.mooclient.module.modules.InventoryViewModule.setMouseButton(false);
             } else {
                 ToggleSprintModule.setKeybind(keyCode, keyName, false);
             }

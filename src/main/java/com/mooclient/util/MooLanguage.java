@@ -141,6 +141,8 @@ public class MooLanguage {
                 case "macro_opt_title" -> "MAKRA / AUTOTEXT";
                 case "macro_opt_subtitle" -> "Wysyłaj komendy i wiadomości klawiszami.";
                 case "macro_enabled_label" -> "Włącz moduł";
+                case "macro_add_btn" -> "Dodaj nowe makro (%d/10)";
+                case "macro_max_reached" -> "Maksymalna liczba 10 makr osiągnięta";
                 case "chat_opt_title" -> "CZAT";
                 case "chat_opt_subtitle" -> "Przezroczyste tło, nieskończona historia i animacja";
                 case "chat_transparent_label" -> "Przezroczyste tło";
@@ -175,8 +177,10 @@ public class MooLanguage {
                 case "dur_none_label" -> "Brak";
                 case "dur_percent_label" -> "Procenty (%)";
                 case "dur_value_label" -> "Wartość";
+                case "show_max_durability_label" -> "Pokaż maks. wytrzymałość (np. 250/528)";
                 case "durability_bar_label" -> "Pasek wytrzymałości (dół)";
-                case "durability_warning_label" -> "Dźwięk krowy przy <= 50 pkt";
+                case "durability_warning_label" -> "Dźwięk krówki (< 12.5% zbroi)";
+                case "durability_critical_alert" -> "Uwaga! Wytrzymałość Twojej zbroi jest krytycznie niska!";
                 case "show_empty_slots_label" -> "Puste sloty";
                 case "shulker_desc" -> "Podgląd zawartości Shulker Boxów w ekwipunku";
                 case "shulker_opt_title" -> "SHULKER TOOLTIP";
@@ -186,6 +190,11 @@ public class MooLanguage {
                 case "shulker_color_border_label" -> "Kolor ramki wg shulkera";
                 case "shulker_empty_slots_label" -> "Wyświetlaj puste sloty";
                 case "shulker_require_shift_label" -> "Wymagaj SHIFT do otwarcia";
+                case "invview_desc" -> "Podgląd 3 rzędów głównego ekwipunku na ekranie";
+                case "invview_opt_title" -> "INVENTORY VIEW";
+                case "invview_opt_subtitle" -> "Podgląd 3 rzędów ekwipunku na ekranie pod klawiszem [I].";
+                case "invview_enabled_label" -> "Włącz moduł";
+                case "invview_keybind_label" -> "Klawisz aktywacji";
                 case "show_offhand_label" -> "Druga ręka (Offhand)";
                 case "show_mainhand_label" -> "Główna ręka";
                 case "mode_label" -> "Tryb aktywacji";
@@ -347,6 +356,8 @@ public class MooLanguage {
                 case "macro_opt_title" -> "MACRO / AUTOTEXT";
                 case "macro_opt_subtitle" -> "Execute commands & messages using custom keybinds.";
                 case "macro_enabled_label" -> "Enable Module";
+                case "macro_add_btn" -> "Add New Macro (%d/10)";
+                case "macro_max_reached" -> "Maximum 10 macros reached";
                 case "chat_opt_title" -> "CHAT";
                 case "chat_opt_subtitle" -> "Transparent background, unlimited history & smooth slide animation";
                 case "chat_transparent_label" -> "Transparent Background";
@@ -381,8 +392,10 @@ public class MooLanguage {
                 case "dur_none_label" -> "None";
                 case "dur_percent_label" -> "Percent (%)";
                 case "dur_value_label" -> "Value";
+                case "show_max_durability_label" -> "Show Max Durability (e.g. 250/528)";
                 case "durability_bar_label" -> "Bottom Durability Bar";
-                case "durability_warning_label" -> "Cow Sound Warning (<= 50 dur)";
+                case "durability_warning_label" -> "Cow Sound Warning (< 12.5% dur)";
+                case "durability_critical_alert" -> "Warning! Your armor durability is critically low!";
                 case "show_empty_slots_label" -> "Show Empty Slots";
                 case "shulker_desc" -> "Preview Shulker Box inventory in tooltips";
                 case "shulker_opt_title" -> "SHULKER TOOLTIP";
@@ -392,6 +405,11 @@ public class MooLanguage {
                 case "shulker_color_border_label" -> "Color-Matched Border";
                 case "shulker_empty_slots_label" -> "Show Empty Slots";
                 case "shulker_require_shift_label" -> "Require SHIFT to Open";
+                case "invview_desc" -> "Preview 3 rows of main inventory on HUD";
+                case "invview_opt_title" -> "INVENTORY VIEW";
+                case "invview_opt_subtitle" -> "Preview 3 rows of main inventory on HUD with keybind [I].";
+                case "invview_enabled_label" -> "Enable Module";
+                case "invview_keybind_label" -> "Activation Keybind";
                 case "show_offhand_label" -> "Show Offhand";
                 case "show_mainhand_label" -> "Show Main Hand";
                 case "mode_label" -> "Activation Mode";

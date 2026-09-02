@@ -45,6 +45,7 @@ public class ModuleManager {
         register(new com.mooclient.module.modules.ArmorModule()); // "Armor"
         register(new com.mooclient.module.modules.ShulkerTooltipModule()); // "Shulker Tooltip"
         register(new com.mooclient.module.modules.EmotesModule()); // "Emotes"
+        register(new com.mooclient.module.modules.InventoryViewModule()); // "Inventory View"
     }
 
     public void register(Module module) {

@@ -226,6 +226,7 @@ public class MooConfig {
             armor.addProperty("style", com.mooclient.module.modules.ArmorModule.getStyle().name());
             armor.addProperty("orientation", com.mooclient.module.modules.ArmorModule.getOrientation().name());
             armor.addProperty("durabilityTextMode", com.mooclient.module.modules.ArmorModule.getDurabilityTextMode().name());
+            armor.addProperty("showMaxDurability", com.mooclient.module.modules.ArmorModule.isShowMaxDurability());
             armor.addProperty("showDurabilityBar", com.mooclient.module.modules.ArmorModule.isShowDurabilityBar());
             armor.addProperty("lowDurabilityWarning", com.mooclient.module.modules.ArmorModule.isLowDurabilityWarning());
             armor.addProperty("durabilityMode", com.mooclient.module.modules.ArmorModule.getDurabilityMode().name());
@@ -272,6 +273,23 @@ public class MooConfig {
             emotes.addProperty("mode", com.mooclient.module.modules.EmotesModule.getMode().name());
             emotes.addProperty("restorePerspective", com.mooclient.module.modules.EmotesModule.isRestorePerspective());
             root.add("emotes", emotes);
+
+            // Inventory View Module
+            JsonObject invView = new JsonObject();
+            invView.addProperty("enabled", com.mooclient.module.modules.InventoryViewModule.isModuleEnabled());
+            invView.addProperty("active", com.mooclient.module.modules.InventoryViewModule.isActive());
+            invView.addProperty("keyCode", com.mooclient.module.modules.InventoryViewModule.getKeyCode());
+            invView.addProperty("keyName", com.mooclient.module.modules.InventoryViewModule.getKeyName());
+            invView.addProperty("isMouseButton", com.mooclient.module.modules.InventoryViewModule.isMouseButton());
+            invView.addProperty("mode", com.mooclient.module.modules.InventoryViewModule.getMode().name());
+            invView.addProperty("style", com.mooclient.module.modules.InventoryViewModule.getStyle().name());
+            invView.addProperty("showBackground", com.mooclient.module.modules.InventoryViewModule.isShowBackground());
+            invView.addProperty("showEmptySlots", com.mooclient.module.modules.InventoryViewModule.isShowEmptySlots());
+            invView.addProperty("anchorX", com.mooclient.module.modules.InventoryViewModule.position.anchorX.name());
+            invView.addProperty("anchorY", com.mooclient.module.modules.InventoryViewModule.position.anchorY.name());
+            invView.addProperty("offsetX", com.mooclient.module.modules.InventoryViewModule.position.offsetX);
+            invView.addProperty("offsetY", com.mooclient.module.modules.InventoryViewModule.position.offsetY);
+            root.add("inventoryView", invView);
 
             // Global Client Settings
             JsonObject settings = new JsonObject();
@@ -580,7 +598,8 @@ public class MooConfig {
                     com.google.gson.JsonArray list = macroJson.getAsJsonArray("list");
                     java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> existing = com.mooclient.module.modules.MacroModule
                             .getMacros();
-                    for (int i = 0; i < list.size(); i++) {
+                    existing.clear();
+                    for (int i = 0; i < Math.min(com.mooclient.module.modules.MacroModule.MAX_MACROS, list.size()); i++) {
                         JsonObject mObj = list.get(i).getAsJsonObject();
                         String id = mObj.has("id") ? mObj.get("id").getAsString() : ("macro_" + (i + 1));
                         String cmd = mObj.has("command") ? mObj.get("command").getAsString() : "";
@@ -588,18 +607,8 @@ public class MooConfig {
                         String kName = mObj.has("keyName") ? mObj.get("keyName").getAsString() : "[NONE]";
                         boolean isMouse = mObj.has("isMouseButton") && mObj.get("isMouseButton").getAsBoolean();
                         boolean mEnabled = mObj.has("enabled") && mObj.get("enabled").getAsBoolean();
-
-                        if (i < existing.size()) {
-                            com.mooclient.module.modules.MacroModule.MacroEntry e = existing.get(i);
-                            e.setCommand(cmd);
-                            e.setKeyCode(kCode);
-                            e.setKeyName(kName);
-                            e.setMouseButton(isMouse);
-                            e.setEnabled(mEnabled);
-                        } else {
-                            existing.add(new com.mooclient.module.modules.MacroModule.MacroEntry(id, cmd, kCode, kName,
-                                    isMouse, mEnabled));
-                        }
+                        existing.add(new com.mooclient.module.modules.MacroModule.MacroEntry(id, cmd, kCode, kName,
+                                isMouse, mEnabled));
                     }
                 }
             }
@@ -856,6 +865,9 @@ public class MooConfig {
                                 com.mooclient.module.modules.ArmorModule.DurabilityMode.valueOf(armor.get("durabilityMode").getAsString()));
                     } catch (Exception ignored) {}
                 }
+                if (armor.has("showMaxDurability")) {
+                    com.mooclient.module.modules.ArmorModule.setShowMaxDurability(armor.get("showMaxDurability").getAsBoolean());
+                }
                 if (armor.has("showDurabilityBar")) {
                     com.mooclient.module.modules.ArmorModule.setShowDurabilityBar(armor.get("showDurabilityBar").getAsBoolean());
                 }
@@ -966,6 +978,56 @@ public class MooConfig {
                 }
                 if (emotes.has("restorePerspective")) {
                     com.mooclient.module.modules.EmotesModule.setRestorePerspective(emotes.get("restorePerspective").getAsBoolean());
+                }
+            }
+
+            // Inventory View Module
+            if (root.has("inventoryView")) {
+                JsonObject invView = root.getAsJsonObject("inventoryView");
+                if (invView.has("enabled")) {
+                    boolean state = invView.get("enabled").getAsBoolean();
+                    com.mooclient.module.modules.InventoryViewModule.setModuleEnabled(state);
+                    ModuleManager.getInstance().getModule("Inventory View").ifPresent(m -> m.setEnabled(state));
+                }
+                if (invView.has("active")) {
+                    com.mooclient.module.modules.InventoryViewModule.setActive(invView.get("active").getAsBoolean());
+                }
+                if (invView.has("keyCode")) {
+                    com.mooclient.module.modules.InventoryViewModule.setKeyCode(invView.get("keyCode").getAsInt());
+                }
+                if (invView.has("keyName")) {
+                    com.mooclient.module.modules.InventoryViewModule.setKeyName(invView.get("keyName").getAsString());
+                }
+                if (invView.has("isMouseButton")) {
+                    com.mooclient.module.modules.InventoryViewModule.setMouseButton(invView.get("isMouseButton").getAsBoolean());
+                }
+                if (invView.has("mode")) {
+                    try {
+                        com.mooclient.module.modules.InventoryViewModule.setMode(
+                                com.mooclient.module.modules.InventoryViewModule.ActivationMode.valueOf(invView.get("mode").getAsString()));
+                    } catch (Exception ignored) {}
+                }
+                if (invView.has("style")) {
+                    try {
+                        com.mooclient.module.modules.InventoryViewModule.setStyle(
+                                com.mooclient.module.modules.InventoryViewModule.InventoryStyle.valueOf(invView.get("style").getAsString()));
+                    } catch (Exception ignored) {}
+                }
+                if (invView.has("showBackground")) {
+                    com.mooclient.module.modules.InventoryViewModule.setShowBackground(invView.get("showBackground").getAsBoolean());
+                }
+                if (invView.has("showEmptySlots")) {
+                    com.mooclient.module.modules.InventoryViewModule.setShowEmptySlots(invView.get("showEmptySlots").getAsBoolean());
+                }
+                if (invView.has("anchorX") && invView.has("anchorY") && invView.has("offsetX") && invView.has("offsetY")) {
+                    try {
+                        com.mooclient.module.modules.InventoryViewModule.position.anchorX =
+                                MooHudPositionHelper.HudAnchorX.valueOf(invView.get("anchorX").getAsString());
+                        com.mooclient.module.modules.InventoryViewModule.position.anchorY =
+                                MooHudPositionHelper.HudAnchorY.valueOf(invView.get("anchorY").getAsString());
+                        com.mooclient.module.modules.InventoryViewModule.position.offsetX = invView.get("offsetX").getAsInt();
+                        com.mooclient.module.modules.InventoryViewModule.position.offsetY = invView.get("offsetY").getAsInt();
+                    } catch (Exception ignored) {}
                 }
             }
 

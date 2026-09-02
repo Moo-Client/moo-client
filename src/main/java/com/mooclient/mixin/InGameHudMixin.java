@@ -446,7 +446,12 @@ public class InGameHudMixin {
             renderArmorHud(context, client, hudScale, customScale, scaledWidth, scaledHeight);
         }
 
-        // 7. Multiplayer Invitation UI (4 switchable HUD variants)
+        // 7. Inventory View Module Rendering (3 main inventory rows)
+        if (com.mooclient.module.modules.InventoryViewModule.shouldRender()) {
+            com.mooclient.util.InventoryViewRenderer.render(context, client, scaledWidth, scaledHeight, hudScale, customScale, false);
+        }
+
+        // 8. Multiplayer Invitation UI (4 switchable HUD variants)
         InvitationUIManager.getInstance().renderHud(context, scaledWidth, scaledHeight, tickCounter.getTickDelta(true));
     }
 
@@ -640,19 +645,18 @@ public class InGameHudMixin {
         int startX = ArmorModule.position.calculateX(boxW, scaledWidth);
         int startY = ArmorModule.position.calculateY(boxH, scaledHeight);
 
-        // Low Durability Cow Sound Alert (<= 50) - Plays ONCE when an item drops to <= 50
+        // Low Durability Cow Sound Alert - Triggers whenever an armor piece drops into critical red zone (<= 25% or <= 60 dur)
         if (client.player != null && !isMenu) {
             if (ArmorModule.checkAndTriggerWarning(stacks)) {
                 try {
                     client.getSoundManager().play(
                             net.minecraft.client.sound.PositionedSoundInstance.master(
-                                    com.mooclient.sound.MooSounds.COW_MOO, 1.0f, 1.5f));
-                    client.player.playSound(com.mooclient.sound.MooSounds.COW_MOO, 1.5f, 1.0f);
+                                    com.mooclient.sound.MooSounds.COW_MOO, 1.0f, 1.0f));
                 } catch (Exception ignored) {
                     try {
                         client.getSoundManager().play(
                                 net.minecraft.client.sound.PositionedSoundInstance.master(
-                                        net.minecraft.sound.SoundEvents.ENTITY_COW_AMBIENT, 1.0f, 1.5f));
+                                        net.minecraft.sound.SoundEvents.ENTITY_COW_AMBIENT, 1.0f, 1.0f));
                     } catch (Exception ignored2) {}
                 }
             }
@@ -665,7 +669,10 @@ public class InGameHudMixin {
             context.getMatrices().translate(-startX, -startY, 0);
         }
 
-        int extraTop = (orientation == ArmorModule.ArmorOrientation.HORIZONTAL && textMode != ArmorModule.DurabilityTextMode.NONE) ? 10 : 0;
+        int extraTop = 0;
+        if (orientation == ArmorModule.ArmorOrientation.HORIZONTAL && textMode != ArmorModule.DurabilityTextMode.NONE) {
+            extraTop = (textMode == ArmorModule.DurabilityTextMode.VALUE && ArmorModule.isShowMaxDurability()) ? 18 : 10;
+        }
         int slotStartY = startY + extraTop;
 
         for (int i = 0; i < slotCount; i++) {
@@ -694,51 +701,71 @@ public class InGameHudMixin {
             if (stack != null && !stack.isEmpty()) {
                 context.drawItem(stack, curX + 2, curY + 2);
 
-                // 3. Durability Bar at the bottom (ALWAYS on) - moved 2px down, sleek 1px thickness
+                float ratio = 1.0f;
+                int remaining = 100;
+                int maxDamage = 100;
+                int durColor = 0xFF00FF00;
+
+                if (stack.isDamageable() && stack.getMaxDamage() > 0) {
+                    maxDamage = stack.getMaxDamage();
+                    ratio = (float) (maxDamage - stack.getDamage()) / (float) maxDamage;
+                    ratio = Math.max(0.0f, Math.min(1.0f, ratio));
+                    remaining = Math.max(0, maxDamage - stack.getDamage());
+                    durColor = 0xFF000000 | stack.getItemBarColor();
+                }
+
+                // 3. Durability Bar at the bottom - matching vanilla item durability bars and colors
                 if (showBar) {
                     int barX = curX + 2;
                     int barY = curY + 18;
                     int barW = 16;
-
-                    float ratio = 1.0f;
-                    if (stack.isDamageable() && stack.getMaxDamage() > 0) {
-                        ratio = (float) (stack.getMaxDamage() - stack.getDamage()) / (float) stack.getMaxDamage();
-                        ratio = Math.max(0.0f, Math.min(1.0f, ratio));
-                    }
-
                     int filledW = Math.max(1, Math.round(ratio * barW));
-                    int durColor = (ratio > 0.5f) ? 0xFF00FF00 : ((ratio > 0.2f) ? 0xFFFFAA00 : 0xFFFF3333);
 
-                    context.fill(barX, barY, barX + barW, barY + 1, 0x88000000);
+                    context.fill(barX, barY, barX + barW, barY + 1, 0xFF000000);
                     context.fill(barX, barY, barX + filledW, barY + 1, durColor);
                 }
 
-                // 4. Durability Text DELIKATNIE NAD (slightly above the slot)
+                // 4. Durability Text (nad slotem w poziomie lub obok w pionie)
                 if (textMode != ArmorModule.DurabilityTextMode.NONE) {
-                    float ratio = 1.0f;
-                    int remaining = 100;
-                    if (stack.isDamageable() && stack.getMaxDamage() > 0) {
-                        ratio = (float) (stack.getMaxDamage() - stack.getDamage()) / (float) stack.getMaxDamage();
-                        ratio = Math.max(0.0f, Math.min(1.0f, ratio));
-                        remaining = Math.max(0, stack.getMaxDamage() - stack.getDamage());
-                    }
-                    int pct = Math.max(0, Math.min(100, Math.round(ratio * 100)));
-
-                    String txt = (textMode == ArmorModule.DurabilityTextMode.PERCENT)
-                            ? (pct + "%")
-                            : String.valueOf(remaining);
-
-                    int tw = client.textRenderer.getWidth(txt);
-                    int textColor = (ratio > 0.5f) ? 0xFFFFFFFF : ((ratio > 0.2f) ? 0xFFFFFF55 : 0xFFFF5555);
-
                     if (orientation == ArmorModule.ArmorOrientation.HORIZONTAL) {
-                        int textX = curX + (slotSize - tw) / 2;
-                        int textY = curY - 9;
-                        context.drawText(client.textRenderer, txt, textX, textY, textColor, true);
+                        if (textMode == ArmorModule.DurabilityTextMode.VALUE && ArmorModule.isShowMaxDurability()) {
+                            // Linia 1 (góra): Maksymalna wytrzymałość w jednolitym szarym kolorze
+                            String maxTxt = String.valueOf(maxDamage);
+                            int maxTw = client.textRenderer.getWidth(maxTxt);
+                            int maxTextX = curX + (slotSize - maxTw) / 2;
+                            int maxTextY = curY - 18;
+                            context.drawText(client.textRenderer, maxTxt, maxTextX, maxTextY, 0xFFA0A0AB, true);
+
+                            // Linia 2 (dół): Obecna wytrzymałość w kolorze paska/wytrzymałości
+                            String curTxt = String.valueOf(remaining);
+                            int curTw = client.textRenderer.getWidth(curTxt);
+                            int curTextX = curX + (slotSize - curTw) / 2;
+                            int curTextY = curY - 9;
+                            context.drawText(client.textRenderer, curTxt, curTextX, curTextY, durColor, true);
+                        } else {
+                            int pct = Math.max(0, Math.min(100, Math.round(ratio * 100)));
+                            String txt = (textMode == ArmorModule.DurabilityTextMode.PERCENT) ? (pct + "%") : String.valueOf(remaining);
+                            int tw = client.textRenderer.getWidth(txt);
+                            int textX = curX + (slotSize - tw) / 2;
+                            int textY = curY - 9;
+                            context.drawText(client.textRenderer, txt, textX, textY, durColor, true);
+                        }
                     } else {
-                        int textX = curX + slotSize + 4;
-                        int textY = curY + (slotSize - 8) / 2;
-                        context.drawText(client.textRenderer, txt, textX, textY, textColor, true);
+                        // Orientacja pionowa (tekst po prawej stronie slotu)
+                        if (textMode == ArmorModule.DurabilityTextMode.VALUE && ArmorModule.isShowMaxDurability()) {
+                            String curTxt = String.valueOf(remaining);
+                            int curTw = client.textRenderer.getWidth(curTxt);
+                            int textX = curX + slotSize + 4;
+                            int textY = curY + (slotSize - 8) / 2;
+                            context.drawText(client.textRenderer, curTxt, textX, textY, durColor, true);
+                            context.drawText(client.textRenderer, "§7/" + maxDamage, textX + curTw, textY, 0xFFA0A0AB, true);
+                        } else {
+                            int pct = Math.max(0, Math.min(100, Math.round(ratio * 100)));
+                            String txt = (textMode == ArmorModule.DurabilityTextMode.PERCENT) ? (pct + "%") : String.valueOf(remaining);
+                            int textX = curX + slotSize + 4;
+                            int textY = curY + (slotSize - 8) / 2;
+                            context.drawText(client.textRenderer, txt, textX, textY, durColor, true);
+                        }
                     }
                 }
             } else if (ArmorModule.isShowEmptySlots() && style != ArmorModule.ArmorStyle.SIMPLE) {

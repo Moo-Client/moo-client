@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.9.8';
+const VERSION = '1.9.9';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,9 +63,10 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-✓ **Poprawka blokady ruchu i obrotu kamery** podczas animacji interakcji multiplayer (handshake)
-✓ **Automatyczne wygasanie zaproszeń** – brak wiszących powiadomień na ekranie HUD
-✓ **Usprawniony interfejs zaproszeń** – dynamiczny layout zapobiegający nakładaniu się tekstu oraz pełne wsparcie PL / EN`;
+- poprawki status hud
+- poprawki macro
+- dodano nowego moda inventory view
+- poprawki ogolne`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);

@@ -1,7 +1,7 @@
 {
-  "version": "1.9.8",
-  "minecraft": "1.21.4",
-  "name": "Moo Client 1.9.8",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.9.8/moo-client-1.9.8.jar",
-  "changelog": "🚀 Moo Client v1.9.8:\n✓ Poprawka blokady ruchu i obrotu kamery podczas animacji interakcji (handshake)\n✓ Automatyczne wygasanie i usuwanie zaproszeń z ekranu HUD\n✓ Usprawniony interfejs zaproszeń i pełne wsparcie językowe PL / EN bez nakładania się tekstu"
+  "version": "1.9.9",
+  "min_launcher_version": "1.0.0",
+  "name": "Moo Client 1.9.9",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.9.9/moo-client-1.9.9.jar",
+  "changelog": "🚀 Moo Client v1.9.9:\n- poprawki status hud\n- poprawki macro\n- dodano nowego moda inventory view\n- poprawki ogolne"
 }

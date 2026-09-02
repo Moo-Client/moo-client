@@ -191,6 +191,10 @@ public class MooClientSettings {
 
         com.mooclient.module.modules.ScoreboardModule.resetPosition();
 
+        com.mooclient.module.modules.InventoryViewModule.position = new com.mooclient.util.MooHudPositionHelper.WidgetPosition(
+                com.mooclient.util.MooHudPositionHelper.HudAnchorX.RIGHT,
+                com.mooclient.util.MooHudPositionHelper.HudAnchorY.BOTTOM, 10, 60);
+
         MooConfig.save();
     }
 

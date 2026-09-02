@@ -47,6 +47,7 @@ public class MacroModule extends Module {
         public void setWasPressed(boolean wasPressed) { this.wasPressed = wasPressed; }
     }
 
+    public static final int MAX_MACROS = 10;
     private static boolean enabled = false;
     private static final List<MacroEntry> macros = new ArrayList<>();
 
@@ -54,9 +55,6 @@ public class MacroModule extends Module {
         // Default macro slots
         macros.add(new MacroEntry("macro_1", "/spawn", GLFW.GLFW_KEY_KP_1, "NUM 1", false, true));
         macros.add(new MacroEntry("macro_2", "/home", GLFW.GLFW_KEY_KP_2, "NUM 2", false, true));
-        macros.add(new MacroEntry("macro_3", "/g c GG", GLFW.GLFW_KEY_KP_3, "NUM 3", false, true));
-        macros.add(new MacroEntry("macro_4", "/hub", GLFW.GLFW_KEY_KP_4, "NUM 4", false, false));
-        macros.add(new MacroEntry("macro_5", "/heal", GLFW.GLFW_KEY_KP_5, "NUM 5", false, false));
     }
 
     public MacroModule() {
@@ -102,6 +100,27 @@ public class MacroModule extends Module {
 
     public static List<MacroEntry> getMacros() {
         return macros;
+    }
+
+    public static boolean canAddMacro() {
+        return macros.size() < MAX_MACROS;
+    }
+
+    public static boolean addMacro(String command, int keyCode, String keyName, boolean isMouseButton, boolean enabled) {
+        if (macros.size() >= MAX_MACROS) {
+            return false;
+        }
+        int nextId = macros.size() + 1;
+        macros.add(new MacroEntry("macro_" + nextId, command, keyCode, keyName, isMouseButton, enabled));
+        return true;
+    }
+
+    public static boolean removeMacro(int index) {
+        if (index >= 0 && index < macros.size()) {
+            macros.remove(index);
+            return true;
+        }
+        return false;
     }
 
     public static void executeMacro(MacroEntry macro) {

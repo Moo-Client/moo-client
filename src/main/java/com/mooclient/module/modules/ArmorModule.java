@@ -78,6 +78,7 @@ public class ArmorModule extends Module {
     private static ArmorOrientation orientation = ArmorOrientation.HORIZONTAL;
     private static DurabilityTextMode durabilityTextMode = DurabilityTextMode.NONE;
     private static boolean showDurabilityBar = true;
+    private static boolean showMaxDurability = false;
     private static boolean lowDurabilityWarning = true;
     private static long lastWarningSoundTime = 0L;
     private static boolean showBackground = true;
@@ -219,6 +220,18 @@ public class ArmorModule extends Module {
         showDurabilityBar = !showDurabilityBar;
     }
 
+    public static boolean isShowMaxDurability() {
+        return showMaxDurability;
+    }
+
+    public static void setShowMaxDurability(boolean state) {
+        showMaxDurability = state;
+    }
+
+    public static void toggleShowMaxDurability() {
+        showMaxDurability = !showMaxDurability;
+    }
+
     private static final boolean[] slotAlerted = new boolean[6];
 
     public static boolean isLowDurabilityWarning() {
@@ -236,23 +249,28 @@ public class ArmorModule extends Module {
         setLowDurabilityWarning(!lowDurabilityWarning);
     }
 
+    public static boolean isItemCritical(net.minecraft.item.ItemStack stack) {
+        if (stack == null || stack.isEmpty() || !stack.isDamageable() || stack.getMaxDamage() <= 0) {
+            return false;
+        }
+        int remaining = stack.getMaxDamage() - stack.getDamage();
+        float ratio = (float) remaining / (float) stack.getMaxDamage();
+        return ratio < 0.125f;
+    }
+
     public static boolean checkAndTriggerWarning(java.util.List<net.minecraft.item.ItemStack> stacks) {
         if (!lowDurabilityWarning || stacks == null) {
             return false;
         }
 
         boolean shouldPlay = false;
+
         for (int i = 0; i < 6; i++) {
             net.minecraft.item.ItemStack stack = (i < stacks.size()) ? stacks.get(i) : null;
-            if (stack != null && !stack.isEmpty() && stack.isDamageable() && stack.getMaxDamage() > 0) {
-                int remaining = stack.getMaxDamage() - stack.getDamage();
-                if (remaining <= 50) {
-                    if (!slotAlerted[i]) {
-                        slotAlerted[i] = true;
-                        shouldPlay = true;
-                    }
-                } else {
-                    slotAlerted[i] = false;
+            if (isItemCritical(stack)) {
+                if (!slotAlerted[i]) {
+                    slotAlerted[i] = true;
+                    shouldPlay = true;
                 }
             } else {
                 slotAlerted[i] = false;
@@ -339,7 +357,13 @@ public class ArmorModule extends Module {
         if (orientation == ArmorOrientation.HORIZONTAL) {
             return slotCount * slotSize + (slotCount - 1) * gap;
         } else {
-            return (durabilityTextMode != DurabilityTextMode.NONE) ? slotSize + 28 : slotSize;
+            if (durabilityTextMode == DurabilityTextMode.NONE) {
+                return slotSize;
+            } else if (durabilityTextMode == DurabilityTextMode.VALUE && showMaxDurability) {
+                return slotSize + 56;
+            } else {
+                return slotSize + 28;
+            }
         }
     }
 
@@ -348,7 +372,13 @@ public class ArmorModule extends Module {
         int slotSize = getSlotSize();
         int gap = getSlotGap();
         if (orientation == ArmorOrientation.HORIZONTAL) {
-            return (durabilityTextMode != DurabilityTextMode.NONE) ? slotSize + 10 : slotSize;
+            if (durabilityTextMode == DurabilityTextMode.NONE) {
+                return slotSize;
+            } else if (durabilityTextMode == DurabilityTextMode.VALUE && showMaxDurability) {
+                return slotSize + 18;
+            } else {
+                return slotSize + 10;
+            }
         } else {
             return slotCount * slotSize + (slotCount - 1) * gap;
         }

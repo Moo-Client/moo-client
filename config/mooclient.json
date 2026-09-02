@@ -1,0 +1,293 @@
+{
+  "language": "pl",
+  "gamma": {
+    "enabled": false
+  },
+  "fps": {
+    "enabled": false,
+    "style": "MOO_CLIENT",
+    "showBackground": true,
+    "textShadow": true,
+    "showPrefix": true,
+    "anchorX": "LEFT",
+    "anchorY": "TOP",
+    "offsetX": 6,
+    "offsetY": 6,
+    "posX": 6,
+    "posY": 6
+  },
+  "sprint": {
+    "enabled": false,
+    "style": "MOO_CLIENT",
+    "showBackground": true,
+    "textShadow": true,
+    "keyCode": 341,
+    "keyName": "LCONTROL",
+    "isMouseButton": false,
+    "anchorX": "LEFT",
+    "anchorY": "TOP",
+    "offsetX": 6,
+    "offsetY": 20,
+    "posX": 6,
+    "posY": 22
+  },
+  "freelook": {
+    "enabled": false,
+    "mode": "HOLD",
+    "invertPitch": false,
+    "keyCode": 86,
+    "keyName": "V",
+    "isMouseButton": false
+  },
+  "potions": {
+    "enabled": false,
+    "style": "SIMPLE",
+    "showBackground": false,
+    "textShadow": true,
+    "anchorX": "LEFT",
+    "anchorY": "TOP",
+    "offsetX": 6,
+    "offsetY": 64,
+    "posX": 6,
+    "posY": 64
+  },
+  "nametags": {
+    "enabled": false,
+    "showLogo": true,
+    "showPing": true,
+    "showSelfPing": false,
+    "pingPosition": "BESIDE",
+    "removeBackground": false,
+    "textShadow": true
+  },
+  "zoom": {
+    "enabled": false,
+    "factor": "X4",
+    "mode": "HOLD",
+    "smoothZoom": true,
+    "keyCode": 67,
+    "keyName": "C",
+    "isMouseButton": false
+  },
+  "macro": {
+    "enabled": false,
+    "list": [
+      {
+        "id": "macro_1",
+        "command": "/cmd1",
+        "keyCode": 1,
+        "keyName": "1",
+        "isMouseButton": false,
+        "enabled": true
+      },
+      {
+        "id": "macro_2",
+        "command": "/cmd2",
+        "keyCode": 2,
+        "keyName": "2",
+        "isMouseButton": false,
+        "enabled": true
+      },
+      {
+        "id": "macro_3",
+        "command": "/cmd3",
+        "keyCode": 3,
+        "keyName": "3",
+        "isMouseButton": false,
+        "enabled": true
+      },
+      {
+        "id": "macro_4",
+        "command": "/cmd4",
+        "keyCode": 4,
+        "keyName": "4",
+        "isMouseButton": false,
+        "enabled": true
+      },
+      {
+        "id": "macro_5",
+        "command": "/cmd5",
+        "keyCode": 5,
+        "keyName": "5",
+        "isMouseButton": false,
+        "enabled": true
+      },
+      {
+        "id": "macro_6",
+        "command": "/cmd6",
+        "keyCode": 6,
+        "keyName": "6",
+        "isMouseButton": false,
+        "enabled": true
+      },
+      {
+        "id": "macro_7",
+        "command": "/cmd7",
+        "keyCode": 7,
+        "keyName": "7",
+        "isMouseButton": false,
+        "enabled": true
+      },
+      {
+        "id": "macro_8",
+        "command": "/cmd8",
+        "keyCode": 8,
+        "keyName": "8",
+        "isMouseButton": false,
+        "enabled": true
+      },
+      {
+        "id": "macro_9",
+        "command": "/cmd9",
+        "keyCode": 9,
+        "keyName": "9",
+        "isMouseButton": false,
+        "enabled": true
+      },
+      {
+        "id": "macro_10",
+        "command": "/new",
+        "keyCode": 100,
+        "keyName": "NEW",
+        "isMouseButton": false,
+        "enabled": true
+      }
+    ]
+  },
+  "chat": {
+    "enabled": false,
+    "transparentBackground": false,
+    "unlimitedChat": false,
+    "smoothChat": false,
+    "textShadow": true
+  },
+  "ping": {
+    "enabled": false,
+    "style": "MOO_CLIENT",
+    "showBackground": true,
+    "textShadow": true,
+    "showPrefix": true,
+    "anchorX": "LEFT",
+    "anchorY": "TOP",
+    "offsetX": 6,
+    "offsetY": 34,
+    "posX": 6,
+    "posY": 34
+  },
+  "waypoints": {
+    "enabled": false,
+    "showDistance": true,
+    "showBeacons": true,
+    "showBackground": true,
+    "textShadow": true,
+    "deathWaypoint": true,
+    "showAllDimensions": false,
+    "showAllServers": false,
+    "scale": 1.0,
+    "keyCode": 66,
+    "keyName": "B",
+    "isMouseButton": false
+  },
+  "scoreboard": {
+    "enabled": true,
+    "textShadow": true,
+    "showBackground": true,
+    "showScores": false,
+    "anchorX": "RIGHT",
+    "anchorY": "CENTER",
+    "offsetX": 6,
+    "offsetY": 0,
+    "posX": -1,
+    "posY": -1
+  },
+  "cps": {
+    "enabled": false,
+    "displayMode": "BOTH",
+    "style": "MOO_CLIENT",
+    "showBackground": true,
+    "textShadow": true,
+    "showPrefix": true,
+    "anchorX": "LEFT",
+    "anchorY": "TOP",
+    "offsetX": 6,
+    "offsetY": 48,
+    "posX": 6,
+    "posY": 48
+  },
+  "armor": {
+    "enabled": false,
+    "style": "MOO_CLIENT",
+    "orientation": "HORIZONTAL",
+    "durabilityTextMode": "NONE",
+    "showMaxDurability": true,
+    "showDurabilityBar": false,
+    "lowDurabilityWarning": false,
+    "durabilityMode": "NONE",
+    "showBackground": true,
+    "showEmptySlots": true,
+    "showOffhand": false,
+    "showMainHand": false,
+    "anchorX": "LEFT",
+    "anchorY": "TOP",
+    "offsetX": 10,
+    "offsetY": 106,
+    "posX": 10,
+    "posY": 106
+  },
+  "shulkerTooltip": {
+    "enabled": false,
+    "inspectEnabled": true,
+    "colorMatchedBorder": true,
+    "showEmptySlots": true,
+    "requireShift": false
+  },
+  "emotes": {
+    "enabled": true,
+    "keyCode": 82,
+    "keyName": "R",
+    "isMouseButton": false,
+    "frontflipKeyCode": 86,
+    "frontflipKeyName": "V",
+    "backflipKeyCode": 66,
+    "backflipKeyName": "B",
+    "wheelKeyCode": 66,
+    "wheelKeyName": "B",
+    "wheelIsMouseButton": false,
+    "acceptKeyCode": 89,
+    "acceptKeyName": "Y",
+    "acceptIsMouseButton": false,
+    "declineKeyCode": 78,
+    "declineKeyName": "N",
+    "declineIsMouseButton": false,
+    "mode": "TOGGLE",
+    "restorePerspective": false
+  },
+  "inventoryView": {
+    "enabled": false,
+    "active": true,
+    "keyCode": 73,
+    "keyName": "I",
+    "isMouseButton": false,
+    "mode": "TOGGLE",
+    "style": "MOO_CLIENT",
+    "showBackground": true,
+    "showEmptySlots": true,
+    "anchorX": "RIGHT",
+    "anchorY": "BOTTOM",
+    "offsetX": 10,
+    "offsetY": 60
+  },
+  "settings": {
+    "accentPreset": "MOO_GREEN",
+    "customRed": 46,
+    "customGreen": 204,
+    "customBlue": 113,
+    "hudSnapping": true,
+    "hudScale": 100,
+    "globalTextShadow": true,
+    "menuBackgroundDim": 1,
+    "guiAnimations": true,
+    "activeProfile": "DEFAULT",
+    "invitationUiVariant": "FLOATING_CENTER"
+  }
+}
