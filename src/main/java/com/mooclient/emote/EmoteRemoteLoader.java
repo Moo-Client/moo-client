@@ -21,7 +21,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * System dynamicznego ładowania i synchronizacji emotek oraz ikon w 100% z chmury Supabase.
  * Baza Supabase jest jedynym nadrzędnym źródłem prawdy (Single Source of Truth).
  * Pobiera zarówno modele .bbmodel, jak i ikony .png w locie bez konieczności aktualizacji klienta.
+ * Automatycznie usuwa z pamięci i cache emotki usunięte z bazy danych.
  */
 public class EmoteRemoteLoader {
 
@@ -90,12 +91,18 @@ public class EmoteRemoteLoader {
                 if (cacheFiles != null) {
                     for (File file : cacheFiles) {
                         try {
+                            String fileName = file.getName();
+                            String id = fileName.substring(0, fileName.lastIndexOf('.')).toLowerCase().trim();
+
+                            // Ignoruj niechciane pliki tymczasowe
+                            if ("shake".equalsIgnoreCase(id)) {
+                                file.delete();
+                                continue;
+                            }
+
                             String content = Files.readString(file.toPath(), StandardCharsets.UTF_8);
                             BlockbenchAnimation anim = BlockbenchAnimationParser.parse(content);
                             if (anim == null) continue;
-
-                            String fileName = file.getName();
-                            String id = fileName.substring(0, fileName.lastIndexOf('.')).toLowerCase();
 
                             int durationTicks = Math.round(anim.getLengthSeconds() * 20.0f);
                             boolean looping = anim.isLooping();
@@ -146,11 +153,20 @@ public class EmoteRemoteLoader {
                         JsonElement element = JsonParser.parseString(json);
                         if (element.isJsonArray()) {
                             JsonArray array = element.getAsJsonArray();
+                            Set<String> validRemoteIds = new HashSet<>();
                             for (JsonElement item : array) {
                                 if (item.isJsonObject()) {
-                                    processRemoteEmoteEntry(item.getAsJsonObject());
+                                    JsonObject obj = item.getAsJsonObject();
+                                    if (obj.has("id") && !obj.get("id").isJsonNull()) {
+                                        String id = obj.get("id").getAsString().toLowerCase().trim();
+                                        validRemoteIds.add(id);
+                                    }
+                                    processRemoteEmoteEntry(obj);
                                 }
                             }
+
+                            // Pruning: usuń wszystkie emotki z pamięci i dysku, których nie ma w Supabase
+                            pruneStaleEmotes(validRemoteIds);
                         }
                     }
                 } else {
@@ -160,6 +176,56 @@ public class EmoteRemoteLoader {
                 MooClient.LOGGER.info("Supabase w trybie offline: {}", e.getMessage());
             }
         });
+    }
+
+    /**
+     * Usuwa z rejestru gry i pamięci podręcznej wszystkie emotki, które nie istnieją w Supabase.
+     */
+    private static void pruneStaleEmotes(Set<String> validRemoteIds) {
+        if (validRemoteIds == null || validRemoteIds.isEmpty()) return;
+
+        // 1. Usunięcie z EmoteRegistry
+        List<Emote> allCurrent = new ArrayList<>(EmoteRegistry.getAll());
+        for (Emote emote : allCurrent) {
+            String id = emote.getId().toLowerCase().trim();
+            if (!validRemoteIds.contains(id)) {
+                EmoteRegistry.unregister(id);
+                MooClient.LOGGER.info("Wyrejestrowano nieistniejącą emotkę: {}", id);
+            }
+        }
+
+        // 2. Usunięcie starych plików modeli z cache
+        if (CACHE_DIR.exists() && CACHE_DIR.isDirectory()) {
+            File[] files = CACHE_DIR.listFiles((dir, name) -> name.endsWith(".json") || name.endsWith(".bbmodel"));
+            if (files != null) {
+                for (File f : files) {
+                    String fileName = f.getName();
+                    String id = fileName.substring(0, fileName.lastIndexOf('.')).toLowerCase().trim();
+                    if (!validRemoteIds.contains(id)) {
+                        try {
+                            f.delete();
+                            MooClient.LOGGER.info("Usunięto osierocony plik cache emotki: {}", f.getName());
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+        }
+
+        // 3. Usunięcie starych ikon z cache
+        if (ICONS_CACHE_DIR.exists() && ICONS_CACHE_DIR.isDirectory()) {
+            File[] iconFiles = ICONS_CACHE_DIR.listFiles((dir, name) -> name.endsWith(".png"));
+            if (iconFiles != null) {
+                for (File f : iconFiles) {
+                    String fileName = f.getName();
+                    String id = fileName.substring(0, fileName.lastIndexOf('.')).toLowerCase().trim();
+                    if (!validRemoteIds.contains(id)) {
+                        try {
+                            f.delete();
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+        }
     }
 
     private static void processRemoteEmoteEntry(JsonObject obj) {
@@ -189,63 +255,82 @@ public class EmoteRemoteLoader {
                 String animJson = obj.get("animation_data").isJsonObject()
                         ? obj.get("animation_data").toString()
                         : obj.get("animation_data").getAsString();
-
-                saveAndRegisterAnimation(id, name, type, isFree, forcesThirdPerson, iconUrl, animJson);
+                registerParsedAnimation(id, name, type, isFree, forcesThirdPerson, animJson, iconUrl);
                 return;
             }
 
-            // 2. Jeśli animacja znajduje się pod zdalnym adresem URL (CDN / Supabase Storage)
+            // 2. Jeśli podano URL do pobrania z Supabase Storage (np. animation_url)
+            String animationUrl = null;
             if (obj.has("animation_url") && !obj.get("animation_url").isJsonNull()) {
-                String rawUrl = obj.get("animation_url").getAsString();
-                if (rawUrl != null && !rawUrl.trim().isEmpty()) {
-                    // Sanityzacja URL (oczyszczenie z enterów i spacji)
-                    String animUrl = rawUrl.trim().split("\\s+")[0];
-                    downloadAnimationFromUrl(id, name, type, isFree, forcesThirdPerson, iconUrl, animUrl);
+                String raw = obj.get("animation_url").getAsString();
+                if (raw != null && !raw.trim().isEmpty()) {
+                    // Usunięcie ewentualnych podwójnych linków lub spacji
+                    animationUrl = raw.trim().split("\\s+")[0];
                 }
             }
+
+            // 3. Sprawdzenie czy animacja istnieje w lokalnym cache
+            File cachedFile = new File(CACHE_DIR, id + ".bbmodel");
+            if (!cachedFile.exists()) {
+                cachedFile = new File(CACHE_DIR, id + ".json");
+            }
+
+            if (cachedFile.exists() && cachedFile.length() > 0) {
+                String content = Files.readString(cachedFile.toPath(), StandardCharsets.UTF_8);
+                registerParsedAnimation(id, name, type, isFree, forcesThirdPerson, content, iconUrl);
+                return;
+            }
+
+            // 4. Pobranie z chmury (z animation_url lub domyślnej ścieżki /emotes/<id>.bbmodel)
+            if (animationUrl == null || animationUrl.isEmpty()) {
+                animationUrl = DEFAULT_SUPABASE_STORAGE_URL + "/" + id + ".bbmodel";
+            }
+
+            downloadAndRegisterAnimation(id, name, type, isFree, forcesThirdPerson, animationUrl, iconUrl);
         } catch (Exception e) {
-            MooClient.LOGGER.warn("Błąd parsowania rekordu emotki z Supabase", e);
+            MooClient.LOGGER.error("Błąd przetwarzania rekordu emotki z Supabase: " + obj, e);
         }
     }
 
-    private static void downloadAnimationFromUrl(String id, String name, EmoteType type, boolean isFree, boolean forcesThirdPerson, String iconUrl, String urlStr) {
-        if (urlStr == null || urlStr.trim().isEmpty()) return;
-        String cleanUrl = urlStr.trim().split("\\s+")[0];
-
+    private static void downloadAndRegisterAnimation(String id, String name, EmoteType type,
+                                                     boolean isFree, boolean forcesThirdPerson,
+                                                     String downloadUrl, String iconUrl) {
         if (PENDING_DOWNLOADS.putIfAbsent(id, Boolean.TRUE) != null) {
             return;
         }
 
         CompletableFuture.runAsync(() -> {
             try {
-                URI uri = URI.create(cleanUrl);
+                URI uri = URI.create(downloadUrl);
                 HttpURLConnection conn = (HttpURLConnection) uri.toURL().openConnection();
                 conn.setRequestMethod("GET");
-                conn.setConnectTimeout(5000);
-                conn.setReadTimeout(5000);
+                conn.setConnectTimeout(4000);
+                conn.setReadTimeout(4000);
 
                 if (conn.getResponseCode() == 200) {
                     try (InputStream is = conn.getInputStream()) {
-                        String animJson = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-                        saveAndRegisterAnimation(id, name, type, isFree, forcesThirdPerson, iconUrl, animJson);
+                        String content = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                        File targetFile = new File(CACHE_DIR, id + (downloadUrl.endsWith(".json") ? ".json" : ".bbmodel"));
+                        try (FileWriter writer = new FileWriter(targetFile, StandardCharsets.UTF_8)) {
+                            writer.write(content);
+                        }
+
+                        registerParsedAnimation(id, name, type, isFree, forcesThirdPerson, content, iconUrl);
                     }
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                MooClient.LOGGER.warn("Nie udało się pobrać animacji dla {}: {}", id, e.getMessage());
             } finally {
                 PENDING_DOWNLOADS.remove(id);
             }
         });
     }
 
-    private static void saveAndRegisterAnimation(String id, String name, EmoteType type, boolean isFree, boolean forcesThirdPerson, String iconUrl, String animJson) {
+    private static void registerParsedAnimation(String id, String name, EmoteType type,
+                                                boolean isFree, boolean forcesThirdPerson,
+                                                String content, String iconUrl) {
         try {
-            // Zapis do lokalnego cache
-            File cacheFile = new File(CACHE_DIR, id + ".json");
-            try (FileWriter writer = new FileWriter(cacheFile, StandardCharsets.UTF_8)) {
-                writer.write(animJson);
-            }
-
-            BlockbenchAnimation anim = BlockbenchAnimationParser.parse(animJson);
+            BlockbenchAnimation anim = BlockbenchAnimationParser.parse(content);
             if (anim == null) return;
 
             int durationTicks = Math.round(anim.getLengthSeconds() * 20.0f);
@@ -259,7 +344,6 @@ public class EmoteRemoteLoader {
             if (existing != null) {
                 existing.setAnimation(anim);
                 existing.setFree(isFree);
-                // Upewnij się, że ikona jest dynamicznie odpytana
                 resolveIcon(id, iconUrl);
             } else {
                 Identifier iconId = resolveIcon(id, iconUrl);
