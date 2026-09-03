@@ -1,13 +1,16 @@
 package com.mooclient.emote;
 
 import com.mooclient.MooClient;
+import com.mooclient.emote.animation.BlockbenchAnimation;
+import com.mooclient.emote.animation.Keyframe;
+import net.minecraft.util.Identifier;
 
 import java.util.*;
 
 /**
  * Centralny rejestr emotek (Solo i Multiplayer) w Moo Client.
- * Wszystkie emotki są ładowane dynamicznie z bazy Supabase
- * za pośrednictwem EmoteRemoteLoader.
+ * Hands Up jest stałą, wbudowaną emotką taktyczną,
+ * a pozostałe emotki ładowane są dynamicznie z bazy Supabase.
  */
 public class EmoteRegistry {
 
@@ -22,10 +25,40 @@ public class EmoteRegistry {
         SOLO_EMOTES.clear();
         MULTIPLAYER_EMOTES.clear();
 
-        // Ładowanie dynamicznych emotek z Supabase i cache
+        // 1. Zawsze ładuj wbudowaną na stałe emotkę Hands Up
+        loadBuiltinHandsUp();
+
+        // 2. Ładowanie dynamicznych emotek z Supabase i cache
         EmoteRemoteLoader.init();
 
-        MooClient.LOGGER.info("Zainicjalizowano dynamiczny EmoteRegistry.");
+        MooClient.LOGGER.info("Zainicjalizowano dynamiczny EmoteRegistry z wbudowanym Hands Up.");
+    }
+
+    public static void loadBuiltinHandsUp() {
+        BlockbenchAnimation anim = new BlockbenchAnimation("hands_up", 0.25f, false);
+        BlockbenchAnimation.BoneTracks rArm = anim.getOrCreateBone("right_arm");
+        rArm.rotation.addKeyframe(new Keyframe(0.0f, 0.0f, 0.0f, 0.0f));
+        rArm.rotation.addKeyframe(new Keyframe(0.08f, -60.0f, 0.0f, 0.0f));
+        rArm.rotation.addKeyframe(new Keyframe(0.16f, -135.0f, 0.0f, 0.0f));
+        rArm.rotation.addKeyframe(new Keyframe(0.25f, -180.0f, 0.0f, 0.0f));
+
+        BlockbenchAnimation.BoneTracks lArm = anim.getOrCreateBone("left_arm");
+        lArm.rotation.addKeyframe(new Keyframe(0.0f, 0.0f, 0.0f, 0.0f));
+        lArm.rotation.addKeyframe(new Keyframe(0.08f, -60.0f, 0.0f, 0.0f));
+        lArm.rotation.addKeyframe(new Keyframe(0.16f, -135.0f, 0.0f, 0.0f));
+        lArm.rotation.addKeyframe(new Keyframe(0.25f, -180.0f, 0.0f, 0.0f));
+
+        Emote emote = new Emote(
+                "hands_up", "emotes_wheel_hands_up",
+                Identifier.of("mooclient", "textures/gui/emotes/hands_up.png"),
+                EmoteType.SOLO, 1,
+                0, // 0 = stałe trzymanie dopóki nie zostanie wywołane stop
+                false,
+                true, false, // free = true, forcesThirdPerson = false
+                anim, null
+        );
+        register(emote);
+        MooClient.LOGGER.info("Pomyślnie zarejestrowano wbudowaną stałą emotkę: hands_up");
     }
 
     public static synchronized void register(Emote emote) {

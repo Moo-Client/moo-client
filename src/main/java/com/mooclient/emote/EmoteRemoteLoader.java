@@ -183,6 +183,7 @@ public class EmoteRemoteLoader {
         List<Emote> allCurrent = new ArrayList<>(EmoteRegistry.getAll());
         for (Emote emote : allCurrent) {
             String id = emote.getId().toLowerCase().trim();
+            if ("hands_up".equalsIgnoreCase(id)) continue;
             if (!validRemoteIds.contains(id)) {
                 EmoteRegistry.unregister(id);
                 MooClient.LOGGER.info("Wyrejestrowano nieistniejącą emotkę: {}", id);
