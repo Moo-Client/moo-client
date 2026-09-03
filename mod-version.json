@@ -1,7 +1,7 @@
 {
-  "version": "2.0.1",
+  "version": "2.0.2",
   "min_launcher_version": "1.0.0",
-  "name": "Moo Client 2.0.1",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.0.1/moo-client-2.0.1.jar",
-  "changelog": "🚀 Moo Client v2.0.1:\n- Salto w tył (Backflip) i w przód (Frontflip) ściśle w miejscu bez przemieszczeń\n- Płynne, bezszwowe zapętlenie animacji Tornado\n- Poprawiona animacja Przyjaznego machania (Friendly Wave)\n- W 100% chmurowa synchronizacja emotek z Supabase"
+  "name": "Moo Client 2.0.2",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.0.2/moo-client-2.0.2.jar",
+  "changelog": "🚀 Moo Client v2.0.2:\n- Globalna naprawa warstw skina (3D skin layers) dla wszystkich emotek\n- Salto w tył i w przód ściśle w miejscu\n- Płynne, bezszwowe zapętlenie animacji Tornado\n- Poprawiona animacja Przyjaznego machania (Friendly Wave)"
 }
