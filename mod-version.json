@@ -1,7 +1,7 @@
 {
-  "version": "2.0.3",
+  "version": "2.0.4",
   "min_launcher_version": "1.0.0",
-  "name": "Moo Client 2.0.3",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.0.3/moo-client-2.0.3.jar",
-  "changelog": "🚀 Moo Client v2.0.3:\n- Przywrócono przycisk Ustawień (Settings) w prawym górnym rogu menu\n- Pełna naprawa nakładek i warstw skina 3D (brak odrywania rękawów w locie)\n- Salta w miejscu i płynne zapętlenie Tornado"
+  "name": "Moo Client 2.0.4",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.0.4/moo-client-2.0.4.jar",
+  "changelog": "🚀 Moo Client v2.0.4:\n- Przywrócono wbudowaną emotkę Hands Up (klawisz R)\n- Pełna naprawa nakładek i warstw skina 3D (brak odrywania rękawów w locie)\n- Przywrócono przycisk Ustawień (Settings) w menu modów\n- Salta w miejscu i płynne zapętlenie Tornado"
 }
