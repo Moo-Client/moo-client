@@ -78,16 +78,15 @@ public class PlayerEntityRendererMixin {
 
         float tickDelta = client.getRenderTickCounter().getTickDelta(true);
 
-        // 1. Czysto wizualne przesunięcie sceny multiplayerowej oraz kości root z pliku animacji
-        float sceneX = emoteState.getSceneOffsetX() + emoteState.getVisualXOffset(tickDelta);
-        float sceneY = emoteState.getSceneOffsetY() + emoteState.getVisualYOffset(tickDelta);
-        float sceneZ = emoteState.getSceneOffsetZ() + emoteState.getVisualZOffset(tickDelta);
-
+        // 1. Czysto wizualne przesunięcie sceny (stały offset sceny)
+        float sceneX = emoteState.getSceneOffsetX();
+        float sceneY = emoteState.getSceneOffsetY();
+        float sceneZ = emoteState.getSceneOffsetZ();
         if (sceneX != 0.0f || sceneY != 0.0f || sceneZ != 0.0f) {
             matrices.translate(sceneX, sceneY, sceneZ);
         }
 
-        // 2. Czysto wizualne rotacje całego ciała (pitch dla salta, yaw dla sceny, roll)
+        // 2. Czysto wizualne rotacje całego ciała (obrót twarzą w twarz, pitch dla salta, roll)
         float pitch = emoteState.getVisualPitch(tickDelta);
         float yaw = emoteState.getVisualYaw(tickDelta);
         float roll = emoteState.getVisualRoll(tickDelta);
@@ -108,6 +107,14 @@ public class PlayerEntityRendererMixin {
 
             // Powrót z punktu obrotu
             matrices.translate(0.0f, -0.9f, 0.0f);
+        }
+
+        // 3. Wizualne przesunięcie kości root z pliku animacji (krok w przód w nowym kierunku spojrzenia)
+        float visualX = emoteState.getVisualXOffset(tickDelta);
+        float visualY = emoteState.getVisualYOffset(tickDelta);
+        float visualZ = emoteState.getVisualZOffset(tickDelta);
+        if (visualX != 0.0f || visualY != 0.0f || visualZ != 0.0f) {
+            matrices.translate(visualX, visualY, visualZ);
         }
     }
 }

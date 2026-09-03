@@ -1,18 +1,13 @@
 package com.mooclient.emote;
 
 import com.mooclient.MooClient;
-import com.mooclient.emote.animation.BlockbenchAnimation;
-import com.mooclient.emote.animation.BlockbenchAnimationParser;
-import net.minecraft.util.Identifier;
 
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
  * Centralny rejestr emotek (Solo i Multiplayer) w Moo Client.
- * Wszystkie emotki są ładowane wyłącznie dynamicznie z bazy Supabase,
- * z lokalnego katalogu ~/.mooclient/emotes/ lub z wbudowanych zasobów zewnętrznych.
+ * Wszystkie emotki są ładowane wyłącznie dynamicznie z bazy Supabase
+ * za pośrednictwem EmoteRemoteLoader.
  */
 public class EmoteRegistry {
 
@@ -27,37 +22,10 @@ public class EmoteRegistry {
         SOLO_EMOTES.clear();
         MULTIPLAYER_EMOTES.clear();
 
-        // 1. Wbudowana, stała, darmowa standardowa emotka (Ręce w górę / Hands Up pod klawisz R)
-        loadBuiltinHandsUp();
-
-        // 2. Ładowanie pozostałych dynamicznych emotek z bazy Supabase oraz lokalnego katalogu ~/.mooclient/emotes/
+        // Ładowanie dynamicznych emotek wyłącznie z chmury Supabase
         EmoteRemoteLoader.init();
 
-        MooClient.LOGGER.info("Zainicjalizowano dynamiczny EmoteRegistry.");
-    }
-
-    private static void loadBuiltinHandsUp() {
-        try (InputStream is = EmoteRegistry.class.getResourceAsStream("/assets/mooclient/emotes/animations/hands_up.json")) {
-            if (is != null) {
-                String content = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-                BlockbenchAnimation parsed = BlockbenchAnimationParser.parse(content);
-                if (parsed != null) {
-                    Emote emote = new Emote(
-                            "hands_up", "emotes_wheel_hands_up",
-                            Identifier.of("mooclient", "textures/gui/emotes/hands_up.png"),
-                            EmoteType.SOLO, 1,
-                            0, // Stałe trzymanie dopóki nie zostanie wywołane stop
-                            false,
-                            true, false, // free = true, forcesThirdPerson = false (nie zmienia kamery)
-                            parsed, null
-                    );
-                    register(emote);
-                    MooClient.LOGGER.info("Pomyślnie załadowano wbudowaną standardową emotkę: hands_up");
-                }
-            }
-        } catch (Exception e) {
-            MooClient.LOGGER.error("Błąd ładowania wbudowanej emotki hands_up", e);
-        }
+        MooClient.LOGGER.info("Zainicjalizowano dynamiczny EmoteRegistry (zasilany w 100% przez Supabase).");
     }
 
     public static void register(Emote emote) {

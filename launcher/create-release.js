@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '1.9.9';
+const VERSION = '2.0.0';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,10 +63,11 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-- poprawki status hud
-- poprawki macro
-- dodano nowego moda inventory view
-- poprawki ogolne`;
+- 🎨 **Nowe ikony 3D emotek** – Trójwymiarowe, dopracowane grafiki postaci w kole wyboru emotek (Facepalm, Przyjazne machnięcie, Salto w przód, Salto w tył, Medytacja, Tornado i Uścisk dłoni).
+- 🤝 **Poprawiona interakcja Handshake (Uścisk dłoni)** – Gracze biorący udział w interakcji automatycznie zwracają się twarzą w twarz, wykonują krok ku sobie, a ich dłonie spotykają się w naturalnym uścisku.
+- 👥 **Pełny podgląd interakcji multiplayer** – Obaj gracze biorący udział w interakcji widzą animację u siebie na ekranie w czasie rzeczywistym.
+- ⚡ **Dynamiczne odświeżanie emotek** – Nowo dodane emotki i ikony pojawiają się w grze w locie bez konieczności restartu klienta.
+- 🛠️ **Poprawki wizualne i płynności animacji**.`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);
@@ -102,7 +103,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         }
     }
 
-    // 1. Upload Fabric Mod JAR (314 KB)
+    // 1. Upload Fabric Mod JAR
     const jarPath = path.join(__dirname, '..', 'build', 'libs', `moo-client-${VERSION}.jar`);
     if (fs.existsSync(jarPath)) {
         await uploadAsset(release.upload_url, token, jarPath, `moo-client-${VERSION}.jar`, 'application/java-archive');
@@ -110,7 +111,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         console.warn(`Jar not found at ${jarPath}`);
     }
 
-    // 2. Upload ASAR (25 MB)
+    // 2. Upload ASAR
     let asarPath = path.join(__dirname, 'dist', 'win-unpacked', 'resources', 'app.asar');
     if (!fs.existsSync(asarPath)) {
         asarPath = path.join(__dirname, 'build-out', 'win-unpacked', 'resources', 'app.asar');

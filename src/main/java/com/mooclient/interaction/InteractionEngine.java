@@ -16,12 +16,14 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.MathHelper;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Główny koordynator systemu interakcji wieloosobowych (Interaction Engine).
+ * Pozycjonuje obu graczy twarzą w twarz i synchronizuje animacje u obu uczestników.
  */
 public class InteractionEngine {
 
@@ -251,12 +253,61 @@ public class InteractionEngine {
             client.options.setPerspective(Perspective.THIRD_PERSON_BACK);
         }
 
-        // Ustawienie transformacji sceny w EmoteEngine dla gracza lokalnego
-        EmotePlayerState localState = EmoteEngine.getInstance().getLocalPlayerState();
-        if (interaction.getSceneConfig() != null) {
-            localState.setCustomSceneTransform(interaction.getSceneConfig().getSlotTransform(localSlot));
+        UUID partnerUuid = (localSlot == 0) ? interaction.getTargetUuid() : interaction.getInitiatorUuid();
+        String partnerName = (localSlot == 0) ? interaction.getTargetName() : interaction.getInitiatorName();
+        int partnerSlot = (localSlot == 0) ? 1 : 0;
+
+        float localYawOffset = 0.0f;
+        float partnerYawOffset = 180.0f;
+
+        if (client != null && client.world != null && client.player != null) {
+            PlayerEntity partnerPlayer = null;
+            if (partnerUuid != null) {
+                partnerPlayer = client.world.getPlayerByUuid(partnerUuid);
+            }
+            if (partnerPlayer == null && partnerName != null) {
+                for (PlayerEntity p : client.world.getPlayers()) {
+                    if (partnerName.equalsIgnoreCase(MooUserManager.cleanName(p.getNameForScoreboard()))) {
+                        partnerPlayer = p;
+                        break;
+                    }
+                }
+            }
+
+            if (partnerPlayer != null) {
+                PlayerEntity p0 = (localSlot == 0) ? client.player : partnerPlayer;
+                PlayerEntity p1 = (localSlot == 0) ? partnerPlayer : client.player;
+
+                double dx = p1.getX() - p0.getX();
+                double dz = p1.getZ() - p0.getZ();
+                if (Math.abs(dx) > 0.001 || Math.abs(dz) > 0.001) {
+                    float yaw0 = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0f;
+                    float yaw1 = yaw0 + 180.0f;
+
+                    if (localSlot == 0) {
+                        localYawOffset = MathHelper.wrapDegrees(yaw0 - p0.getBodyYaw());
+                        partnerYawOffset = MathHelper.wrapDegrees(yaw1 - p1.getBodyYaw());
+                    } else {
+                        localYawOffset = MathHelper.wrapDegrees(yaw1 - p1.getBodyYaw());
+                        partnerYawOffset = MathHelper.wrapDegrees(yaw0 - p0.getBodyYaw());
+                    }
+                }
+            }
         }
+
+        // 1. Ustawienie transformacji i uruchomienie animacji dla gracza lokalnego
+        EmotePlayerState localState = EmoteEngine.getInstance().getLocalPlayerState();
+        localState.setCustomSceneTransform(new SceneTransform(0.0f, 0.0f, 0.0f, localYawOffset));
         localState.startEmote(emote, localSlot, startEpochMs);
+
+        // 2. Ustawienie transformacji i uruchomienie animacji dla partnera w scenie
+        if (partnerUuid != null || partnerName != null) {
+            EmoteEngine.getInstance().playRemoteEmote(partnerUuid, partnerName, emote.getId(), partnerSlot, startEpochMs);
+            EmotePlayerState partnerState = EmoteEngine.getInstance().getPlayerState(partnerUuid, partnerName);
+            if (partnerState != null) {
+                partnerState.setCustomSceneTransform(new SceneTransform(0.0f, 0.0f, 0.0f, partnerYawOffset));
+            }
+        }
     }
 
     /**
@@ -265,10 +316,18 @@ public class InteractionEngine {
     public synchronized void cancelCurrentInteraction(String reason) {
         if (activeInteraction != null) {
             UUID id = activeInteraction.getInteractionId();
+            UUID partnerUuid = activeInteraction.getInitiatorUuid().equals(MooSessionValidator.getLocalPlayerUuid())
+                    ? activeInteraction.getTargetUuid() : activeInteraction.getInitiatorUuid();
+            String partnerName = activeInteraction.getInitiatorUuid().equals(MooSessionValidator.getLocalPlayerUuid())
+                    ? activeInteraction.getTargetName() : activeInteraction.getInitiatorName();
+
             activeInteraction.setState(InteractionState.INTERRUPTED);
             activeInteraction = null;
 
             EmoteEngine.getInstance().stopLocalEmote();
+            if (partnerUuid != null || partnerName != null) {
+                EmoteEngine.getInstance().stopRemoteEmote(partnerUuid, partnerName);
+            }
 
             // Wysłanie pakietu CANCEL
             if (MooNetworkHandler.getInstance() != null) {
@@ -282,9 +341,17 @@ public class InteractionEngine {
      */
     public synchronized void onIncomingCancel(UUID interactionId, String reason) {
         if (activeInteraction != null && activeInteraction.getInteractionId().equals(interactionId)) {
+            UUID partnerUuid = activeInteraction.getInitiatorUuid().equals(MooSessionValidator.getLocalPlayerUuid())
+                    ? activeInteraction.getTargetUuid() : activeInteraction.getInitiatorUuid();
+            String partnerName = activeInteraction.getInitiatorUuid().equals(MooSessionValidator.getLocalPlayerUuid())
+                    ? activeInteraction.getTargetName() : activeInteraction.getInitiatorName();
+
             activeInteraction.setState(InteractionState.CANCELLED);
             activeInteraction = null;
             EmoteEngine.getInstance().stopLocalEmote();
+            if (partnerUuid != null || partnerName != null) {
+                EmoteEngine.getInstance().stopRemoteEmote(partnerUuid, partnerName);
+            }
         }
         pendingInvitations.remove(interactionId);
         InvitationUIManager.getInstance().hideInvitation(interactionId);
@@ -337,9 +404,17 @@ public class InteractionEngine {
             if (emote != null && !emote.isLooping() && emote.getDurationTicks() > 0) {
                 long durationMs = (long) (emote.getDurationTicks() * 50);
                 if (System.currentTimeMillis() >= activeInteraction.getStartEpochMs() + durationMs) {
+                    UUID partnerUuid = activeInteraction.getInitiatorUuid().equals(client.player.getUuid())
+                            ? activeInteraction.getTargetUuid() : activeInteraction.getInitiatorUuid();
+                    String partnerName = activeInteraction.getInitiatorUuid().equals(client.player.getUuid())
+                            ? activeInteraction.getTargetName() : activeInteraction.getInitiatorName();
+
                     activeInteraction.setState(InteractionState.COMPLETED);
                     activeInteraction = null;
                     EmoteEngine.getInstance().stopLocalEmote();
+                    if (partnerUuid != null || partnerName != null) {
+                        EmoteEngine.getInstance().stopRemoteEmote(partnerUuid, partnerName);
+                    }
                 }
             }
         }

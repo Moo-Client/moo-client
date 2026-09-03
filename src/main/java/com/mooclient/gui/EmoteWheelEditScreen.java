@@ -2,6 +2,7 @@ package com.mooclient.gui;
 
 import com.mooclient.emote.Emote;
 import com.mooclient.emote.EmoteRegistry;
+import com.mooclient.emote.EmoteRemoteLoader;
 import com.mooclient.module.modules.EmotesModule;
 import com.mooclient.permissions.PermissionManager;
 import com.mooclient.util.EmoteWheelConfig;
@@ -54,6 +55,7 @@ public class EmoteWheelEditScreen extends Screen {
         super.init();
         EmoteWheelConfig.load();
         PermissionManager.fetchLocalPlayerPermissions(true);
+        EmoteRemoteLoader.refreshRemoteEmotesAsync();
         for (int i = 0; i < EmoteWheelConfig.TOTAL_SLOTS; i++) {
             String slot = EmoteWheelConfig.getSlot(i);
             workingSlots[i] = "hands_up".equalsIgnoreCase(slot) ? null : slot;

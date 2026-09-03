@@ -12,7 +12,7 @@ public class Emote {
 
     private final String id;
     private final String nameKey;
-    private final Identifier icon;
+    private Identifier icon;
     private final EmoteType type;
     private final int participantCount;
     private final int durationTicks;
@@ -83,6 +83,12 @@ public class Emote {
 
     public Identifier getIcon() {
         return icon;
+    }
+
+    public void setIcon(Identifier icon) {
+        if (icon != null) {
+            this.icon = icon;
+        }
     }
 
     public EmoteType getType() {

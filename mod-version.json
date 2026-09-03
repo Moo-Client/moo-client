@@ -1,7 +1,7 @@
 {
-  "version": "1.9.9",
+  "version": "2.0.0",
   "min_launcher_version": "1.0.0",
-  "name": "Moo Client 1.9.9",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v1.9.9/moo-client-1.9.9.jar",
-  "changelog": "🚀 Moo Client v1.9.9:\n- poprawki status hud\n- poprawki macro\n- dodano nowego moda inventory view\n- poprawki ogolne"
+  "name": "Moo Client 2.0.0",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.0.0/moo-client-2.0.0.jar",
+  "changelog": "🚀 Moo Client v2.0.0:\n- Nowe ikony 3D emotek\n- Poprawiona interakcja Handshake (Uścisk dłoni)\n- Pełny podgląd interakcji multiplayer u obu graczy\n- Dynamiczne odświeżanie emotek i grafik\n- Poprawki wizualne i płynności animacji"
 }

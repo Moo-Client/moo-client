@@ -66,6 +66,17 @@ public class EmoteEngine {
         return remoteStatesByUuid.computeIfAbsent(uuid, k -> new EmotePlayerState());
     }
 
+    public EmotePlayerState getPlayerState(UUID uuid, String name) {
+        if (uuid != null) {
+            return getPlayerState(uuid);
+        }
+        if (name != null && !name.isEmpty()) {
+            String clean = MooUserManager.cleanName(name);
+            return remoteStatesByName.computeIfAbsent(clean, k -> new EmotePlayerState());
+        }
+        return null;
+    }
+
     public EmotePlayerState getPlayerStateIfExists(UUID uuid) {
         if (uuid == null) return null;
         MinecraftClient client = MinecraftClient.getInstance();
