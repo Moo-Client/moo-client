@@ -1,7 +1,7 @@
 {
-  "version": "2.0.0",
+  "version": "2.0.1",
   "min_launcher_version": "1.0.0",
-  "name": "Moo Client 2.0.0",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.0.0/moo-client-2.0.0.jar",
-  "changelog": "🚀 Moo Client v2.0.0:\n- Nowe ikony 3D emotek\n- Poprawiona interakcja Handshake (Uścisk dłoni)\n- Pełny podgląd interakcji multiplayer u obu graczy\n- Dynamiczne odświeżanie emotek i grafik\n- Poprawki wizualne i płynności animacji"
+  "name": "Moo Client 2.0.1",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.0.1/moo-client-2.0.1.jar",
+  "changelog": "🚀 Moo Client v2.0.1:\n- Salto w tył (Backflip) i w przód (Frontflip) ściśle w miejscu bez przemieszczeń\n- Płynne, bezszwowe zapętlenie animacji Tornado\n- Poprawiona animacja Przyjaznego machania (Friendly Wave)\n- W 100% chmurowa synchronizacja emotek z Supabase"
 }

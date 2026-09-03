@@ -13,12 +13,12 @@ public class Emote {
     private final String id;
     private final String nameKey;
     private Identifier icon;
-    private final EmoteType type;
-    private final int participantCount;
-    private final int durationTicks;
-    private final boolean looping;
+    private EmoteType type;
+    private int participantCount;
+    private int durationTicks;
+    private boolean looping;
     private boolean free;
-    private final boolean forcesThirdPerson;
+    private boolean forcesThirdPerson;
     private boolean local = false;
     private IEmoteAnimation animation;
     private InteractionSceneConfig sceneConfig;
@@ -95,16 +95,32 @@ public class Emote {
         return type;
     }
 
+    public void setType(EmoteType type) {
+        this.type = type;
+    }
+
     public int getParticipantCount() {
         return participantCount;
+    }
+
+    public void setParticipantCount(int participantCount) {
+        this.participantCount = participantCount;
     }
 
     public int getDurationTicks() {
         return durationTicks;
     }
 
+    public void setDurationTicks(int durationTicks) {
+        this.durationTicks = durationTicks;
+    }
+
     public boolean isLooping() {
         return looping;
+    }
+
+    public void setLooping(boolean looping) {
+        this.looping = looping;
     }
 
     public boolean isFree() {
@@ -125,6 +141,10 @@ public class Emote {
 
     public boolean isForcesThirdPerson() {
         return forcesThirdPerson;
+    }
+
+    public void setForcesThirdPerson(boolean forcesThirdPerson) {
+        this.forcesThirdPerson = forcesThirdPerson;
     }
 
     public boolean isMultiplayer() {

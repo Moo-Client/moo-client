@@ -8,9 +8,9 @@ import net.minecraft.util.math.MathHelper;
  */
 public class BoneTransform {
 
-    public float pitch = 0.0f; // Rotacja X
-    public float yaw = 0.0f;   // Rotacja Y
-    public float roll = 0.0f;  // Rotacja Z
+    public float pitch = 0.0f; // Rotacja X (radiany)
+    public float yaw = 0.0f;   // Rotacja Y (radiany)
+    public float roll = 0.0f;  // Rotacja Z (radiany)
 
     public float posX = 0.0f;
     public float posY = 0.0f;
@@ -78,15 +78,30 @@ public class BoneTransform {
         this.scaleZ = other.scaleZ;
     }
 
+    public BoneTransform copy() {
+        return new BoneTransform(pitch, yaw, roll, posX, posY, posZ, scaleX, scaleY, scaleZ);
+    }
+
+    /**
+     * Płynna interpolacja kątowa w radianach po najkrótszej drodze na okręgu (zapobiega gwałtownym przeskokom przy zapętleniu).
+     */
+    private static float lerpAngleRad(float a, float b, float delta) {
+        float twoPi = (float) (2.0 * Math.PI);
+        float diff = (b - a) % twoPi;
+        if (diff > (float) Math.PI) diff -= twoPi;
+        if (diff < (float) -Math.PI) diff += twoPi;
+        return a + diff * delta;
+    }
+
     public static BoneTransform lerp(BoneTransform a, BoneTransform b, float delta) {
         if (a == null && b == null) return new BoneTransform();
         if (a == null) return b.copy();
         if (b == null) return a.copy();
 
         BoneTransform result = new BoneTransform();
-        result.pitch = MathHelper.lerp(delta, a.pitch, b.pitch);
-        result.yaw = MathHelper.lerp(delta, a.yaw, b.yaw);
-        result.roll = MathHelper.lerp(delta, a.roll, b.roll);
+        result.pitch = lerpAngleRad(a.pitch, b.pitch, delta);
+        result.yaw = lerpAngleRad(a.yaw, b.yaw, delta);
+        result.roll = lerpAngleRad(a.roll, b.roll, delta);
 
         result.posX = MathHelper.lerp(delta, a.posX, b.posX);
         result.posY = MathHelper.lerp(delta, a.posY, b.posY);
@@ -96,13 +111,5 @@ public class BoneTransform {
         result.scaleY = MathHelper.lerp(delta, a.scaleY, b.scaleY);
         result.scaleZ = MathHelper.lerp(delta, a.scaleZ, b.scaleZ);
         return result;
-    }
-
-    public BoneTransform copy() {
-        BoneTransform c = new BoneTransform(pitch, yaw, roll, posX, posY, posZ);
-        c.scaleX = this.scaleX;
-        c.scaleY = this.scaleY;
-        c.scaleZ = this.scaleZ;
-        return c;
     }
 }

@@ -116,7 +116,8 @@ public class BlockbenchAnimation implements IEmoteAnimation {
                 float[] rotDeg = tracks.rotation.sample(t);
                 transform.pitch = (float) Math.toRadians(rotDeg[0]);
                 transform.yaw = (float) Math.toRadians(rotDeg[1]);
-                transform.roll = (float) Math.toRadians(rotDeg[2]);
+                // Konwersja osi Z z formatu Blockbench Bedrock na Minecraft Java ModelPart
+                transform.roll = -(float) Math.toRadians(rotDeg[2]);
             }
 
             if (!tracks.position.isEmpty()) {

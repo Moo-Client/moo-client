@@ -86,13 +86,30 @@ public class PlayerEntityRendererMixin {
             matrices.translate(sceneX, sceneY, sceneZ);
         }
 
-        // 2. Czysto wizualne rotacje całego ciała (obrót twarzą w twarz, pitch dla salta, roll)
+        // 2. Uniesienie w górę (skok/wysokość salta aplikowana w pionie w świecie gry)
+        float visualY = emoteState.getVisualYOffset(tickDelta);
+        if (visualY != 0.0f) {
+            matrices.translate(0.0f, visualY, 0.0f);
+        }
+
+        // 3. Przesunięcie poziome kości root (blokowane dla backflip i frontflip, by wykonywały się ściśle w miejscu)
+        String emoteId = (emoteState.getActiveEmote() != null) ? emoteState.getActiveEmote().getId() : "";
+        boolean isInPlaceFlip = "backflip".equalsIgnoreCase(emoteId) || "frontflip".equalsIgnoreCase(emoteId);
+
+        if (!isInPlaceFlip) {
+            float visualX = emoteState.getVisualXOffset(tickDelta);
+            float visualZ = emoteState.getVisualZOffset(tickDelta);
+            if (visualX != 0.0f || visualZ != 0.0f) {
+                matrices.translate(visualX, 0.0f, visualZ);
+            }
+        }
+
+        // 4. Czysto wizualne rotacje całego ciała wokół środka sylwetki (~0.9m wysokości)
         float pitch = emoteState.getVisualPitch(tickDelta);
         float yaw = emoteState.getVisualYaw(tickDelta);
         float roll = emoteState.getVisualRoll(tickDelta);
 
         if (Math.abs(pitch) > 0.001f || Math.abs(yaw) > 0.001f || Math.abs(roll) > 0.001f) {
-            // Przesunięcie punktu obrotu na środek sylwetki gracza (~0.9m wysokości)
             matrices.translate(0.0f, 0.9f, 0.0f);
 
             if (Math.abs(yaw) > 0.001f) {
@@ -105,16 +122,7 @@ public class PlayerEntityRendererMixin {
                 matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(roll));
             }
 
-            // Powrót z punktu obrotu
             matrices.translate(0.0f, -0.9f, 0.0f);
-        }
-
-        // 3. Wizualne przesunięcie kości root z pliku animacji (krok w przód w nowym kierunku spojrzenia)
-        float visualX = emoteState.getVisualXOffset(tickDelta);
-        float visualY = emoteState.getVisualYOffset(tickDelta);
-        float visualZ = emoteState.getVisualZOffset(tickDelta);
-        if (visualX != 0.0f || visualY != 0.0f || visualZ != 0.0f) {
-            matrices.translate(visualX, visualY, visualZ);
         }
     }
 }

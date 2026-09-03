@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '2.0.0';
+const VERSION = '2.0.1';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,11 +63,10 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-- 🎨 **Nowe ikony 3D emotek** – Trójwymiarowe, dopracowane grafiki postaci w kole wyboru emotek (Facepalm, Przyjazne machnięcie, Salto w przód, Salto w tył, Medytacja, Tornado i Uścisk dłoni).
-- 🤝 **Poprawiona interakcja Handshake (Uścisk dłoni)** – Gracze biorący udział w interakcji automatycznie zwracają się twarzą w twarz, wykonują krok ku sobie, a ich dłonie spotykają się w naturalnym uścisku.
-- 👥 **Pełny podgląd interakcji multiplayer** – Obaj gracze biorący udział w interakcji widzą animację u siebie na ekranie w czasie rzeczywistym.
-- ⚡ **Dynamiczne odświeżanie emotek** – Nowo dodane emotki i ikony pojawiają się w grze w locie bez konieczności restartu klienta.
-- 🛠️ **Poprawki wizualne i płynności animacji**.`;
+- 🤸 **Salto w tył (Backflip) i w przód (Frontflip) w miejscu** – Postać wykonuje pełny obrót 360° ściśle w miejscu, z naturalnym wyskokiem w górę i lądowaniem bez niepożądanych przesunięć poziomych.
+- 🌪️ **Płynne, bezszwowe zapętlenie Tornado** – Nowa interpolacja kątowa po najkrótszej drodze eliminuje szarpnięcia i cofanie animacji przy zapętleniu.
+- 👋 **Poprawka animacji Przyjaznego machania (Friendly Wave)** – Skorygowano osie obrotu kończyny (ramię macha swobodnie w powietrzu, ręka nie koliduje z głową) oraz zsynchronizowano warstwy 3D skina.
+- ☁️ **Czysty system chmurowy** – Całkowicie wyeliminowano zależność od lokalnych plików dyskowych, 100% integracja z bazą Supabase.`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);

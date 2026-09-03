@@ -59,20 +59,20 @@ public abstract class PlayerEntityModelMixin extends BipedEntityModel<PlayerEnti
         float tickDelta = client.getRenderTickCounter().getTickDelta(true);
         emoteState.updateRenderTransforms(tickDelta);
 
-        // Aplikacja transformacji kości głowy (Head)
+        // Aplikacja transformacji kości głowy (Head) - nadpisanie kątów animacją, by spojrzenie gracza nie kolidowało z rękami
         BoneTransform headT = emoteState.getBoneTransform("head");
         if (headT != null) {
-            this.head.pitch += headT.pitch;
-            this.head.yaw += headT.yaw;
-            this.head.roll += headT.roll;
+            this.head.pitch = headT.pitch;
+            this.head.yaw = headT.yaw;
+            this.head.roll = headT.roll;
         }
 
         // Aplikacja transformacji tułowia (Body)
         BoneTransform bodyT = emoteState.getBoneTransform("body");
         if (bodyT != null) {
-            this.body.pitch += bodyT.pitch;
-            this.body.yaw += bodyT.yaw;
-            this.body.roll += bodyT.roll;
+            this.body.pitch = bodyT.pitch;
+            this.body.yaw = bodyT.yaw;
+            this.body.roll = bodyT.roll;
         }
 
         // Aplikacja transformacji prawego ramienia (Right Arm)
@@ -107,11 +107,11 @@ public abstract class PlayerEntityModelMixin extends BipedEntityModel<PlayerEnti
             this.leftLeg.roll = lLegT.roll;
         }
 
-        // Resetowanie lokalnych transformacji warstw nakładek (sleeve, pants, jacket)
-        this.rightSleeve.resetTransform();
-        this.leftSleeve.resetTransform();
-        this.rightPants.resetTransform();
-        this.leftPants.resetTransform();
-        this.jacket.resetTransform();
+        // Synchronizacja warstw nakładek (sleeve, pants, jacket) z odpowiednimi kończynami
+        this.rightSleeve.copyTransform(this.rightArm);
+        this.leftSleeve.copyTransform(this.leftArm);
+        this.rightPants.copyTransform(this.rightLeg);
+        this.leftPants.copyTransform(this.leftLeg);
+        this.jacket.copyTransform(this.body);
     }
 }
