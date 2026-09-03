@@ -609,6 +609,22 @@ public class MooClientScreen extends Screen {
         context.drawTextWithShadow(this.textRenderer, headerTitle, panelX + (panelW - titleW) / 2, panelY + 10,
                 COLOR_TEXT_WHITE);
 
+        // Settings Button on right side of header
+        int setBtnW = 96;
+        int setBtnH = 22;
+        int setBtnX = panelX + panelW - setBtnW - 14;
+        int setBtnY = panelY + 12;
+        boolean setBtnHover = mouseX >= setBtnX && mouseX <= setBtnX + setBtnW && mouseY >= setBtnY
+                && mouseY <= setBtnY + setBtnH;
+        int setBg = setBtnHover ? com.mooclient.util.MooClientSettings.getAccentGlowColor(0x35) : 0x44141420;
+        int setBorder = setBtnHover ? com.mooclient.util.MooClientSettings.getAccentColor() : 0x33FFFFFF;
+        context.fill(setBtnX, setBtnY, setBtnX + setBtnW, setBtnY + setBtnH, setBg);
+        drawBorder(context, setBtnX, setBtnY, setBtnW, setBtnH, setBorder);
+        String setLabel = "⚙ " + MooLanguage.get("settings");
+        int setLabelW = this.textRenderer.getWidth(setLabel);
+        context.drawTextWithShadow(this.textRenderer, setLabel, setBtnX + (setBtnW - setLabelW) / 2, setBtnY + 6,
+                setBtnHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
+
         // Search Bar under "MOO CLIENT"
         int searchW = 200;
         int searchH = 18;
@@ -2789,6 +2805,18 @@ public class MooClientScreen extends Screen {
                 if (mouseX >= backX && mouseX <= backX + backW && mouseY >= backY && mouseY <= backY + backH) {
                     playClickSound();
                     this.currentView = View.HUB;
+                    this.searching = false;
+                    return true;
+                }
+
+                // Settings Button Click
+                int setBtnW = 96;
+                int setBtnH = 22;
+                int setBtnX = panelX + panelW - setBtnW - 14;
+                int setBtnY = panelY + 12;
+                if (mouseX >= setBtnX && mouseX <= setBtnX + setBtnW && mouseY >= setBtnY && mouseY <= setBtnY + setBtnH) {
+                    playClickSound();
+                    this.currentView = View.SETTINGS;
                     this.searching = false;
                     return true;
                 }
