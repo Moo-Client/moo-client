@@ -10,7 +10,7 @@ import java.util.Map;
 public class InteractionSceneConfig {
 
     private final Map<Integer, SceneTransform> slotTransforms = new HashMap<>();
-    private float defaultDistance = 1.0f;
+    private float defaultDistance = 1.20f;
 
     public InteractionSceneConfig() {
     }

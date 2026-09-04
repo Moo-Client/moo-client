@@ -87,11 +87,15 @@ public class PlayerEntityRendererMixin {
             matrices.translate(0.0f, visualY, 0.0f);
         }
 
-        // 2. Przesunięcie poziome kości root (blokowane dla backflip i frontflip, by wykonywały się ściśle w miejscu)
+        // 2. Przesunięcie poziome kości root (blokowane dla backflip i frontflip, by wykonywały się ściśle w miejscu,
+        // oraz dla interakcji duo/multiplayer, gdzie precyzyjną pozycję i odstęp w scenie kontroluje SceneTransform)
         String emoteId = (emoteState.getActiveEmote() != null) ? emoteState.getActiveEmote().getId() : "";
         boolean isInPlaceFlip = "backflip".equalsIgnoreCase(emoteId) || "frontflip".equalsIgnoreCase(emoteId);
 
-        if (!isInPlaceFlip) {
+        SceneTransform sceneTransform = emoteState.getCustomSceneTransform();
+        boolean isMultiplayerFacing = (sceneTransform != null && sceneTransform.lockFacingTarget);
+
+        if (!isInPlaceFlip && !isMultiplayerFacing) {
             float visualX = emoteState.getVisualXOffset(tickDelta);
             float visualZ = emoteState.getVisualZOffset(tickDelta);
             if (visualX != 0.0f || visualZ != 0.0f) {
@@ -104,8 +108,7 @@ public class PlayerEntityRendererMixin {
         float roll = emoteState.getVisualRoll(tickDelta);
         float yaw;
 
-        SceneTransform sceneTransform = emoteState.getCustomSceneTransform();
-        if (sceneTransform != null && sceneTransform.lockFacingTarget) {
+        if (isMultiplayerFacing) {
             // Obliczamy dynamicznie obrót tak, aby w połączeniu z (180 - bodyYaw) ciało było
             // skierowane idealnie pod kątem targetYaw twarzą w twarz:
             // (180 - bodyYaw) + (bodyYaw - targetYaw) = 180 - targetYaw

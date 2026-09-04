@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '2.0.6';
+const VERSION = '2.0.7';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,9 +63,10 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-- 🤦 **Precyzyjna korekta ułożenia dłoni w emotce Facepalm** – Ręka trafia prosto w twarz i czoło gracza, z zachowaniem naturalnego kąta łokcia, w pełnej zgodności z podglądem animacji Blockbench.
-- 📐 **Pełna synchronizacja osi obrotu** – Dopasowano znaki obrotu w osiach Y i Z pomiędzy silnikiem Minecraft Java ModelPart a projektem Blockbench.
-- 🤝 **Utrzymanie wszystkich usprawnień Handshake z v2.0.5** – Idealna odległość 1.15 m, orientacja twarzą w twarz, odblokowany swobodny ruch kamery myszką.`;
+- 🤝 **Optymalizacja uścisku dłoni (Handshake)** – Zwiększono dystans między graczami do komfortowych 1.20 m, całkowicie eliminując przenikanie kasków i pancerzy.
+- 📐 **Idealne spotkanie dłoni w osi symetrii** – Skierowano prawe ramię obu graczy w lewo ku środkowi sylwetki (yaw = -33°, roll = +10°), dzięki czemu dłonie schodzą się idealnie w punkcie uścisku zamiast mijać w poprzek.
+- 🛡️ **Ochrona pozycjonowania sceny** – Zablokowano nadmiarową translację kości root w trakcie scen interakcji multiplayer, gwarantując stały i powtarzalny dystans.
+- 🤦 **Zachowanie idealnego ułożenia dłoni Facepalm z v2.0.6**.`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);

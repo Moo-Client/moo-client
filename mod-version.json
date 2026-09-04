@@ -1,7 +1,7 @@
 {
-  "version": "2.0.6",
+  "version": "2.0.7",
   "min_launcher_version": "1.0.0",
-  "name": "Moo Client 2.0.6",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.0.6/moo-client-2.0.6.jar",
-  "changelog": "🚀 Moo Client v2.0.6:\n- Precyzyjna korekta kątów dłoni w emotce Facepalm: dłoń spoczywa prosto na twarzy i czole\n- Pełne dopasowanie układu współrzędnych Blockbench ZYX do Minecraft Java ModelPart"
+  "name": "Moo Client 2.0.7",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.0.7/moo-client-2.0.7.jar",
+  "changelog": "🚀 Moo Client v2.0.7:\n- Optymalizacja emotki Handshake: idealny odstęp między graczami (1.20 m) eliminujący przenikanie pancerzy i hełmów\n- Skierowanie ramion w lewo ku osi symetrii u obu graczy w celu perfekcyjnego uścisku dłoń w dłoń"
 }

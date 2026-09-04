@@ -332,7 +332,7 @@ public class EmoteRemoteLoader {
             boolean looping = anim.isLooping();
 
             InteractionSceneConfig sceneConfig = (type == EmoteType.MULTIPLAYER)
-                    ? InteractionSceneConfig.createFacingDuo(1.0f)
+                    ? InteractionSceneConfig.createFacingDuo(1.20f)
                     : null;
 
             Emote existing = EmoteRegistry.get(id);

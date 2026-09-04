@@ -130,9 +130,21 @@ public class BlockbenchAnimation implements IEmoteAnimation {
                 float[] rotDeg = tracks.rotation.sample(t);
                 // Konwersja kątów z układu Blockbench na Minecraft Java ModelPart:
                 // pitch (X) zachowuje zwrot, yaw (Y) i roll (Z) są odwracane ze względu na odwróconą oś Y (w dół w MC).
-                transform.pitch = (float) Math.toRadians(rotDeg[0]);
-                transform.yaw = -(float) Math.toRadians(rotDeg[1]);
-                transform.roll = -(float) Math.toRadians(rotDeg[2]);
+                float pitch = (float) Math.toRadians(rotDeg[0]);
+                float rawY = rotDeg[1];
+                float rawZ = rotDeg[2];
+
+                // W uścisku dłoni (Handshake) prawe ramię u obu graczy musi iść w lewo (yaw < 0),
+                // aby obie prawe dłonie spotkały się idealnie w osi symetrii pośrodku między graczami.
+                if ("handshake".equalsIgnoreCase(this.name) && "right_arm".equals(boneName)) {
+                    if (rawY < 0.0f) rawY = -rawY;
+                    if (rawY < 25.0f && rawY > 0.0f) rawY = 33.0f;
+                    if (rawZ < 0.0f) rawZ = -10.0f;
+                }
+
+                transform.pitch = pitch;
+                transform.yaw = -(float) Math.toRadians(rawY);
+                transform.roll = -(float) Math.toRadians(rawZ);
             }
 
             if (!tracks.position.isEmpty()) {

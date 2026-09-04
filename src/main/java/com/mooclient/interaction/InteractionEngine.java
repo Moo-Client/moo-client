@@ -290,7 +290,7 @@ public class InteractionEngine {
 
                     double dist = Math.sqrt(dx * dx + dz * dz);
                     float targetDist = (emote.getSceneConfig() != null && emote.getSceneConfig().getDefaultDistance() > 0.5f)
-                            ? emote.getSceneConfig().getDefaultDistance() : 1.15f;
+                            ? emote.getSceneConfig().getDefaultDistance() : 1.20f;
                     float shift = Math.max(0.0f, (float) (dist - targetDist) / 2.0f);
                     visualShiftZ = -shift;
                 }
@@ -299,7 +299,7 @@ public class InteractionEngine {
 
         // Slot 0 jest skierowany pod kątem yaw0, a Slot 1 pod kątem yaw1.
         // Obydwaj gracze są wizualnie przyciągani do siebie (visualShiftZ = -shift)
-        // tak, aby ich dłonie stykały się dokładnie w uścisku (odległość 1.15 m).
+        // tak, aby ich dłonie stykały się dokładnie w uścisku (odległość 1.20 m).
         SceneTransform st0 = new SceneTransform(0.0f, 0.0f, visualShiftZ, yaw0, true);
         SceneTransform st1 = new SceneTransform(0.0f, 0.0f, visualShiftZ, yaw1, true);
 
