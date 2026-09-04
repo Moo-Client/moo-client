@@ -1,16 +1,24 @@
 package com.mooclient.emote.animation;
 
-import org.joml.Matrix3f;
-import org.joml.Vector3f;
-
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Reprezentacja załadowanej animacji w formacie Blockbench / Minecraft Bedrock.
- * Posiada pełną konwersję matematyczną z kolejności obrotów Bedrock (Euler XYZ)
- * na silnik modeli Minecraft Java ModelPart (Euler ZYX), gwarantując stuprocentową
- * wierność pozycji kończyn względem projektu .bbmodel (w tym emotek złożonych, jak facepalm).
+ * Posiada pełną zgodność z modelem matematycznym Blockbencha i Minecraft Java ModelPart.
+ * 
+ * Zarówno Blockbench (wewnętrzny format .bbmodel), jak i silnik Minecraft ModelPart
+ * stosują kolejność obrotów Eulera ZYX (Quaternionf.rotationZYX / Matrix3f.rotationZYX).
+ * W Minecraft Java ModelPart oś pionowa Y wskazuje w dół (w przeciwieństwie do Blockbencha,
+ * gdzie oś Y wskazuje w górę). Odwrócenie osi Y implikuje zmianę znaku kątów obrotu
+ * w osiach Y (yaw) oraz Z (roll), podczas gdy obrót w osi X (pitch - pochylenie w przód/górę)
+ * zachowuje ten sam znak:
+ *   pitch = radX
+ *   yaw   = -radY
+ *   roll  = -radZ
+ * 
+ * Dzięki temu wszystkie emotki (w tym złożone, trójwymiarowe pozycje jak facepalm,
+ * friendly_wave czy meditation) trafiają dokładnie w zamierzone punkty ciała (czoło, twarz).
  */
 public class BlockbenchAnimation implements IEmoteAnimation {
 
@@ -120,28 +128,11 @@ public class BlockbenchAnimation implements IEmoteAnimation {
 
             if (!tracks.rotation.isEmpty()) {
                 float[] rotDeg = tracks.rotation.sample(t);
-                float radX = (float) Math.toRadians(rotDeg[0]);
-                float radY = (float) Math.toRadians(rotDeg[1]);
-                float radZ = (float) Math.toRadians(rotDeg[2]);
-
-                // Blockbench (format Bedrock) składa obroty w kolejności XYZ (Euler XYZ).
-                // Minecraft Java ModelPart aplikuje obroty w kolejności ZYX (Quaternionf.rotationZYX(roll, yaw, pitch)).
-                // Gdy co najmniej dwie osie obracają się jednocześnie (np. w emotce facepalm lub friendly_wave),
-                // bezpośrednie przypisanie kątów powoduje deformację i wykrzywienie kończyn.
-                // Przekształcamy macierz obrotu XYZ na kąty ZYX, uzyskując 100% zgodności z Blockbench:
-                boolean multiAxis = (radX != 0.0f && radY != 0.0f) || (radX != 0.0f && radZ != 0.0f) || (radY != 0.0f && radZ != 0.0f);
-                if (multiAxis) {
-                    Matrix3f mat = new Matrix3f().rotationXYZ(radX, radY, radZ);
-                    Vector3f zyx = new Vector3f();
-                    mat.getEulerAnglesZYX(zyx);
-                    transform.pitch = zyx.x;
-                    transform.yaw = zyx.y;
-                    transform.roll = zyx.z;
-                } else {
-                    transform.pitch = radX;
-                    transform.yaw = radY;
-                    transform.roll = radZ;
-                }
+                // Konwersja kątów z układu Blockbench na Minecraft Java ModelPart:
+                // pitch (X) zachowuje zwrot, yaw (Y) i roll (Z) są odwracane ze względu na odwróconą oś Y (w dół w MC).
+                transform.pitch = (float) Math.toRadians(rotDeg[0]);
+                transform.yaw = -(float) Math.toRadians(rotDeg[1]);
+                transform.roll = -(float) Math.toRadians(rotDeg[2]);
             }
 
             if (!tracks.position.isEmpty()) {

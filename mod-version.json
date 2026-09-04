@@ -1,7 +1,7 @@
 {
-  "version": "2.0.5",
+  "version": "2.0.6",
   "min_launcher_version": "1.0.0",
-  "name": "Moo Client 2.0.5",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.0.5/moo-client-2.0.5.jar",
-  "changelog": "🚀 Moo Client v2.0.5:\n- Naprawa emotki Facepalm (prawidłowa konwersja kwaternionów ZYX/XYZ z Blockbench)\n- Pełna naprawa uścisku dłoni (Handshake): gracze stają idealnie twarzą w twarz\n- Prawidłowa odległość w uścisku dłoni (1.15m dłoń w dłoń)\n- Odblokowanie swobodnego obrotu kamery myszką podczas interakcji\n- Likwidacja desynchronizacji zegarów systemowych przy interakcjach multiplayer"
+  "name": "Moo Client 2.0.6",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.0.6/moo-client-2.0.6.jar",
+  "changelog": "🚀 Moo Client v2.0.6:\n- Precyzyjna korekta kątów dłoni w emotce Facepalm: dłoń spoczywa prosto na twarzy i czole\n- Pełne dopasowanie układu współrzędnych Blockbench ZYX do Minecraft Java ModelPart"
 }

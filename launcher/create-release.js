@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '2.0.5';
+const VERSION = '2.0.6';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,12 +63,9 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-- 🤦 **Naprawa emotki Facepalm** – Wdrożono pełną konwersję macierzową kwaternionów ZYX do XYZ z modelu Blockbench. Ręka przykłada się idealnie do czoła bez wykrzywień łokcia czy odchyleń w bok.
-- 🤝 **Kompleksowa naprawa uścisku dłoni (Handshake)**:
-  - **Kierunek i rotacja:** Gracze obracają się i stają idealnie twarzą w twarz, z blokadą sylwetki na partnera.
-  - **Odległość:** Automatyczne domykanie dystansu do 1.15 m – dłonie łączą się w uścisku zamiast mijać się w powietrzu.
-  - **Kamera:** Odblokowano swobodny obrót kamery myszką podczas trwania uścisku, z płynnym powrotem do widoku F1.
-  - **Synchronizacja sieciowa:** Zlikwidowano desynchronizację zegarów systemowych Windows, eliminując ucinanie animacji po zaakceptowaniu.`;
+- 🤦 **Precyzyjna korekta ułożenia dłoni w emotce Facepalm** – Ręka trafia prosto w twarz i czoło gracza, z zachowaniem naturalnego kąta łokcia, w pełnej zgodności z podglądem animacji Blockbench.
+- 📐 **Pełna synchronizacja osi obrotu** – Dopasowano znaki obrotu w osiach Y i Z pomiędzy silnikiem Minecraft Java ModelPart a projektem Blockbench.
+- 🤝 **Utrzymanie wszystkich usprawnień Handshake z v2.0.5** – Idealna odległość 1.15 m, orientacja twarzą w twarz, odblokowany swobodny ruch kamery myszką.`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);
