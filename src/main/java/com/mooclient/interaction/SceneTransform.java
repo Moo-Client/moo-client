@@ -14,6 +14,9 @@ public class SceneTransform {
     public float visualPitch = 0.0f;
     public float visualRoll = 0.0f;
 
+    public boolean lockFacingTarget = false;
+    public float targetYaw = 0.0f;
+
     public SceneTransform() {
     }
 
@@ -24,6 +27,14 @@ public class SceneTransform {
         this.visualYaw = visualYaw;
     }
 
+    public SceneTransform(float visualOffsetX, float visualOffsetY, float visualOffsetZ, float targetYaw, boolean lockFacingTarget) {
+        this.visualOffsetX = visualOffsetX;
+        this.visualOffsetY = visualOffsetY;
+        this.visualOffsetZ = visualOffsetZ;
+        this.targetYaw = targetYaw;
+        this.lockFacingTarget = lockFacingTarget;
+    }
+
     public void reset() {
         this.visualOffsetX = 0.0f;
         this.visualOffsetY = 0.0f;
@@ -31,12 +42,16 @@ public class SceneTransform {
         this.visualYaw = 0.0f;
         this.visualPitch = 0.0f;
         this.visualRoll = 0.0f;
+        this.lockFacingTarget = false;
+        this.targetYaw = 0.0f;
     }
 
     public SceneTransform copy() {
         SceneTransform c = new SceneTransform(visualOffsetX, visualOffsetY, visualOffsetZ, visualYaw);
         c.visualPitch = this.visualPitch;
         c.visualRoll = this.visualRoll;
+        c.lockFacingTarget = this.lockFacingTarget;
+        c.targetYaw = this.targetYaw;
         return c;
     }
 }

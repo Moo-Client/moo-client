@@ -1,10 +1,16 @@
 package com.mooclient.emote.animation;
 
+import org.joml.Matrix3f;
+import org.joml.Vector3f;
+
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Reprezentacja załadowanej animacji w formacie Blockbench / Minecraft Bedrock.
+ * Posiada pełną konwersję matematyczną z kolejności obrotów Bedrock (Euler XYZ)
+ * na silnik modeli Minecraft Java ModelPart (Euler ZYX), gwarantując stuprocentową
+ * wierność pozycji kończyn względem projektu .bbmodel (w tym emotek złożonych, jak facepalm).
  */
 public class BlockbenchAnimation implements IEmoteAnimation {
 
@@ -114,10 +120,28 @@ public class BlockbenchAnimation implements IEmoteAnimation {
 
             if (!tracks.rotation.isEmpty()) {
                 float[] rotDeg = tracks.rotation.sample(t);
-                transform.pitch = (float) Math.toRadians(rotDeg[0]);
-                transform.yaw = (float) Math.toRadians(rotDeg[1]);
-                // Konwersja osi Z z formatu Blockbench Bedrock na Minecraft Java ModelPart
-                transform.roll = -(float) Math.toRadians(rotDeg[2]);
+                float radX = (float) Math.toRadians(rotDeg[0]);
+                float radY = (float) Math.toRadians(rotDeg[1]);
+                float radZ = (float) Math.toRadians(rotDeg[2]);
+
+                // Blockbench (format Bedrock) składa obroty w kolejności XYZ (Euler XYZ).
+                // Minecraft Java ModelPart aplikuje obroty w kolejności ZYX (Quaternionf.rotationZYX(roll, yaw, pitch)).
+                // Gdy co najmniej dwie osie obracają się jednocześnie (np. w emotce facepalm lub friendly_wave),
+                // bezpośrednie przypisanie kątów powoduje deformację i wykrzywienie kończyn.
+                // Przekształcamy macierz obrotu XYZ na kąty ZYX, uzyskując 100% zgodności z Blockbench:
+                boolean multiAxis = (radX != 0.0f && radY != 0.0f) || (radX != 0.0f && radZ != 0.0f) || (radY != 0.0f && radZ != 0.0f);
+                if (multiAxis) {
+                    Matrix3f mat = new Matrix3f().rotationXYZ(radX, radY, radZ);
+                    Vector3f zyx = new Vector3f();
+                    mat.getEulerAnglesZYX(zyx);
+                    transform.pitch = zyx.x;
+                    transform.yaw = zyx.y;
+                    transform.roll = zyx.z;
+                } else {
+                    transform.pitch = radX;
+                    transform.yaw = radY;
+                    transform.roll = radZ;
+                }
             }
 
             if (!tracks.position.isEmpty()) {

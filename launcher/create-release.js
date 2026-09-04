@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '2.0.4';
+const VERSION = '2.0.5';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,10 +63,12 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-- 🤸 **Salto w tył (Backflip) i w przód (Frontflip) w miejscu** – Postać wykonuje pełny obrót 360° ściśle w miejscu, z naturalnym wyskokiem w górę i lądowaniem bez niepożądanych przesunięć poziomych.
-- 🌪️ **Płynne, bezszwowe zapętlenie Tornado** – Nowa interpolacja kątowa po najkrótszej drodze eliminuje szarpnięcia i cofanie animacji przy zapętleniu.
-- 👋 **Poprawka animacji Przyjaznego machania (Friendly Wave)** – Skorygowano osie obrotu kończyny (ramię macha swobodnie w powietrzu, ręka nie koliduje z głową) oraz zsynchronizowano warstwy 3D skina.
-- ☁️ **Czysty system chmurowy** – Całkowicie wyeliminowano zależność od lokalnych plików dyskowych, 100% integracja z bazą Supabase.`;
+- 🤦 **Naprawa emotki Facepalm** – Wdrożono pełną konwersję macierzową kwaternionów ZYX do XYZ z modelu Blockbench. Ręka przykłada się idealnie do czoła bez wykrzywień łokcia czy odchyleń w bok.
+- 🤝 **Kompleksowa naprawa uścisku dłoni (Handshake)**:
+  - **Kierunek i rotacja:** Gracze obracają się i stają idealnie twarzą w twarz, z blokadą sylwetki na partnera.
+  - **Odległość:** Automatyczne domykanie dystansu do 1.15 m – dłonie łączą się w uścisku zamiast mijać się w powietrzu.
+  - **Kamera:** Odblokowano swobodny obrót kamery myszką podczas trwania uścisku, z płynnym powrotem do widoku F1.
+  - **Synchronizacja sieciowa:** Zlikwidowano desynchronizację zegarów systemowych Windows, eliminując ucinanie animacji po zaakceptowaniu.`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);

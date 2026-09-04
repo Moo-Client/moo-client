@@ -135,6 +135,10 @@ public class EmotePlayerState {
         this.customSceneTransform = sceneTransform;
     }
 
+    public SceneTransform getCustomSceneTransform() {
+        return customSceneTransform;
+    }
+
     public synchronized void onTick() {
         if (activeEmote == null) return;
 

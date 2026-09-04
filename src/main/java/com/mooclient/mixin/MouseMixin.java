@@ -4,6 +4,7 @@ import com.mooclient.interaction.InteractionInputBlocker;
 import com.mooclient.module.modules.FreelookModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,15 +27,6 @@ public class MouseMixin {
 
     @Inject(method = "updateMouse", at = @At("HEAD"), cancellable = true)
     private void mooClient$onUpdateMouse(double timeDelta, CallbackInfo ci) {
-        // Blokada obrotu kamery podczas aktywnej interakcji multiplayerowej (np. handshake)
-        if (this.client.currentScreen == null
-                && com.mooclient.interaction.InteractionEngine.getInstance().hasActiveInteraction()) {
-            this.cursorDeltaX = 0.0;
-            this.cursorDeltaY = 0.0;
-            ci.cancel();
-            return;
-        }
-
         if (this.client.currentScreen == null && FreelookModule.isActive()) {
             double dx = this.cursorDeltaX;
             double dy = this.cursorDeltaY;
@@ -61,12 +53,12 @@ public class MouseMixin {
 
     @Inject(method = "onMouseButton", at = @At("HEAD"))
     private void mooClient$onMouseButton(long window, int button, int action, int mods, CallbackInfo ci) {
-        if (action == org.lwjgl.glfw.GLFW.GLFW_PRESS && this.client.currentScreen == null && this.client.player != null) {
+        if (action == GLFW.GLFW_PRESS && this.client.currentScreen == null && this.client.player != null) {
             InteractionInputBlocker.onPlayerAction();
 
-            if (button == org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 com.mooclient.module.modules.CpsModule.registerLeftClick();
-            } else if (button == org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            } else if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                 com.mooclient.module.modules.CpsModule.registerRightClick();
             }
         }

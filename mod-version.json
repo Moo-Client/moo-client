@@ -1,7 +1,7 @@
 {
-  "version": "2.0.4",
+  "version": "2.0.5",
   "min_launcher_version": "1.0.0",
-  "name": "Moo Client 2.0.4",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.0.4/moo-client-2.0.4.jar",
-  "changelog": "🚀 Moo Client v2.0.4:\n- Przywrócono wbudowaną emotkę Hands Up (klawisz R)\n- Pełna naprawa nakładek i warstw skina 3D (brak odrywania rękawów w locie)\n- Przywrócono przycisk Ustawień (Settings) w menu modów\n- Salta w miejscu i płynne zapętlenie Tornado"
+  "name": "Moo Client 2.0.5",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.0.5/moo-client-2.0.5.jar",
+  "changelog": "🚀 Moo Client v2.0.5:\n- Naprawa emotki Facepalm (prawidłowa konwersja kwaternionów ZYX/XYZ z Blockbench)\n- Pełna naprawa uścisku dłoni (Handshake): gracze stają idealnie twarzą w twarz\n- Prawidłowa odległość w uścisku dłoni (1.15m dłoń w dłoń)\n- Odblokowanie swobodnego obrotu kamery myszką podczas interakcji\n- Likwidacja desynchronizacji zegarów systemowych przy interakcjach multiplayer"
 }
