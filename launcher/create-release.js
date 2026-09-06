@@ -63,9 +63,13 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION} - test**
 
-- 💬 **Stackowanie wiadomości na czacie (Chat Stacking)** – Dodano opcję grupowania powtarzających się wiadomości w licznik [x2], [x3]...
-- 📜 **Nieskończona historia czatu i odporność na clearchat** – Historia zachowuje się po zmianie serwerów.
-- ⚙️ **Niezależne pod-opcje modułu Chat** – Opcje działają natychmiast i niezależnie od master-toggle.`;
+- 📦 **Nowy Mod: Item Scale (Skalowanie Przedmiotów na Ziemi)**:
+  - Dynamiczne powiększanie ważnych itemów (Totemy, Koxy, Złote Jabłka, Perły, Potki, Miecze, Zbroje) podczas PvP.
+  - System profili (PvP, Enchanty, Custom).
+  - Inteligentny filtr powiększania wszystkich przedmiotów posiadających zaklęcia (enchanty).
+  - Konfigurowalne suwaki skali wyróżnionych i pozostałych itemów.
+- 💬 **Stackowanie wiadomości na czacie (Chat Stacking)** – Grupowanie powtarzających się wiadomości w licznik [x2], [x3]...
+- 📜 **Nieskończona historia czatu i odporność na clearchat**.`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);
