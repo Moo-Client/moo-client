@@ -50,6 +50,13 @@ public class MooClientScreen extends Screen {
     private int listeningEmoteSlot = 0; // 0 = Hands Up, 1 = Frontflip, 2 = Backflip
     private int listeningMacroIndex = -1;
     private int editingMacroIndex = -1;
+    private int itemScaleEditingProfileIndex = -1;
+    private int itemScaleEnchantPickerItemIndex = -1;
+    private int itemScaleEnchantScroll = 0;
+    private String itemScaleSearchQuery = "";
+    private boolean itemScaleSearching = false;
+    private int itemScaleSearchPage = 0;
+    private int itemScaleProfileItemsPage = 0;
     private double scrollY = 0;
     private boolean draggingScrollbar = false;
     private double scrollbarDragStartY = 0;
@@ -884,8 +891,13 @@ public class MooClientScreen extends Screen {
     private int getOptionsPanelHeight(String modName) {
         if (modName.equalsIgnoreCase("Armor") || modName.equalsIgnoreCase("Armor HUD")) {
             return 450;
-        } else if (modName.equalsIgnoreCase("Item Scale")) {
-            return 395;
+        } else if (modName.equalsIgnoreCase("Item Scale") || modName.equalsIgnoreCase("ItemScale")) {
+            if (this.itemScaleEditingProfileIndex < 0) {
+                int count = com.mooclient.module.modules.ItemScaleModule.getProfiles().size();
+                return Math.min(445, Math.max(220, 95 + count * 36 + 42));
+            } else {
+                return 445;
+            }
         } else if (modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) {
             return 365;
         } else if (modName.equalsIgnoreCase("Inventory View") || modName.equalsIgnoreCase("InventoryView")) {
@@ -971,6 +983,13 @@ public class MooClientScreen extends Screen {
         } else if (modName.equalsIgnoreCase("Inventory View") || modName.equalsIgnoreCase("InventoryView")) {
             optTitle = MooLanguage.get("invview_opt_title");
             optSubtitle = MooLanguage.get("invview_opt_subtitle");
+        } else if (modName.equalsIgnoreCase("Item Scale") || modName.equalsIgnoreCase("ItemScale")) {
+            optTitle = MooLanguage.get("itemscale_opt_title");
+            if (this.itemScaleEditingProfileIndex >= 0 && this.itemScaleEditingProfileIndex < com.mooclient.module.modules.ItemScaleModule.getProfiles().size()) {
+                optSubtitle = "Profil: " + com.mooclient.module.modules.ItemScaleModule.getProfiles().get(this.itemScaleEditingProfileIndex).getName();
+            } else {
+                optSubtitle = MooLanguage.get("itemscale_opt_subtitle");
+            }
         } else {
             optTitle = MooLanguage.get("gamma_opt_title");
             optSubtitle = MooLanguage.get("gamma_opt_subtitle");
@@ -1235,74 +1254,6 @@ public class MooClientScreen extends Screen {
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shadow_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     com.mooclient.module.modules.ChatModule.isTextShadow());
-
-        } else if (modName.equalsIgnoreCase("Item Scale")) {
-            com.mooclient.module.modules.ItemScaleModule.ScaleProfile prof = com.mooclient.module.modules.ItemScaleModule.getActiveProfile();
-
-            // Row 1: Enable / Disable Item Scale Module
-            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("itemscale_enabled_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
-                    com.mooclient.module.modules.ItemScaleModule.isItemScaleEnabled());
-
-            // Row 2: Profile Selector (PvP / Enchanty / Custom)
-            rowY += rowH + 6;
-            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("itemscale_profile_label"));
-            String profText = "[ " + prof.getName() + " ] (kliknij by zmienić)";
-            int btnW = 160;
-            int btnH = 22;
-            int btnX = rowX + rowW - btnW - 10;
-            int btnY = rowY + 6;
-            boolean profHover = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH;
-            context.fill(btnX, btnY, btnX + btnW, btnY + btnH, profHover ? 0xCC252535 : 0x88181824);
-            drawBorder(context, btnX, btnY, btnW, btnH, profHover ? 0xAAFFFFFF : 0x44FFFFFF);
-            drawCenteredText(context, profText, btnX + btnW / 2, btnY + 7, profHover ? COLOR_TEXT_WHITE : 0xFF55FFFF);
-
-            // Row 3: Highlighted Scale Slider (1.0x to 4.0x)
-            rowY += rowH + 6;
-            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("itemscale_highlight_scale_label"));
-            int hPercent = Math.round(((prof.getHighlightScale() - 1.0f) / 3.0f) * 100.0f);
-            renderScaleSliderWithLabel(context, rowX + rowW - 160, rowY + 6, 150, 22, String.format(java.util.Locale.US, "%.1fx", prof.getHighlightScale()), hPercent, mouseX, mouseY);
-
-            // Row 4: Default Scale Slider (0.5x to 2.0x)
-            rowY += rowH + 6;
-            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("itemscale_default_scale_label"));
-            int dPercent = Math.round(((prof.getDefaultScale() - 0.5f) / 1.5f) * 100.0f);
-            renderScaleSliderWithLabel(context, rowX + rowW - 160, rowY + 6, 150, 22, String.format(java.util.Locale.US, "%.1fx", prof.getDefaultScale()), dPercent, mouseX, mouseY);
-
-            // Row 5: Scale All Enchanted Items Toggle
-            rowY += rowH + 6;
-            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("itemscale_enchanted_label"));
-            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, prof.isScaleEnchanted());
-
-            // Preset items quick toggle grid / list
-            rowY += rowH + 6;
-            context.drawTextWithShadow(this.textRenderer, MooLanguage.get("itemscale_items_list_label") + ":", rowX + 4, rowY + 2, 0xFFA0A0AB);
-            rowY += 14;
-
-            int itemBtnW = (rowW - 12) / 3;
-            int itemBtnH = 20;
-            for (int i = 0; i < com.mooclient.module.modules.ItemScaleModule.PRESET_ITEMS.size() && i < 12; i++) {
-                String[] itemData = com.mooclient.module.modules.ItemScaleModule.PRESET_ITEMS.get(i);
-                String itemId = itemData[0];
-                String itemLabel = itemData[1];
-                int col = i % 3;
-                int row = i / 3;
-                int bX = rowX + col * (itemBtnW + 6);
-                int bY = rowY + row * (itemBtnH + 4);
-
-                boolean isSelected = prof.containsItem(itemId);
-                boolean itemHover = mouseX >= bX && mouseX <= bX + itemBtnW && mouseY >= bY && mouseY <= bY + itemBtnH;
-
-                int bBg = isSelected ? (itemHover ? 0xCC166534 : 0x8814532D) : (itemHover ? 0x66252535 : 0x44141420);
-                int bBorder = isSelected ? 0xFF22C55E : (itemHover ? 0x88FFFFFF : 0x22FFFFFF);
-                int tColor = isSelected ? 0xFF86EFAC : (itemHover ? COLOR_TEXT_WHITE : 0xFF9CA3AF);
-
-                context.fill(bX, bY, bX + itemBtnW, bY + itemBtnH, bBg);
-                drawBorder(context, bX, bY, itemBtnW, itemBtnH, bBorder);
-
-                String shortLabel = this.textRenderer.trimToWidth(itemLabel, itemBtnW - 14);
-                drawCenteredText(context, (isSelected ? "✔ " : "") + shortLabel, bX + itemBtnW / 2, bY + 6, tColor);
-            }
 
         } else if (modName.equalsIgnoreCase("Macro")) {
             // Row 1: Enable / Disable Macro Module
@@ -1712,12 +1663,444 @@ public class MooClientScreen extends Screen {
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     com.mooclient.module.modules.InventoryViewModule.isShowEmptySlots());
 
+        } else if (modName.equalsIgnoreCase("Item Scale") || modName.equalsIgnoreCase("ItemScale")) {
+            renderItemScaleOptions(context, mouseX, mouseY, rowX, rowY, rowW, rowH, panelX, panelY, panelW, panelH);
+
         } else {
             // Gamma Options
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("fullbright_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     selectedModule != null && selectedModule.isEnabled());
         }
+    }
+
+    private void renderItemScaleOptions(DrawContext context, int mouseX, int mouseY, int rowX, int rowY, int rowW, int rowH, int panelX, int panelY, int panelW, int panelH) {
+        java.util.List<com.mooclient.module.modules.ItemScaleModule.ScaleProfile> profiles = com.mooclient.module.modules.ItemScaleModule.getProfiles();
+
+        // 1. IF ENCHANT PICKER MODAL IS OPEN, RENDER ONLY THE MODAL AND RETURN IMMEDIATELY!
+        // This 100% prevents any background text or elements from View 2 showing through the modal!
+        if (this.itemScaleEnchantPickerItemIndex >= 0 && this.itemScaleEditingProfileIndex >= 0 && this.itemScaleEditingProfileIndex < profiles.size()) {
+            renderItemScaleEnchantPicker(context, mouseX, mouseY, panelX, panelY, panelW, panelH, profiles.get(this.itemScaleEditingProfileIndex));
+            return;
+        }
+
+        if (this.itemScaleEditingProfileIndex < 0 || this.itemScaleEditingProfileIndex >= profiles.size()) {
+            // --- VIEW 1: PROFILES LIST ---
+            int curY = rowY - 6;
+            int pRowH = 30;
+
+            if (profiles.isEmpty()) {
+                context.drawTextWithShadow(this.textRenderer, "Brak profili. Kliknij przycisk poniżej, aby utworzyć profil!", rowX + 6, curY + 8, COLOR_TEXT_MUTED);
+                curY += 28;
+            }
+
+            for (int i = 0; i < profiles.size(); i++) {
+                com.mooclient.module.modules.ItemScaleModule.ScaleProfile prof = profiles.get(i);
+                boolean isProfHover = mouseX >= rowX && mouseX <= rowX + rowW && mouseY >= curY && mouseY <= curY + pRowH;
+                int pBg = prof.isEnabled() ? (isProfHover ? 0x661E293B : 0x5515151E) : 0x33101018;
+                int pBorder = prof.isEnabled() ? 0x5538BDF8 : 0x22FFFFFF;
+
+                context.fill(rowX, curY, rowX + rowW, curY + pRowH, pBg);
+                drawBorder(context, rowX, curY, rowW, pRowH, pBorder);
+
+                // Slot # & Name
+                String pName = "#" + (i + 1) + " " + prof.getName();
+                context.drawTextWithShadow(this.textRenderer, pName, rowX + 10, curY + 5,
+                        prof.isEnabled() ? COLOR_TEXT_WHITE : COLOR_TEXT_MUTED);
+
+                // Info tag: item count + scale
+                String info = prof.getItems().size() + " itemów • Skala: " + String.format("%.1fx", prof.getHighlightScale());
+                context.drawTextWithShadow(this.textRenderer, info, rowX + 10, curY + 16, 0xFF64748B);
+
+                // Edit button
+                int editBtnW = 72;
+                int editBtnH = 20;
+                int editBtnX = rowX + rowW - editBtnW - 44 - 26;
+                int editBtnY = curY + 5;
+                boolean editHover = mouseX >= editBtnX && mouseX <= editBtnX + editBtnW && mouseY >= editBtnY && mouseY <= editBtnY + editBtnH;
+                context.fill(editBtnX, editBtnY, editBtnX + editBtnW, editBtnY + editBtnH, editHover ? 0xCC1E3A8A : 0x881E293B);
+                drawBorder(context, editBtnX, editBtnY, editBtnW, editBtnH, editHover ? 0xFF38BDF8 : 0x5538BDF8);
+                drawCenteredText(context, MooLanguage.get("itemscale_edit_btn"), editBtnX + editBtnW / 2, editBtnY + 6, editHover ? COLOR_TEXT_WHITE : 0xFF38BDF8);
+
+                // Toggle Switch
+                int tX = editBtnX + editBtnW + 6;
+                int tY = curY + 6;
+                drawOptionToggle(context, tX, tY, mouseX, mouseY, prof.isEnabled());
+
+                // Delete Button (can delete any profile down to 0)
+                int delX = tX + 38;
+                int delY = curY + 5;
+                int delW = 20;
+                int delH = 20;
+                boolean delHover = mouseX >= delX && mouseX <= delX + delW && mouseY >= delY && mouseY <= delY + delH;
+                context.fill(delX, delY, delX + delW, delY + delH, delHover ? 0xDD7F1D1D : 0x55331111);
+                drawBorder(context, delX, delY, delW, delH, delHover ? 0xFFFF4444 : 0x44FF5555);
+                drawCenteredText(context, "✕", delX + delW / 2, delY + 6, delHover ? COLOR_TEXT_WHITE : 0xFFFF7777);
+
+                curY += pRowH + 4;
+            }
+
+            // Add Profile Button
+            int addBtnY = curY + 2;
+            int addBtnH = 24;
+            boolean addHover = mouseX >= rowX && mouseX <= rowX + rowW && mouseY >= addBtnY && mouseY <= addBtnY + addBtnH;
+            context.fill(rowX, addBtnY, rowX + rowW, addBtnY + addBtnH, addHover ? 0xCC1E3A8A : 0x66181824);
+            drawBorder(context, rowX, addBtnY, rowW, addBtnH, addHover ? 0xFF38BDF8 : 0x5538BDF8);
+            drawCenteredText(context, MooLanguage.get("itemscale_add_profile"), rowX + rowW / 2, addBtnY + 8, addHover ? COLOR_TEXT_WHITE : 0xFF38BDF8);
+
+        } else {
+            // --- VIEW 2: PROFILE DETAIL / ITEM SEARCH & EDITOR ---
+            com.mooclient.module.modules.ItemScaleModule.ScaleProfile prof = profiles.get(this.itemScaleEditingProfileIndex);
+
+            // Top Bar: Back to Profiles Button & Profile Toggle
+            int curY = rowY - 8;
+            int backBtnW = 126;
+            int backBtnH = 19;
+            boolean bHover = mouseX >= rowX && mouseX <= rowX + backBtnW && mouseY >= curY && mouseY <= curY + backBtnH;
+            context.fill(rowX, curY, rowX + backBtnW, curY + backBtnH, bHover ? 0xAA252535 : 0x66181824);
+            drawBorder(context, rowX, curY, backBtnW, backBtnH, bHover ? 0xAAFFFFFF : 0x33FFFFFF);
+            drawCenteredText(context, MooLanguage.get("itemscale_back_to_profiles"), rowX + backBtnW / 2, curY + 6, bHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
+
+            // Enable toggle on right
+            context.drawTextWithShadow(this.textRenderer, "Włącz ten profil:", rowX + rowW - 136, curY + 5, COLOR_TEXT_MUTED);
+            drawOptionToggle(context, rowX + rowW - 44, curY + 1, mouseX, mouseY, prof.isEnabled());
+
+            curY += backBtnH + 6;
+
+            // Slider 1: Highlight scale (1.0x - 4.0x)
+            drawOptionRow(context, rowX, curY, rowW, 25, MooLanguage.get("itemscale_highlight_scale"));
+            int sW = 150;
+            int sX = rowX + rowW - 160;
+            int hPercent = Math.round(((prof.getHighlightScale() - 1.0f) / 3.0f) * 100);
+            renderScaleSliderWithLabel(context, sX, curY + 3, sW, 20, String.format("%.1fx", prof.getHighlightScale()), hPercent, mouseX, mouseY);
+
+            curY += 27;
+
+            // Slider 2: Default scale (0.5x - 2.0x)
+            drawOptionRow(context, rowX, curY, rowW, 25, MooLanguage.get("itemscale_default_scale"));
+            int dPercent = Math.round(((prof.getDefaultScale() - 0.5f) / 1.5f) * 100);
+            renderScaleSliderWithLabel(context, sX, curY + 3, sW, 20, String.format("%.1fx", prof.getDefaultScale()), dPercent, mouseX, mouseY);
+
+            curY += 28;
+
+            // Profile Items Header
+            java.util.List<com.mooclient.module.modules.ItemScaleModule.ScaleItemEntry> items = prof.getItems();
+            String itemsHeader = "Przedmioty w profilu (" + items.size() + ") - kliknij enchant aby zmienić:";
+            context.drawTextWithShadow(this.textRenderer, itemsHeader, rowX + 2, curY, 0xFF38BDF8);
+
+            // Paging for items in profile if > 4
+            int profileItemsPerPage = 4;
+            int maxProfPages = Math.max(1, (items.size() + profileItemsPerPage - 1) / profileItemsPerPage);
+            if (this.itemScaleProfileItemsPage >= maxProfPages) this.itemScaleProfileItemsPage = maxProfPages - 1;
+            if (this.itemScaleProfileItemsPage < 0) this.itemScaleProfileItemsPage = 0;
+
+            if (items.size() > profileItemsPerPage) {
+                String pPageStr = (this.itemScaleProfileItemsPage + 1) + "/" + maxProfPages;
+                int pPageStrW = this.textRenderer.getWidth(pPageStr);
+                int navX = rowX + rowW - 54;
+                context.drawTextWithShadow(this.textRenderer, "<", navX, curY, mouseX >= navX && mouseX <= navX + 10 && mouseY >= curY && mouseY <= curY + 10 ? 0xFF38BDF8 : 0xFFA0A0AB);
+                context.drawTextWithShadow(this.textRenderer, pPageStr, navX + 14, curY, COLOR_TEXT_WHITE);
+                context.drawTextWithShadow(this.textRenderer, ">", navX + 18 + pPageStrW, curY, mouseX >= navX + 18 + pPageStrW && mouseX <= navX + 28 + pPageStrW && mouseY >= curY && mouseY <= curY + 10 ? 0xFF38BDF8 : 0xFFA0A0AB);
+            }
+
+            curY += 12;
+
+            // Active items in this profile (2 columns, 2 rows max = 4 items visible at a time)
+            int itemBoxH = 22;
+            int itemsPerRow = 2;
+            int itemBoxW = (rowW - 6) / 2;
+
+            if (items.isEmpty()) {
+                context.fill(rowX, curY, rowX + rowW, curY + 36, 0x33101018);
+                drawBorder(context, rowX, curY, rowW, 36, 0x22FFFFFF);
+                drawCenteredText(context, "Brak przedmiotów w tym profilu. Wyszukaj i dodaj poniżej!", rowX + rowW / 2, curY + 13, COLOR_TEXT_MUTED);
+                curY += 42;
+            } else {
+                int startItemIdx = this.itemScaleProfileItemsPage * profileItemsPerPage;
+                int displayedCount = Math.min(profileItemsPerPage, items.size() - startItemIdx);
+                for (int i = 0; i < displayedCount; i++) {
+                    int realIdx = startItemIdx + i;
+                    com.mooclient.module.modules.ItemScaleModule.ScaleItemEntry entry = items.get(realIdx);
+                    int col = i % itemsPerRow;
+                    int row = i / itemsPerRow;
+                    int bX = rowX + col * (itemBoxW + 6);
+                    int bY = curY + row * (itemBoxH + 3);
+
+                    boolean itemHover = mouseX >= bX && mouseX <= bX + itemBoxW && mouseY >= bY && mouseY <= bY + itemBoxH;
+                    context.fill(bX, bY, bX + itemBoxW, bY + itemBoxH, itemHover ? 0xDD1E293B : 0x99151520);
+                    drawBorder(context, bX, bY, itemBoxW, itemBoxH, itemHover ? 0xAA38BDF8 : 0x33FFFFFF);
+
+                    // Draw Minecraft Item Icon
+                    net.minecraft.item.ItemStack iconStack = com.mooclient.module.modules.ItemScaleModule.getItemStackForEntry(entry.getItemId());
+                    if (!iconStack.isEmpty()) {
+                        context.drawItem(iconStack, bX + 3, bY + 3);
+                    }
+
+                    // Delete Item Button (✕)
+                    int delX = bX + itemBoxW - 19;
+                    int delY = bY + 3;
+                    int delW = 16;
+                    int delH = 16;
+                    boolean delHover = mouseX >= delX && mouseX <= delX + delW && mouseY >= delY && mouseY <= delY + delH;
+                    context.fill(delX, delY, delX + delW, delY + delH, delHover ? 0xDD7F1D1D : 0x44331111);
+                    drawBorder(context, delX, delY, delW, delH, delHover ? 0xFFFF6666 : 0x33FF6666);
+                    drawCenteredText(context, "✕", delX + delW / 2, delY + 4, delHover ? COLOR_TEXT_WHITE : 0xFFFF6666);
+
+                    // Enchantment Badge
+                    String encName = entry.getBadgeText();
+                    int encColor = entry.getEnchantments().isEmpty() ? 0xFF94A3B8 : 0xFF55FFFF;
+                    String encBadge = "[" + this.textRenderer.trimToWidth(encName, 58) + "]";
+                    int encW = this.textRenderer.getWidth(encBadge);
+                    int encX = delX - encW - 4;
+                    context.drawTextWithShadow(this.textRenderer, encBadge, encX, bY + 7, encColor);
+
+                    // Item Name (bound strictly so it CANNOT touch encBadge)
+                    String displayName = com.mooclient.module.modules.ItemScaleModule.getItemDisplayName(entry.getItemId());
+                    int maxNameW = Math.max(10, encX - (bX + 22) - 4);
+                    String trimName = this.textRenderer.trimToWidth(displayName, maxNameW);
+                    context.drawTextWithShadow(this.textRenderer, trimName, bX + 22, bY + 7, COLOR_TEXT_WHITE);
+                }
+                int rowsUsed = (displayedCount + itemsPerRow - 1) / itemsPerRow;
+                curY += rowsUsed * (itemBoxH + 3) + 4;
+            }
+
+            // --- ALL MINECRAFT 1.21.4 ITEMS SEARCH ENGINE ---
+            curY += 2;
+            context.drawTextWithShadow(this.textRenderer, "Wyszukiwarka przedmiotów MC 1.21.4:", rowX + 2, curY, 0xFF38BDF8);
+            curY += 12;
+
+            // Search Bar Input Field
+            int searchBarH = 20;
+            boolean searchHover = mouseX >= rowX && mouseX <= rowX + rowW && mouseY >= curY && mouseY <= curY + searchBarH;
+            context.fill(rowX, curY, rowX + rowW, curY + searchBarH, this.itemScaleSearching ? 0xEE141420 : 0x99101018);
+            drawBorder(context, rowX, curY, rowW, searchBarH, this.itemScaleSearching ? 0xFF38BDF8 : (searchHover ? 0x8838BDF8 : 0x33FFFFFF));
+
+            // Search icon / prompt
+            String qText = this.itemScaleSearchQuery;
+            if (this.itemScaleSearching && (System.currentTimeMillis() / 400) % 2 == 0) {
+                qText += "_";
+            }
+            if (this.itemScaleSearchQuery.isEmpty() && !this.itemScaleSearching) {
+                context.drawTextWithShadow(this.textRenderer, "🔍 Wpisz nazwę (np. miecz, totem, kox, buława, zbroja)...", rowX + 8, curY + 6, 0xFF64748B);
+            } else {
+                context.drawTextWithShadow(this.textRenderer, "🔍 " + qText, rowX + 8, curY + 6, COLOR_TEXT_WHITE);
+            }
+
+            // Clear search query button (✕)
+            if (!this.itemScaleSearchQuery.isEmpty()) {
+                int clrX = rowX + rowW - 20;
+                int clrY = curY + 2;
+                boolean clrHover = mouseX >= clrX && mouseX <= clrX + 16 && mouseY >= clrY && mouseY <= clrY + 16;
+                drawCenteredText(context, "✕", clrX + 8, clrY + 4, clrHover ? 0xFFFF5555 : 0xFFA0A0AB);
+            }
+
+            curY += searchBarH + 5;
+
+            // Search Results Grid (3 columns x 3 rows = 9 items per page)
+            java.util.List<com.mooclient.module.modules.ItemScaleModule.ItemSearchResult> searchResults =
+                    com.mooclient.module.modules.ItemScaleModule.searchMinecraftItems(this.itemScaleSearchQuery);
+
+            int itemsPerPage = 9;
+            int totalPages = Math.max(1, (searchResults.size() + itemsPerPage - 1) / itemsPerPage);
+            if (this.itemScaleSearchPage >= totalPages) this.itemScaleSearchPage = totalPages - 1;
+            if (this.itemScaleSearchPage < 0) this.itemScaleSearchPage = 0;
+
+            int qBtnW = (rowW - 12) / 3;
+            int qBtnH = 20;
+            int startIdx = this.itemScaleSearchPage * itemsPerPage;
+            int countThisPage = Math.min(itemsPerPage, searchResults.size() - startIdx);
+
+            for (int i = 0; i < countThisPage; i++) {
+                int resIdx = startIdx + i;
+                com.mooclient.module.modules.ItemScaleModule.ItemSearchResult res = searchResults.get(resIdx);
+                int col = i % 3;
+                int row = i / 3;
+                int bX = rowX + col * (qBtnW + 6);
+                int bY = curY + row * (qBtnH + 3);
+
+                boolean inProf = prof.containsItem(res.getItemId());
+                boolean qHover = mouseX >= bX && mouseX <= bX + qBtnW && mouseY >= bY && mouseY <= bY + qBtnH;
+
+                int bg = inProf ? 0xBB065F46 : (qHover ? 0xDD1E293B : 0x77151520);
+                int border = inProf ? 0xFF10B981 : (qHover ? 0xAA38BDF8 : 0x22FFFFFF);
+                int textCol = inProf ? 0xFF6EE7B7 : (qHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
+
+                context.fill(bX, bY, bX + qBtnW, bY + qBtnH, bg);
+                drawBorder(context, bX, bY, qBtnW, qBtnH, border);
+
+                if (res.getItem() != null) {
+                    context.drawItem(res.getItem().getDefaultStack(), bX + 2, bY + 2);
+                }
+
+                String label = (inProf ? "✔ " : "+ ") + res.getDisplayName();
+                String trimLabel = this.textRenderer.trimToWidth(label, qBtnW - 24);
+                context.drawTextWithShadow(this.textRenderer, trimLabel, bX + 20, bY + 6, textCol);
+            }
+
+            curY += 3 * (qBtnH + 3) + 2;
+
+            // Pagination Controls Bar below search results
+            int navBtnW = 60;
+            int navBtnH = 16;
+            int prevX = rowX + 2;
+            int nextX = rowX + rowW - navBtnW - 2;
+
+            boolean prevHover = mouseX >= prevX && mouseX <= prevX + navBtnW && mouseY >= curY && mouseY <= curY + navBtnH && this.itemScaleSearchPage > 0;
+            context.fill(prevX, curY, prevX + navBtnW, curY + navBtnH, prevHover ? 0xCC1E293B : 0x55151520);
+            drawBorder(context, prevX, curY, navBtnW, navBtnH, this.itemScaleSearchPage > 0 ? (prevHover ? 0xFF38BDF8 : 0x44FFFFFF) : 0x22FFFFFF);
+            drawCenteredText(context, "< Poprz.", prevX + navBtnW / 2, curY + 4, this.itemScaleSearchPage > 0 ? (prevHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB) : 0x44FFFFFF);
+
+            String pageInfo = "Strona " + (this.itemScaleSearchPage + 1) + " / " + totalPages + " (" + searchResults.size() + " itemów)";
+            drawCenteredText(context, pageInfo, rowX + rowW / 2, curY + 4, 0xFF94A3B8);
+
+            boolean nextHover = mouseX >= nextX && mouseX <= nextX + navBtnW && mouseY >= curY && mouseY <= curY + navBtnH && this.itemScaleSearchPage < totalPages - 1;
+            context.fill(nextX, curY, nextX + navBtnW, curY + navBtnH, nextHover ? 0xCC1E293B : 0x55151520);
+            drawBorder(context, nextX, curY, navBtnW, navBtnH, this.itemScaleSearchPage < totalPages - 1 ? (nextHover ? 0xFF38BDF8 : 0x44FFFFFF) : 0x22FFFFFF);
+            drawCenteredText(context, "Nast. >", nextX + navBtnW / 2, curY + 4, this.itemScaleSearchPage < totalPages - 1 ? (nextHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB) : 0x44FFFFFF);
+        }
+    }
+
+    private void renderItemScaleEnchantPicker(DrawContext context, int mouseX, int mouseY, int panelX, int panelY, int panelW, int panelH, com.mooclient.module.modules.ItemScaleModule.ScaleProfile prof) {
+        if (this.itemScaleEnchantPickerItemIndex >= prof.getItems().size()) {
+            this.itemScaleEnchantPickerItemIndex = -1;
+            return;
+        }
+        com.mooclient.module.modules.ItemScaleModule.ScaleItemEntry item = prof.getItems().get(this.itemScaleEnchantPickerItemIndex);
+
+        // Solid darkened backdrop covering whole screen
+        context.fill(0, 0, this.width, this.height, 0xEE05050A);
+
+        int modalW = 460;
+        int modalH = 310;
+        int modalX = (this.width - modalW) / 2;
+        int modalY = (this.height - modalH) / 2;
+
+        // Completely opaque, crisp modal background - NO background text can shine through!
+        context.fill(modalX, modalY, modalX + modalW, modalY + modalH, 0xFF12121B);
+        drawBorder(context, modalX, modalY, modalW, modalH, 0xFF38BDF8);
+
+        // Title & Item Name
+        String itemName = com.mooclient.module.modules.ItemScaleModule.getItemDisplayName(item.getItemId());
+        context.drawTextWithShadow(this.textRenderer, "WYBIERZ WYMAGANE ENCHANTY I POZIOMY", modalX + 14, modalY + 10, 0xFF38BDF8);
+        String sub = "Przedmiot: " + itemName + " (Wybrane: " + item.getBadgeText() + ")";
+        context.drawTextWithShadow(this.textRenderer, sub, modalX + 14, modalY + 22, COLOR_TEXT_MUTED);
+
+        // Close ✕
+        int closeX = modalX + modalW - 24;
+        int closeY = modalY + 10;
+        boolean closeHover = mouseX >= closeX && mouseX <= closeX + 14 && mouseY >= closeY && mouseY <= closeY + 14;
+        drawCenteredText(context, "✕", closeX + 7, closeY + 3, closeHover ? 0xFFFF5555 : COLOR_TEXT_WHITE);
+
+        context.fill(modalX + 14, modalY + 35, modalX + modalW - 14, modalY + 36, 0x22FFFFFF);
+
+        // Logic Selector: [ Wystarczy dowolny (LUB) ]  [ Wszystkie wybrane (I) ]
+        context.drawTextWithShadow(this.textRenderer, "Wymóg:", modalX + 14, modalY + 45, COLOR_TEXT_MUTED);
+        int logBtnY = modalY + 40;
+        int log1W = 180;
+        int log2W = 170;
+        int log1X = modalX + 56;
+        int log2X = log1X + log1W + 6;
+        int logH = 18;
+
+        boolean isAll = item.isRequireAllEnchantments();
+        boolean log1Hover = mouseX >= log1X && mouseX <= log1X + log1W && mouseY >= logBtnY && mouseY <= logBtnY + logH;
+        boolean log2Hover = mouseX >= log2X && mouseX <= log2X + log2W && mouseY >= logBtnY && mouseY <= logBtnY + logH;
+
+        // Button 1: OR (Dowolny)
+        context.fill(log1X, logBtnY, log1X + log1W, logBtnY + logH, !isAll ? 0xCC0284C7 : (log1Hover ? 0x881E293B : 0x55151520));
+        drawBorder(context, log1X, logBtnY, log1W, logH, !isAll ? 0xFF38BDF8 : (log1Hover ? 0xAAFFFFFF : 0x22FFFFFF));
+        drawCenteredText(context, (!isAll ? "✔ " : "") + "Wystarczy dowolny (LUB)", log1X + log1W / 2, logBtnY + 5, !isAll ? COLOR_TEXT_WHITE : (log1Hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB));
+
+        // Button 2: AND (Wszystkie)
+        context.fill(log2X, logBtnY, log2X + log2W, logBtnY + logH, isAll ? 0xCC0284C7 : (log2Hover ? 0x881E293B : 0x55151520));
+        drawBorder(context, log2X, logBtnY, log2W, logH, isAll ? 0xFF38BDF8 : (log2Hover ? 0xAAFFFFFF : 0x22FFFFFF));
+        drawCenteredText(context, (isAll ? "✔ " : "") + "Wszystkie wybrane (I)", log2X + log2W / 2, logBtnY + 5, isAll ? COLOR_TEXT_WHITE : (log2Hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB));
+
+        context.fill(modalX + 14, modalY + 63, modalX + modalW - 14, modalY + 64, 0x22FFFFFF);
+
+        // ONLY VALID ENCHANTMENTS FOR THIS SPECIFIC ITEM!
+        java.util.List<String[]> enchantList = com.mooclient.module.modules.ItemScaleModule.getValidEnchantmentsForItem(item.getItemId());
+
+        int listY = modalY + 68;
+        int rowH = 22;
+        int bW = modalW - 28;
+
+        int maxVisibleRows = 8;
+        int maxScroll = Math.max(0, enchantList.size() - maxVisibleRows);
+        this.itemScaleEnchantScroll = Math.max(0, Math.min(maxScroll, this.itemScaleEnchantScroll));
+
+        for (int i = 0; i < maxVisibleRows && (this.itemScaleEnchantScroll + i) < enchantList.size(); i++) {
+            int idx = this.itemScaleEnchantScroll + i;
+            String[] enc = enchantList.get(idx);
+            String encId = enc[0];
+            int bX = modalX + 14;
+            int bY = listY + i * (rowH + 3);
+
+            boolean isSpecial = encId.isEmpty() || encId.equalsIgnoreCase("any");
+            boolean isSelected;
+            if (encId.isEmpty()) {
+                isSelected = item.getEnchantments().isEmpty();
+            } else if (encId.equalsIgnoreCase("any")) {
+                isSelected = item.getEnchantments().size() == 1 && item.getEnchantments().get(0).getEnchantId().equalsIgnoreCase("any");
+            } else {
+                isSelected = item.hasEnchantment(encId);
+            }
+
+            int maxLevel = com.mooclient.module.modules.ItemScaleModule.getMaxLevelForEnchantment(encId);
+            boolean hasLevels = !isSpecial && maxLevel > 1;
+
+            int lvBtnW = 20;
+            int totalLvW = hasLevels ? (maxLevel * (lvBtnW + 3) + 4) : 0;
+            int nameW = bW - totalLvW;
+
+            boolean nameHover = mouseX >= bX && mouseX <= bX + nameW && mouseY >= bY && mouseY <= bY + rowH;
+
+            // Background & border for row
+            int bg = isSelected ? 0x880284C7 : (nameHover ? 0x991E293B : 0x55151520);
+            int border = isSelected ? 0xAA38BDF8 : (nameHover ? 0x66FFFFFF : 0x22FFFFFF);
+            context.fill(bX, bY, bX + bW, bY + rowH, bg);
+            drawBorder(context, bX, bY, bW, rowH, border);
+
+            // Left side: Checkbox + Name
+            String check = isSelected ? "✔ " : "[ ] ";
+            String text = check + enc[1];
+            int textCol = isSelected ? COLOR_TEXT_WHITE : (nameHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
+            context.drawTextWithShadow(this.textRenderer, this.textRenderer.trimToWidth(text, nameW - 8), bX + 6, bY + 7, textCol);
+
+            // Right side: Level buttons [I] [II] [III] [IV] [V]
+            if (hasLevels) {
+                com.mooclient.module.modules.ItemScaleModule.EnchantRequirement req = item.getRequirement(encId);
+                int startLvX = bX + bW - (maxLevel * (lvBtnW + 3)) - 2;
+                for (int lv = 1; lv <= maxLevel; lv++) {
+                    int lvX = startLvX + (lv - 1) * (lvBtnW + 3);
+                    int lvY = bY + 2;
+                    boolean lvActive = req != null && req.hasLevel(lv);
+                    boolean lvHover = mouseX >= lvX && mouseX <= lvX + lvBtnW && mouseY >= lvY && mouseY <= lvY + 18;
+
+                    int lvBg = lvActive ? 0xDD10B981 : (lvHover ? 0xCC1E293B : 0x66151520);
+                    int lvBorder = lvActive ? 0xFF34D399 : (lvHover ? 0xAAFFFFFF : 0x22FFFFFF);
+                    context.fill(lvX, lvY, lvX + lvBtnW, lvY + 18, lvBg);
+                    drawBorder(context, lvX, lvY, lvBtnW, 18, lvBorder);
+                    drawCenteredText(context, com.mooclient.module.modules.ItemScaleModule.toRoman(lv), lvX + lvBtnW / 2, lvY + 5, lvActive ? COLOR_TEXT_WHITE : (lvHover ? COLOR_TEXT_WHITE : 0xFFA0A0AB));
+                }
+            } else if (!isSpecial && maxLevel == 1) {
+                context.drawTextWithShadow(this.textRenderer, "(Pojedynczy)", bX + bW - 74, bY + 7, 0xFF64748B);
+            }
+        }
+
+        // Bottom Bar: scroll hint & Save Button
+        int bottomY = modalY + modalH - 26;
+        if (maxScroll > 0) {
+            context.drawTextWithShadow(this.textRenderer, "Użyj scrolla myszy, aby przewinąć", modalX + 14, bottomY + 6, 0xFF64748B);
+        }
+
+        int saveW = 140;
+        int saveH = 20;
+        int saveX = modalX + modalW - saveW - 14;
+        boolean saveHover = mouseX >= saveX && mouseX <= saveX + saveW && mouseY >= bottomY && mouseY <= bottomY + saveH;
+        context.fill(saveX, bottomY, saveX + saveW, bottomY + saveH, saveHover ? 0xCC0284C7 : 0x880369A1);
+        drawBorder(context, saveX, bottomY, saveW, saveH, saveHover ? 0xFF38BDF8 : 0x8838BDF8);
+        drawCenteredText(context, "✔ ZAPISZ I ZAMKNIJ", saveX + saveW / 2, bottomY + 6, COLOR_TEXT_WHITE);
     }
 
     /**
@@ -2594,6 +2977,22 @@ public class MooClientScreen extends Screen {
                 return true;
             }
         }
+        if (currentView == View.OPTIONS && this.itemScaleEnchantPickerItemIndex >= 0) {
+            this.itemScaleEnchantScroll = Math.max(0, this.itemScaleEnchantScroll - (int) Math.signum(verticalAmount));
+            return true;
+        }
+        if (currentView == View.OPTIONS && this.itemScaleEditingProfileIndex >= 0 && this.itemScaleEnchantPickerItemIndex < 0) {
+            java.util.List<com.mooclient.module.modules.ItemScaleModule.ItemSearchResult> searchResults =
+                    com.mooclient.module.modules.ItemScaleModule.searchMinecraftItems(this.itemScaleSearchQuery);
+            int totalPages = Math.max(1, (searchResults.size() + 8) / 9);
+            if (verticalAmount < 0 && this.itemScaleSearchPage < totalPages - 1) {
+                this.itemScaleSearchPage++;
+                return true;
+            } else if (verticalAmount > 0 && this.itemScaleSearchPage > 0) {
+                this.itemScaleSearchPage--;
+                return true;
+            }
+        }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
@@ -3088,6 +3487,11 @@ public class MooClientScreen extends Screen {
                 if (mouseX >= backX && mouseX <= backX + backW && mouseY >= backY && mouseY <= backY + backH) {
                     playClickSound();
                     this.listeningForKeybind = false;
+                    if ((modName.equalsIgnoreCase("Item Scale") || modName.equalsIgnoreCase("ItemScale")) && this.itemScaleEditingProfileIndex >= 0) {
+                        this.itemScaleEditingProfileIndex = -1;
+                        this.itemScaleEnchantPickerItemIndex = -1;
+                        return true;
+                    }
                     if (this.openedFromHub) {
                         this.currentView = View.HUB;
                         this.openedFromHub = false;
@@ -3102,6 +3506,122 @@ public class MooClientScreen extends Screen {
                 int rowH = 34;
                 int rowW = panelW - 32;
                 int rowX = panelX + 16;
+
+                // Intercept clicks if Item Scale enchant picker modal is open
+                if (this.itemScaleEnchantPickerItemIndex >= 0 && this.itemScaleEditingProfileIndex >= 0) {
+                    java.util.List<com.mooclient.module.modules.ItemScaleModule.ScaleProfile> profiles = com.mooclient.module.modules.ItemScaleModule.getProfiles();
+                    if (this.itemScaleEditingProfileIndex < profiles.size()) {
+                        com.mooclient.module.modules.ItemScaleModule.ScaleProfile prof = profiles.get(this.itemScaleEditingProfileIndex);
+                        if (this.itemScaleEnchantPickerItemIndex < prof.getItems().size()) {
+                            com.mooclient.module.modules.ItemScaleModule.ScaleItemEntry item = prof.getItems().get(this.itemScaleEnchantPickerItemIndex);
+                            int modalW = 460;
+                            int modalH = 310;
+                            int modalX = (this.width - modalW) / 2;
+                            int modalY = (this.height - modalH) / 2;
+
+                            int closeX = modalX + modalW - 24;
+                            int closeY = modalY + 10;
+                            // Close when clicking close '✕' or outside modal
+                            if (mouseX < modalX || mouseX > modalX + modalW || mouseY < modalY || mouseY > modalY + modalH
+                                    || (mouseX >= closeX && mouseX <= closeX + 14 && mouseY >= closeY && mouseY <= closeY + 14)) {
+                                this.itemScaleEnchantPickerItemIndex = -1;
+                                playClickSound();
+                                com.mooclient.util.MooConfig.save();
+                                return true;
+                            }
+
+                            // Logic Selector buttons (LUB vs I)
+                            int logBtnY = modalY + 40;
+                            int log1W = 180;
+                            int log2W = 170;
+                            int log1X = modalX + 56;
+                            int log2X = log1X + log1W + 6;
+                            int logH = 18;
+
+                            if (mouseX >= log1X && mouseX <= log1X + log1W && mouseY >= logBtnY && mouseY <= logBtnY + logH) {
+                                playClickSound();
+                                item.setRequireAllEnchantments(false);
+                                com.mooclient.util.MooConfig.save();
+                                return true;
+                            }
+                            if (mouseX >= log2X && mouseX <= log2X + log2W && mouseY >= logBtnY && mouseY <= logBtnY + logH) {
+                                playClickSound();
+                                item.setRequireAllEnchantments(true);
+                                com.mooclient.util.MooConfig.save();
+                                return true;
+                            }
+
+                            // Save & Close Button
+                            int bottomY = modalY + modalH - 26;
+                            int saveW = 140;
+                            int saveH = 20;
+                            int saveX = modalX + modalW - saveW - 14;
+                            if (mouseX >= saveX && mouseX <= saveX + saveW && mouseY >= bottomY && mouseY <= bottomY + saveH) {
+                                playClickSound();
+                                this.itemScaleEnchantPickerItemIndex = -1;
+                                com.mooclient.util.MooConfig.save();
+                                return true;
+                            }
+
+                            // Enchantment Rows & Level buttons
+                            java.util.List<String[]> enchantList = com.mooclient.module.modules.ItemScaleModule.getValidEnchantmentsForItem(item.getItemId());
+                            int listY = modalY + 68;
+                            int encRowH = 22;
+                            int bW = modalW - 28;
+                            int maxVisibleRows = 8;
+                            int maxScroll = Math.max(0, enchantList.size() - maxVisibleRows);
+                            this.itemScaleEnchantScroll = Math.max(0, Math.min(maxScroll, this.itemScaleEnchantScroll));
+
+                            for (int i = 0; i < maxVisibleRows && (this.itemScaleEnchantScroll + i) < enchantList.size(); i++) {
+                                int idx = this.itemScaleEnchantScroll + i;
+                                String[] enc = enchantList.get(idx);
+                                String encId = enc[0];
+                                int bX = modalX + 14;
+                                int bY = listY + i * (encRowH + 3);
+
+                                boolean isSpecial = encId.isEmpty() || encId.equalsIgnoreCase("any");
+                                int maxLevel = com.mooclient.module.modules.ItemScaleModule.getMaxLevelForEnchantment(encId);
+                                boolean hasLevels = !isSpecial && maxLevel > 1;
+
+                                int lvBtnW = 20;
+                                int totalLvW = hasLevels ? (maxLevel * (lvBtnW + 3) + 4) : 0;
+                                int nameW = bW - totalLvW;
+
+                                // Check click on individual level buttons [I] [II] [III] [IV] [V]
+                                if (hasLevels) {
+                                    int startLvX = bX + bW - (maxLevel * (lvBtnW + 3)) - 2;
+                                    for (int lv = 1; lv <= maxLevel; lv++) {
+                                        int lvX = startLvX + (lv - 1) * (lvBtnW + 3);
+                                        int lvY = bY + 2;
+                                        if (mouseX >= lvX && mouseX <= lvX + lvBtnW && mouseY >= lvY && mouseY <= lvY + 18) {
+                                            playClickSound();
+                                            item.toggleEnchantmentLevel(encId, lv);
+                                            com.mooclient.util.MooConfig.save();
+                                            return true;
+                                        }
+                                    }
+                                }
+
+                                // Check click on enchantment row (checkbox + name)
+                                if (mouseX >= bX && mouseX <= bX + nameW && mouseY >= bY && mouseY <= bY + encRowH) {
+                                    playClickSound();
+                                    if (encId.isEmpty()) {
+                                        item.clearEnchantments();
+                                    } else if (encId.equalsIgnoreCase("any")) {
+                                        item.toggleEnchantment("any");
+                                    } else {
+                                        item.toggleEnchantment(encId);
+                                    }
+                                    com.mooclient.util.MooConfig.save();
+                                    return true;
+                                }
+                            }
+                            return true;
+                        }
+                    }
+                    this.itemScaleEnchantPickerItemIndex = -1;
+                    return true;
+                }
 
                 if (modName.equalsIgnoreCase("FPS")) {
                     int styleClick = getStyleSelectorClick(rowX + rowW - 206, rowY + 6, (int) mouseX, (int) mouseY);
@@ -3475,81 +3995,275 @@ public class MooClientScreen extends Screen {
                         com.mooclient.util.MooConfig.save();
                         return true;
                     }
-                } else if (modName.equalsIgnoreCase("Item Scale")) {
-                    com.mooclient.module.modules.ItemScaleModule.ScaleProfile prof = com.mooclient.module.modules.ItemScaleModule.getActiveProfile();
+                } else if (modName.equalsIgnoreCase("Item Scale") || modName.equalsIgnoreCase("ItemScale")) {
+                    java.util.List<com.mooclient.module.modules.ItemScaleModule.ScaleProfile> profiles = com.mooclient.module.modules.ItemScaleModule.getProfiles();
 
-                    // Row 1: Toggle Module
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
-                        playClickSound();
-                        com.mooclient.module.modules.ItemScaleModule.toggleItemScaleEnabled();
-                        if (selectedModule != null) {
-                            selectedModule.setEnabled(com.mooclient.module.modules.ItemScaleModule.isItemScaleEnabled());
+                    if (this.itemScaleEditingProfileIndex < 0 || this.itemScaleEditingProfileIndex >= profiles.size()) {
+                        // --- VIEW 1: Profiles List Interaction ---
+                        int curY = rowY - 6;
+                        int pRowH = 30;
+
+                        if (profiles.isEmpty()) {
+                            curY += 28;
                         }
-                        com.mooclient.util.MooConfig.save();
-                        return true;
-                    }
 
-                    // Row 2: Profile switch
-                    rowY += rowH + 6;
-                    int btnW = 160;
-                    int btnH = 22;
-                    int btnX = rowX + rowW - btnW - 10;
-                    int btnY = rowY + 6;
-                    if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
-                        playClickSound();
-                        com.mooclient.module.modules.ItemScaleModule.nextProfile();
-                        com.mooclient.util.MooConfig.save();
-                        return true;
-                    }
+                        for (int i = 0; i < profiles.size(); i++) {
+                            com.mooclient.module.modules.ItemScaleModule.ScaleProfile prof = profiles.get(i);
+                            int editBtnW = 72;
+                            int editBtnH = 20;
+                            int editBtnX = rowX + rowW - editBtnW - 44 - 26;
+                            int editBtnY = curY + 5;
+                            int tX = editBtnX + editBtnW + 6;
+                            int tY = curY + 6;
+                            int delX = tX + 38;
+                            int delY = curY + 5;
+                            int delW = 20;
+                            int delH = 20;
 
-                    // Row 3: Highlight scale slider
-                    rowY += rowH + 6;
-                    int sW = 150;
-                    int sH = 22;
-                    int sX = rowX + rowW - 160;
-                    int sY = rowY + 6;
-                    if (mouseX >= sX - 4 && mouseX <= sX + sW + 4 && mouseY >= sY && mouseY <= sY + sH) {
-                        playClickSound();
-                        this.draggingSlider = 5;
-                        handleSliderDrag(mouseX);
-                        return true;
-                    }
+                            // Click Edit Button
+                            if (mouseX >= editBtnX && mouseX <= editBtnX + editBtnW && mouseY >= editBtnY && mouseY <= editBtnY + editBtnH) {
+                                playClickSound();
+                                this.itemScaleEditingProfileIndex = i;
+                                this.itemScaleEnchantPickerItemIndex = -1;
+                                this.itemScaleSearching = false;
+                                return true;
+                            }
 
-                    // Row 4: Default scale slider
-                    rowY += rowH + 6;
-                    sY = rowY + 6;
-                    if (mouseX >= sX - 4 && mouseX <= sX + sW + 4 && mouseY >= sY && mouseY <= sY + sH) {
-                        playClickSound();
-                        this.draggingSlider = 6;
-                        handleSliderDrag(mouseX);
-                        return true;
-                    }
+                            // Click Toggle ON/OFF
+                            if (mouseX >= tX && mouseX <= tX + 34 && mouseY >= tY && mouseY <= tY + 18) {
+                                playClickSound();
+                                prof.toggleEnabled();
+                                com.mooclient.util.MooConfig.save();
+                                return true;
+                            }
 
-                    // Row 5: Scale All Enchanted Items
-                    rowY += rowH + 6;
-                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
-                        playClickSound();
-                        prof.toggleScaleEnchanted();
-                        com.mooclient.util.MooConfig.save();
-                        return true;
-                    }
+                            // Click Delete Profile (can delete any profile down to 0)
+                            if (mouseX >= delX && mouseX <= delX + delW && mouseY >= delY && mouseY <= delY + delH) {
+                                playClickSound();
+                                com.mooclient.module.modules.ItemScaleModule.removeProfile(i);
+                                com.mooclient.util.MooConfig.save();
+                                return true;
+                            }
 
-                    // Grid item buttons
-                    rowY += rowH + 6 + 14;
-                    int itemBtnW = (rowW - 12) / 3;
-                    int itemBtnH = 20;
-                    for (int i = 0; i < com.mooclient.module.modules.ItemScaleModule.PRESET_ITEMS.size() && i < 12; i++) {
-                        String[] itemData = com.mooclient.module.modules.ItemScaleModule.PRESET_ITEMS.get(i);
-                        String itemId = itemData[0];
-                        int col = i % 3;
-                        int row = i / 3;
-                        int bX = rowX + col * (itemBtnW + 6);
-                        int bY = rowY + row * (itemBtnH + 4);
+                            curY += pRowH + 4;
+                        }
 
-                        if (mouseX >= bX && mouseX <= bX + itemBtnW && mouseY >= bY && mouseY <= bY + itemBtnH) {
+                        // Click Add Profile Button
+                        int addBtnY = curY + 2;
+                        int addBtnH = 24;
+                        if (mouseX >= rowX && mouseX <= rowX + rowW && mouseY >= addBtnY && mouseY <= addBtnY + addBtnH) {
                             playClickSound();
-                            prof.toggleItem(itemId);
+                            com.mooclient.module.modules.ItemScaleModule.addProfile("Profil " + (profiles.size() + 1));
+                            this.itemScaleEditingProfileIndex = profiles.size() - 1;
+                            this.itemScaleEnchantPickerItemIndex = -1;
+                            this.itemScaleSearching = false;
                             com.mooclient.util.MooConfig.save();
+                            return true;
+                        }
+
+                    } else {
+                        // --- VIEW 2: Profile Detail Interaction ---
+                        com.mooclient.module.modules.ItemScaleModule.ScaleProfile prof = profiles.get(this.itemScaleEditingProfileIndex);
+
+                        int curY = rowY - 8;
+                        int backBtnW = 126;
+                        int backBtnH = 19;
+
+                        // Click Back to Profiles Button
+                        if (mouseX >= rowX && mouseX <= rowX + backBtnW && mouseY >= curY && mouseY <= curY + backBtnH) {
+                            playClickSound();
+                            this.itemScaleEditingProfileIndex = -1;
+                            this.itemScaleEnchantPickerItemIndex = -1;
+                            this.itemScaleSearching = false;
+                            return true;
+                        }
+
+                        // Click Enable Profile Toggle
+                        if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= curY + 1 && mouseY <= curY + 19) {
+                            playClickSound();
+                            prof.toggleEnabled();
+                            com.mooclient.util.MooConfig.save();
+                            return true;
+                        }
+
+                        curY += backBtnH + 6;
+
+                        // Slider 1: Highlight scale
+                        int sW = 150;
+                        int sX = rowX + rowW - 160;
+                        if (mouseX >= sX - 4 && mouseX <= sX + sW + 4 && mouseY >= curY + 3 && mouseY <= curY + 23) {
+                            playClickSound();
+                            this.draggingSlider = 5;
+                            handleSliderDrag(mouseX);
+                            return true;
+                        }
+
+                        curY += 27;
+
+                        // Slider 2: Default scale
+                        if (mouseX >= sX - 4 && mouseX <= sX + sW + 4 && mouseY >= curY + 3 && mouseY <= curY + 23) {
+                            playClickSound();
+                            this.draggingSlider = 6;
+                            handleSliderDrag(mouseX);
+                            return true;
+                        }
+
+                        curY += 28;
+
+                        java.util.List<com.mooclient.module.modules.ItemScaleModule.ScaleItemEntry> items = prof.getItems();
+                        int profileItemsPerPage = 4;
+                        int maxProfPages = Math.max(1, (items.size() + profileItemsPerPage - 1) / profileItemsPerPage);
+
+                        // Paging for items in profile if > 4
+                        if (items.size() > profileItemsPerPage) {
+                            String pPageStr = (this.itemScaleProfileItemsPage + 1) + "/" + maxProfPages;
+                            int pPageStrW = this.textRenderer.getWidth(pPageStr);
+                            int navX = rowX + rowW - 54;
+
+                            // Left arrow <
+                            if (mouseX >= navX - 4 && mouseX <= navX + 10 && mouseY >= curY - 2 && mouseY <= curY + 12) {
+                                if (this.itemScaleProfileItemsPage > 0) {
+                                    playClickSound();
+                                    this.itemScaleProfileItemsPage--;
+                                    return true;
+                                }
+                            }
+                            // Right arrow >
+                            if (mouseX >= navX + 16 + pPageStrW && mouseX <= navX + 30 + pPageStrW && mouseY >= curY - 2 && mouseY <= curY + 12) {
+                                if (this.itemScaleProfileItemsPage < maxProfPages - 1) {
+                                    playClickSound();
+                                    this.itemScaleProfileItemsPage++;
+                                    return true;
+                                }
+                            }
+                        }
+
+                        curY += 12;
+
+                        // Items in Profile (up to 4 visible per page)
+                        int itemBoxH = 22;
+                        int itemsPerRow = 2;
+                        int itemBoxW = (rowW - 6) / 2;
+
+                        if (items.isEmpty()) {
+                            curY += 42;
+                        } else {
+                            int startItemIdx = this.itemScaleProfileItemsPage * profileItemsPerPage;
+                            int displayedCount = Math.min(profileItemsPerPage, items.size() - startItemIdx);
+
+                            for (int i = 0; i < displayedCount; i++) {
+                                int realIdx = startItemIdx + i;
+                                int col = i % itemsPerRow;
+                                int row = i / itemsPerRow;
+                                int bX = rowX + col * (itemBoxW + 6);
+                                int bY = curY + row * (itemBoxH + 3);
+
+                                int delX = bX + itemBoxW - 19;
+                                int delY = bY + 3;
+                                int delW = 16;
+                                int delH = 16;
+
+                                // Delete Item button
+                                if (mouseX >= delX && mouseX <= delX + delW && mouseY >= delY && mouseY <= delY + delH) {
+                                    playClickSound();
+                                    prof.removeItem(realIdx);
+                                    if (this.itemScaleProfileItemsPage > 0 && startItemIdx >= prof.getItems().size()) {
+                                        this.itemScaleProfileItemsPage--;
+                                    }
+                                    com.mooclient.util.MooConfig.save();
+                                    return true;
+                                }
+
+                                // Click on item card or enchant badge opens enchant picker!
+                                if (mouseX >= bX && mouseX <= bX + itemBoxW && mouseY >= bY && mouseY <= bY + itemBoxH) {
+                                    playClickSound();
+                                    this.itemScaleEnchantPickerItemIndex = realIdx;
+                                    this.itemScaleEnchantScroll = 0;
+                                    return true;
+                                }
+                            }
+
+                            int rowsUsed = (displayedCount + itemsPerRow - 1) / itemsPerRow;
+                            curY += rowsUsed * (itemBoxH + 3) + 4;
+                        }
+
+                        // --- Search Bar Interaction ---
+                        curY += 2 + 12;
+                        int searchBarH = 20;
+
+                        // Clear ✕ button
+                        if (!this.itemScaleSearchQuery.isEmpty()) {
+                            int clrX = rowX + rowW - 20;
+                            int clrY = curY + 2;
+                            if (mouseX >= clrX && mouseX <= clrX + 16 && mouseY >= clrY && mouseY <= clrY + 16) {
+                                playClickSound();
+                                this.itemScaleSearchQuery = "";
+                                this.itemScaleSearchPage = 0;
+                                this.itemScaleSearching = true;
+                                return true;
+                            }
+                        }
+
+                        // Focus / Unfocus Search Bar
+                        if (mouseX >= rowX && mouseX <= rowX + rowW && mouseY >= curY && mouseY <= curY + searchBarH) {
+                            playClickSound();
+                            this.itemScaleSearching = true;
+                            return true;
+                        } else {
+                            this.itemScaleSearching = false;
+                        }
+
+                        curY += searchBarH + 5;
+
+                        // --- Search Results Grid Interaction ---
+                        java.util.List<com.mooclient.module.modules.ItemScaleModule.ItemSearchResult> searchResults =
+                                com.mooclient.module.modules.ItemScaleModule.searchMinecraftItems(this.itemScaleSearchQuery);
+
+                        int itemsPerPage = 9;
+                        int totalPages = Math.max(1, (searchResults.size() + itemsPerPage - 1) / itemsPerPage);
+                        if (this.itemScaleSearchPage >= totalPages) this.itemScaleSearchPage = totalPages - 1;
+                        if (this.itemScaleSearchPage < 0) this.itemScaleSearchPage = 0;
+
+                        int qBtnW = (rowW - 12) / 3;
+                        int qBtnH = 20;
+                        int startIdx = this.itemScaleSearchPage * itemsPerPage;
+                        int countThisPage = Math.min(itemsPerPage, searchResults.size() - startIdx);
+
+                        for (int i = 0; i < countThisPage; i++) {
+                            int resIdx = startIdx + i;
+                            com.mooclient.module.modules.ItemScaleModule.ItemSearchResult res = searchResults.get(resIdx);
+                            int col = i % 3;
+                            int row = i / 3;
+                            int bX = rowX + col * (qBtnW + 6);
+                            int bY = curY + row * (qBtnH + 3);
+
+                            if (mouseX >= bX && mouseX <= bX + qBtnW && mouseY >= bY && mouseY <= bY + qBtnH) {
+                                playClickSound();
+                                prof.toggleItem(res.getItemId());
+                                com.mooclient.util.MooConfig.save();
+                                return true;
+                            }
+                        }
+
+                        curY += 3 * (qBtnH + 3) + 2;
+
+                        // --- Pagination Controls Bar Interaction ---
+                        int navBtnW = 60;
+                        int navBtnH = 16;
+                        int prevX = rowX + 2;
+                        int nextX = rowX + rowW - navBtnW - 2;
+
+                        // Click Previous Page
+                        if (mouseX >= prevX && mouseX <= prevX + navBtnW && mouseY >= curY && mouseY <= curY + navBtnH && this.itemScaleSearchPage > 0) {
+                            playClickSound();
+                            this.itemScaleSearchPage--;
+                            return true;
+                        }
+
+                        // Click Next Page
+                        if (mouseX >= nextX && mouseX <= nextX + navBtnW && mouseY >= curY && mouseY <= curY + navBtnH && this.itemScaleSearchPage < totalPages - 1) {
+                            playClickSound();
+                            this.itemScaleSearchPage++;
                             return true;
                         }
                     }
@@ -4342,25 +5056,27 @@ public class MooClientScreen extends Screen {
             com.mooclient.module.modules.WaypointsModule.setScalePercent(val);
             com.mooclient.util.MooConfig.save();
         } else if (currentView == View.OPTIONS && (draggingSlider == 5 || draggingSlider == 6)) {
-            com.mooclient.module.modules.ItemScaleModule.ScaleProfile prof = com.mooclient.module.modules.ItemScaleModule.getActiveProfile();
-            if (prof != null) {
-                int panelW = 480;
-                int panelX = (this.width - panelW) / 2;
-                int rowX = panelX + 20;
-                int rowW = panelW - 40;
-                int sW = 150;
-                int sX = rowX + rowW - 160;
-                int trackW = sW - 42;
+            if (this.itemScaleEditingProfileIndex >= 0 && this.itemScaleEditingProfileIndex < com.mooclient.module.modules.ItemScaleModule.getProfiles().size()) {
+                com.mooclient.module.modules.ItemScaleModule.ScaleProfile prof = com.mooclient.module.modules.ItemScaleModule.getProfiles().get(this.itemScaleEditingProfileIndex);
+                if (prof != null) {
+                    int panelW = 480;
+                    int panelX = (this.width - panelW) / 2;
+                    int rowX = panelX + 16;
+                    int rowW = panelW - 32;
+                    int sW = 150;
+                    int sX = rowX + rowW - 160;
+                    int trackW = sW - 42;
 
-                float pct = Math.max(0.0f, Math.min(1.0f, (float) (mouseX - sX) / (float) trackW));
-                if (draggingSlider == 5) {
-                    float newScale = 1.0f + pct * 3.0f;
-                    prof.setHighlightScale(Math.round(newScale * 10.0f) / 10.0f);
-                } else if (draggingSlider == 6) {
-                    float newScale = 0.5f + pct * 1.5f;
-                    prof.setDefaultScale(Math.round(newScale * 10.0f) / 10.0f);
+                    float pct = Math.max(0.0f, Math.min(1.0f, (float) (mouseX - sX) / (float) trackW));
+                    if (draggingSlider == 5) {
+                        float newScale = 1.0f + pct * 3.0f;
+                        prof.setHighlightScale(Math.round(newScale * 10.0f) / 10.0f);
+                    } else if (draggingSlider == 6) {
+                        float newScale = 0.5f + pct * 1.5f;
+                        prof.setDefaultScale(Math.round(newScale * 10.0f) / 10.0f);
+                    }
+                    com.mooclient.util.MooConfig.save();
                 }
-                com.mooclient.util.MooConfig.save();
             }
         }
     }
@@ -4371,6 +5087,13 @@ public class MooClientScreen extends Screen {
             if (chr >= 32 && chr != 127) {
                 searchFilter += chr;
                 scrollY = 0;
+                return true;
+            }
+        }
+        if (currentView == View.OPTIONS && this.itemScaleSearching) {
+            if (chr >= 32 && chr != 127) {
+                this.itemScaleSearchQuery += chr;
+                this.itemScaleSearchPage = 0;
                 return true;
             }
         }
@@ -4550,6 +5273,36 @@ public class MooClientScreen extends Screen {
             return true;
         }
 
+        // If searching in Item Scale View 2
+        if (currentView == View.OPTIONS && this.itemScaleSearching) {
+            if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE) {
+                if (!this.itemScaleSearchQuery.isEmpty()) {
+                    this.itemScaleSearchQuery = this.itemScaleSearchQuery.substring(0, this.itemScaleSearchQuery.length() - 1);
+                    this.itemScaleSearchPage = 0;
+                }
+                return true;
+            } else if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER
+                    || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+                this.itemScaleSearching = false;
+                return true;
+            } else if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_V
+                    && (modifiers & org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL) != 0) {
+                try {
+                    if (this.client != null && this.client.keyboard != null) {
+                        String clip = this.client.keyboard.getClipboard();
+                        if (clip != null && !clip.isEmpty()) {
+                            this.itemScaleSearchQuery += clip.trim();
+                            this.itemScaleSearchPage = 0;
+                        }
+                    }
+                } catch (Exception ignored) {
+                }
+                return true;
+            }
+            // Consume key when searching so inventory key (E) doesn't close the screen
+            return true;
+        }
+
         // If editing macro command text
         if (currentView == View.OPTIONS && editingMacroIndex >= 0) {
             java.util.List<com.mooclient.module.modules.MacroModule.MacroEntry> macroList = com.mooclient.module.modules.MacroModule
@@ -4681,6 +5434,14 @@ public class MooClientScreen extends Screen {
         }
 
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            if (currentView == View.OPTIONS && this.itemScaleEnchantPickerItemIndex >= 0) {
+                this.itemScaleEnchantPickerItemIndex = -1;
+                return true;
+            }
+            if (currentView == View.OPTIONS && this.itemScaleEditingProfileIndex >= 0) {
+                this.itemScaleEditingProfileIndex = -1;
+                return true;
+            }
             if (currentView == View.OPTIONS || currentView == View.SETTINGS) {
                 if (this.openedFromHub && currentView == View.OPTIONS) {
                     this.currentView = View.HUB;
@@ -4713,6 +5474,10 @@ public class MooClientScreen extends Screen {
 
     @Override
     public void close() {
+        this.itemScaleEditingProfileIndex = -1;
+        this.itemScaleEnchantPickerItemIndex = -1;
+        this.itemScaleSearching = false;
+        this.itemScaleSearchQuery = "";
         com.mooclient.util.MooConfig.save();
         super.close();
     }

@@ -1,7 +1,7 @@
 {
-  "version": "2.0.8",
+  "version": "2.0.9",
   "min_launcher_version": "1.0.0",
-  "name": "Moo Client 2.0.8 - test",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.0.8/moo-client-2.0.8.jar",
-  "changelog": "🚀 Moo Client v2.0.8 - test:\n- Stackowanie powtarzających się wiadomości na czacie ([x2], [x3]...)\n- Niezależne przełączniki opcji czatu\n- Nieskończona historia i odporność na czyszczenie"
+  "name": "Moo Client 2.0.9",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.0.9/moo-client-2.0.9.jar",
+  "changelog": "🚀 Moo Client v2.0.9:\n- Nowy zaawansowany mod Item Scale (skalowanie przedmiotów na ziemi)\n- Dynamiczne powiększanie ważnych itemów (totemy, koxy, perły, potki, miecze, zbroje)\n- System profili oraz wybór wymaganych enchantów (PPM na przedmiocie)\n- Intuicyjny interfejs GUI ze sliderami i szybkim dodawaniem itemów\n- Stackowanie powtarzających się wiadomości na czacie i nieskończona historia"
 }

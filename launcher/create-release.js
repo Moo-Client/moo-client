@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '2.0.8';
+const VERSION = '2.0.9';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -61,13 +61,13 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
     const token = getGitHubToken();
     if (!token) { console.error('No token'); process.exit(1); }
 
-    const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION} - test**
+    const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
 - 📦 **Nowy Mod: Item Scale (Skalowanie Przedmiotów na Ziemi)**:
   - Dynamiczne powiększanie ważnych itemów (Totemy, Koxy, Złote Jabłka, Perły, Potki, Miecze, Zbroje) podczas PvP.
-  - System profili (PvP, Enchanty, Custom).
-  - Inteligentny filtr powiększania wszystkich przedmiotów posiadających zaklęcia (enchanty).
-  - Konfigurowalne suwaki skali wyróżnionych i pozostałych itemów.
+  - Zaawansowany system profili z możliwością tworzenia, edycji i usuwania.
+  - Inteligentny wybierak wymaganych enchantów (PPM na przedmiocie) oraz poziomów zaklęć.
+  - Wygodny konfigurator GUI ze sliderami i szybkim dodawaniem itemów.
 - 💬 **Stackowanie wiadomości na czacie (Chat Stacking)** – Grupowanie powtarzających się wiadomości w licznik [x2], [x3]...
 - 📜 **Nieskończona historia czatu i odporność na clearchat**.`;
 

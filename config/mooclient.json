@@ -154,6 +154,10 @@
       }
     ]
   },
+  "itemScale": {
+    "enabled": true,
+    "profiles": []
+  },
   "chat": {
     "enabled": true,
     "transparentBackground": false,
