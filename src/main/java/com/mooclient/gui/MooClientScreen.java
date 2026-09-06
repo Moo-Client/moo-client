@@ -51,6 +51,9 @@ public class MooClientScreen extends Screen {
     private int listeningMacroIndex = -1;
     private int editingMacroIndex = -1;
     private double scrollY = 0;
+    private boolean draggingScrollbar = false;
+    private double scrollbarDragStartY = 0;
+    private double scrollbarDragStartScrollY = 0;
 
     // Search bar state in Mods view
     private String searchFilter = "";
@@ -791,14 +794,53 @@ public class MooClientScreen extends Screen {
 
         // Draw vertical scrollbar if needed
         if (maxScroll > 0) {
-            int scrollTrackX = panelX + panelW - 8;
-            int scrollTrackY = panelY + headerH + 10;
+            int scrollTrackX = panelX + panelW - 10;
+            int scrollTrackY = panelY + headerH + 8;
             int scrollTrackH = visibleAreaH;
-            int thumbH = Math.max(22, (int) ((float) visibleAreaH / (visibleAreaH + maxScroll) * scrollTrackH));
+            int scrollTrackW = 6;
+            int thumbH = Math.max(24, (int) ((float) visibleAreaH / (visibleAreaH + maxScroll) * scrollTrackH));
             int thumbY = scrollTrackY + (int) ((scrollY / (float) maxScroll) * (scrollTrackH - thumbH));
-            context.fill(scrollTrackX, scrollTrackY, scrollTrackX + 3, scrollTrackY + scrollTrackH, 0x33000000);
-            context.fill(scrollTrackX, thumbY, scrollTrackX + 3, thumbY + thumbH, 0x88FFFFFF);
+
+            boolean trackHover = mouseX >= scrollTrackX - 4 && mouseX <= scrollTrackX + scrollTrackW + 4
+                    && mouseY >= scrollTrackY && mouseY <= scrollTrackY + scrollTrackH;
+            boolean thumbHover = mouseX >= scrollTrackX - 4 && mouseX <= scrollTrackX + scrollTrackW + 4
+                    && mouseY >= thumbY && mouseY <= thumbY + thumbH;
+
+            // Track
+            context.fill(scrollTrackX, scrollTrackY, scrollTrackX + scrollTrackW, scrollTrackY + scrollTrackH, 0x44000000);
+            drawBorder(context, scrollTrackX, scrollTrackY, scrollTrackW, scrollTrackH, 0x22FFFFFF);
+
+            // Thumb
+            int thumbColor = (draggingScrollbar || thumbHover) ? com.mooclient.util.MooClientSettings.getAccentColor() : (trackHover ? 0xDDFFFFFF : 0x88FFFFFF);
+            context.fill(scrollTrackX, thumbY, scrollTrackX + scrollTrackW, thumbY + thumbH, thumbColor);
         }
+    }
+
+    private int getModsMaxScroll() {
+        List<Module> allModules = ModuleManager.getInstance().getModules().stream()
+                .filter(m -> !(m instanceof com.mooclient.module.modules.EmotesModule))
+                .toList();
+        List<Module> modules;
+        if (searchFilter == null || searchFilter.trim().isEmpty()) {
+            modules = allModules;
+        } else {
+            String query = searchFilter.trim().toLowerCase();
+            modules = allModules.stream().filter(m -> {
+                String name = m.getName().toLowerCase();
+                String desc = getModuleDescText(m.getName()).toLowerCase();
+                return name.contains(query) || desc.contains(query);
+            }).toList();
+        }
+
+        int cols = 3;
+        int cardH = 135;
+        int cardGap = 16;
+        int headerH = 56;
+        int panelH = 265;
+        int totalRows = Math.max(1, (modules.size() + cols - 1) / cols);
+        int totalContentH = totalRows * cardH + (totalRows - 1) * cardGap;
+        int visibleAreaH = panelH - headerH - 20;
+        return Math.max(0, totalContentH - visibleAreaH + 8);
     }
 
     private String getModuleDescText(String name) {
@@ -2546,19 +2588,9 @@ public class MooClientScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         if (currentView == View.MODS) {
-            List<Module> modules = ModuleManager.getInstance().getModules();
-            int cols = 3;
-            int cardH = 150;
-            int cardGap = 16;
-            int headerH = 42;
-            int panelH = 260;
-            int totalRows = (modules.size() + cols - 1) / cols;
-            int totalContentH = totalRows * cardH + (totalRows - 1) * cardGap;
-            int visibleAreaH = panelH - headerH - 24;
-            int maxScroll = Math.max(0, totalContentH - visibleAreaH + 8);
-
+            int maxScroll = getModsMaxScroll();
             if (maxScroll > 0) {
-                scrollY = Math.max(0, Math.min(maxScroll, scrollY - verticalAmount * 24.0));
+                scrollY = Math.max(0, Math.min(maxScroll, scrollY - verticalAmount * 28.0));
                 return true;
             }
         }
@@ -2945,6 +2977,35 @@ public class MooClientScreen extends Screen {
                     return true;
                 } else {
                     searching = false;
+                }
+
+                // Scrollbar Click & Drag initiation in Mods View
+                int maxScroll = getModsMaxScroll();
+                if (maxScroll > 0) {
+                    int headerH = 56;
+                    int visibleAreaH = panelH - headerH - 20;
+                    int scrollTrackX = panelX + panelW - 10;
+                    int scrollTrackY = panelY + headerH + 8;
+                    int scrollTrackH = visibleAreaH;
+                    int scrollTrackW = 6;
+                    int thumbH = Math.max(24, (int) ((float) visibleAreaH / (visibleAreaH + maxScroll) * scrollTrackH));
+                    int thumbY = scrollTrackY + (int) ((scrollY / (float) maxScroll) * (scrollTrackH - thumbH));
+
+                    if (mouseX >= scrollTrackX - 6 && mouseX <= scrollTrackX + scrollTrackW + 6
+                            && mouseY >= scrollTrackY && mouseY <= scrollTrackY + scrollTrackH) {
+                        if (mouseY >= thumbY && mouseY <= thumbY + thumbH) {
+                            draggingScrollbar = true;
+                            scrollbarDragStartY = mouseY;
+                            scrollbarDragStartScrollY = scrollY;
+                        } else {
+                            float clickProgress = (float) (mouseY - scrollTrackY - thumbH / 2.0) / (float) (scrollTrackH - thumbH);
+                            scrollY = Math.max(0, Math.min(maxScroll, clickProgress * maxScroll));
+                            draggingScrollbar = true;
+                            scrollbarDragStartY = mouseY;
+                            scrollbarDragStartScrollY = scrollY;
+                        }
+                        return true;
+                    }
                 }
 
                 List<Module> allModules = ModuleManager.getInstance().getModules().stream()
@@ -3447,25 +3508,20 @@ public class MooClientScreen extends Screen {
                     int sH = 22;
                     int sX = rowX + rowW - 160;
                     int sY = rowY + 6;
-                    int trackW = sW - 42;
-                    if (mouseX >= sX && mouseX <= sX + trackW && mouseY >= sY && mouseY <= sY + sH) {
+                    if (mouseX >= sX - 4 && mouseX <= sX + sW + 4 && mouseY >= sY && mouseY <= sY + sH) {
                         playClickSound();
-                        float pct = Math.max(0.0f, Math.min(1.0f, (float)(mouseX - sX) / (float)trackW));
-                        float newScale = 1.0f + pct * 3.0f;
-                        prof.setHighlightScale(Math.round(newScale * 10.0f) / 10.0f);
-                        com.mooclient.util.MooConfig.save();
+                        this.draggingSlider = 5;
+                        handleSliderDrag(mouseX);
                         return true;
                     }
 
                     // Row 4: Default scale slider
                     rowY += rowH + 6;
                     sY = rowY + 6;
-                    if (mouseX >= sX && mouseX <= sX + trackW && mouseY >= sY && mouseY <= sY + sH) {
+                    if (mouseX >= sX - 4 && mouseX <= sX + sW + 4 && mouseY >= sY && mouseY <= sY + sH) {
                         playClickSound();
-                        float pct = Math.max(0.0f, Math.min(1.0f, (float)(mouseX - sX) / (float)trackW));
-                        float newScale = 0.5f + pct * 1.5f;
-                        prof.setDefaultScale(Math.round(newScale * 10.0f) / 10.0f);
-                        com.mooclient.util.MooConfig.save();
+                        this.draggingSlider = 6;
+                        handleSliderDrag(mouseX);
                         return true;
                     }
 
@@ -4285,6 +4341,27 @@ public class MooClientScreen extends Screen {
             int val = Math.round((clamped / (float) trackW) * 100);
             com.mooclient.module.modules.WaypointsModule.setScalePercent(val);
             com.mooclient.util.MooConfig.save();
+        } else if (currentView == View.OPTIONS && (draggingSlider == 5 || draggingSlider == 6)) {
+            com.mooclient.module.modules.ItemScaleModule.ScaleProfile prof = com.mooclient.module.modules.ItemScaleModule.getActiveProfile();
+            if (prof != null) {
+                int panelW = 480;
+                int panelX = (this.width - panelW) / 2;
+                int rowX = panelX + 20;
+                int rowW = panelW - 40;
+                int sW = 150;
+                int sX = rowX + rowW - 160;
+                int trackW = sW - 42;
+
+                float pct = Math.max(0.0f, Math.min(1.0f, (float) (mouseX - sX) / (float) trackW));
+                if (draggingSlider == 5) {
+                    float newScale = 1.0f + pct * 3.0f;
+                    prof.setHighlightScale(Math.round(newScale * 10.0f) / 10.0f);
+                } else if (draggingSlider == 6) {
+                    float newScale = 0.5f + pct * 1.5f;
+                    prof.setDefaultScale(Math.round(newScale * 10.0f) / 10.0f);
+                }
+                com.mooclient.util.MooConfig.save();
+            }
         }
     }
 
@@ -4403,6 +4480,23 @@ public class MooClientScreen extends Screen {
                 return true;
             }
         }
+        if (currentView == View.MODS && draggingScrollbar) {
+            int maxScroll = getModsMaxScroll();
+            if (maxScroll > 0) {
+                int panelH = 265;
+                int headerH = 56;
+                int visibleAreaH = panelH - headerH - 20;
+                int scrollTrackH = visibleAreaH;
+                int thumbH = Math.max(24, (int) ((float) visibleAreaH / (visibleAreaH + maxScroll) * scrollTrackH));
+                int availableTrack = scrollTrackH - thumbH;
+                if (availableTrack > 0) {
+                    double deltaMouseY = mouseY - scrollbarDragStartY;
+                    double scrollDelta = (deltaMouseY / (double) availableTrack) * maxScroll;
+                    scrollY = Math.max(0, Math.min(maxScroll, scrollbarDragStartScrollY + scrollDelta));
+                }
+            }
+            return true;
+        }
         if ((currentView == View.SETTINGS || currentView == View.OPTIONS) && draggingSlider >= 0) {
             handleSliderDrag(mouseX);
             return true;
@@ -4417,6 +4511,7 @@ public class MooClientScreen extends Screen {
         }
         draggingWidget = null;
         draggingSlider = -1;
+        draggingScrollbar = false;
         if (activeGuideLines != null) {
             activeGuideLines.clear();
         }
