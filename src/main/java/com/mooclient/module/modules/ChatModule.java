@@ -6,14 +6,16 @@ import net.minecraft.util.math.MathHelper;
 /**
  * Chat Module for Moo Client.
  * - Transparent Chat Background (option to remove dark background behind chat)
- * - Unlimited Chat History (extends 100 lines limit to unlimited)
+ * - Unlimited Chat History (extends 100 lines limit to unlimited, persists across servers)
+ * - Stack Messages (collapses consecutive identical messages into [x2], [x3]...)
  * - Smooth Chat Animation (smooth sliding transition when new messages arrive)
  */
 public class ChatModule extends Module {
 
-    private static boolean enabled = false;
+    private static boolean enabled = true;
     private static boolean transparentBackground = false;
     private static boolean unlimitedChat = true;
+    private static boolean stackMessages = true;
     private static boolean smoothChat = true;
     private static boolean textShadow = true;
 
@@ -21,7 +23,7 @@ public class ChatModule extends Module {
     private static float animOffset = 0.0f;
 
     public ChatModule() {
-        super("Chat", "Ulepszenia czatu: przezroczystość, cień tekstu, nielimitowana historia, animacja", Category.RENDER, false);
+        super("Chat", "Ulepszenia czatu: przezroczystość, cień tekstu, nielimitowana historia, stackowanie, animacja", Category.RENDER, true);
     }
 
     @Override
@@ -49,7 +51,7 @@ public class ChatModule extends Module {
     }
 
     public static boolean isTransparentBackground() {
-        return enabled && transparentBackground;
+        return transparentBackground;
     }
 
     public static void setTransparentBackground(boolean state) {
@@ -61,7 +63,7 @@ public class ChatModule extends Module {
     }
 
     public static boolean isUnlimitedChat() {
-        return enabled && unlimitedChat;
+        return unlimitedChat;
     }
 
     public static void setUnlimitedChat(boolean state) {
@@ -72,8 +74,20 @@ public class ChatModule extends Module {
         unlimitedChat = !unlimitedChat;
     }
 
+    public static boolean isStackMessages() {
+        return stackMessages;
+    }
+
+    public static void setStackMessages(boolean state) {
+        stackMessages = state;
+    }
+
+    public static void toggleStackMessages() {
+        stackMessages = !stackMessages;
+    }
+
     public static boolean isSmoothChat() {
-        return enabled && smoothChat;
+        return smoothChat;
     }
 
     public static void setSmoothChat(boolean state) {
@@ -97,7 +111,7 @@ public class ChatModule extends Module {
     }
 
     public static void onMessageAdded() {
-        if (enabled && smoothChat) {
+        if (smoothChat) {
             animOffset = 9.0f;
         }
     }
@@ -111,6 +125,6 @@ public class ChatModule extends Module {
     }
 
     public static float getAnimOffset() {
-        return (enabled && smoothChat) ? animOffset : 0.0f;
+        return smoothChat ? animOffset : 0.0f;
     }
 }

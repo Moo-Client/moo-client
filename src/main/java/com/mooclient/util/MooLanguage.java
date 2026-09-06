@@ -144,9 +144,10 @@ public class MooLanguage {
                 case "macro_add_btn" -> "Dodaj nowe makro (%d/10)";
                 case "macro_max_reached" -> "Maksymalna liczba 10 makr osiągnięta";
                 case "chat_opt_title" -> "CZAT";
-                case "chat_opt_subtitle" -> "Przezroczyste tło, nieskończona historia i animacja";
+                case "chat_opt_subtitle" -> "Przezroczyste tło, nieskończona historia, stackowanie i animacja";
                 case "chat_transparent_label" -> "Przezroczyste tło";
                 case "chat_unlimited_label" -> "Nieskończona historia";
+                case "chat_stack_label" -> "Stackowanie wiadomości";
                 case "chat_smooth_label" -> "Płynna animacja czatu";
                 case "style_label" -> "Styl wyglądu";
                 case "bg_label" -> "Tło widżetu";
@@ -359,9 +360,10 @@ public class MooLanguage {
                 case "macro_add_btn" -> "Add New Macro (%d/10)";
                 case "macro_max_reached" -> "Maximum 10 macros reached";
                 case "chat_opt_title" -> "CHAT";
-                case "chat_opt_subtitle" -> "Transparent background, unlimited history & smooth slide animation";
+                case "chat_opt_subtitle" -> "Transparent background, unlimited history, message stacking & smooth animation";
                 case "chat_transparent_label" -> "Transparent Background";
                 case "chat_unlimited_label" -> "Unlimited Chat History";
+                case "chat_stack_label" -> "Stack Messages";
                 case "chat_smooth_label" -> "Smooth Chat Animation";
                 case "style_label" -> "Appearance Style";
                 case "bg_label" -> "Show Background";

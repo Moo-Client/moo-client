@@ -1170,13 +1170,19 @@ public class MooClientScreen extends Screen {
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     com.mooclient.module.modules.ChatModule.isUnlimitedChat());
 
-            // Row 3: Smooth Chat Animation
+            // Row 3: Stack Messages
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("chat_stack_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.ChatModule.isStackMessages());
+
+            // Row 4: Smooth Chat Animation
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("chat_smooth_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     com.mooclient.module.modules.ChatModule.isSmoothChat());
 
-            // Row 4: Text Shadow
+            // Row 5: Text Shadow
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shadow_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
@@ -3278,7 +3284,17 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 3: Smooth Chat
+                    // Row 3: Stack Messages
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        com.mooclient.module.modules.ChatModule.toggleStackMessages();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 4: Smooth Chat
                     rowY += rowH + 6;
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {
@@ -3288,7 +3304,7 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 4: Text Shadow
+                    // Row 5: Text Shadow
                     rowY += rowH + 6;
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {

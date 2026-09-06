@@ -155,10 +155,11 @@
     ]
   },
   "chat": {
-    "enabled": false,
+    "enabled": true,
     "transparentBackground": false,
-    "unlimitedChat": false,
-    "smoothChat": false,
+    "unlimitedChat": true,
+    "stackMessages": true,
+    "smoothChat": true,
     "textShadow": true
   },
   "ping": {

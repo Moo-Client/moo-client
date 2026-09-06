@@ -128,11 +128,15 @@ function setupIPC() {
                 sendToRenderer('launch-progress', progress);
             });
 
-            // Step 2: Check & update mod from GitHub
-            const modUpdated = await modManager.checkAndUpdate((status, progress) => {
-                sendToRenderer('launch-status', status);
-                sendToRenderer('launch-progress', progress);
-            });
+            // Step 2: Check & update mod from GitHub (bypassed in dev mode)
+            if (!modManager.isDevMode()) {
+                const modUpdated = await modManager.checkAndUpdate((status, progress) => {
+                    sendToRenderer('launch-status', status);
+                    sendToRenderer('launch-progress', progress);
+                });
+            } else {
+                modManager.ensureBundledMod();
+            }
 
             // Step 3: Launch Minecraft with Fabric + mod
             sendToRenderer('launch-status', 'Uruchamianie Minecrafta...');
@@ -295,7 +299,7 @@ function setupIPC() {
     });
 
 function getActualLauncherVersion() {
-    let ver = '2.0.7';
+    let ver = '2.0.8';
     try {
         const pkg = require('../package.json');
         if (pkg && pkg.version) ver = pkg.version;
@@ -314,6 +318,16 @@ function getActualLauncherVersion() {
     // --- Moo Client Core Version & Update Check ---
     ipcMain.handle('check-client-update', async () => {
         const launcherVersion = getActualLauncherVersion();
+        if (modManager.isDevMode()) {
+            return {
+                success: true,
+                hasUpdate: false,
+                currentVersion: launcherVersion,
+                latestVersion: launcherVersion,
+                changelog: 'Tryb deweloperski — aktualizacje zdalne są wyłączone.',
+                downloadUrl: ''
+            };
+        }
         try {
             const remote = await modManager.getRemoteVersion();
             const localMod = modManager.getLocalVersion();
@@ -340,6 +354,9 @@ function getActualLauncherVersion() {
     });
 
     ipcMain.handle('perform-client-update', async () => {
+        if (modManager.isDevMode()) {
+            return { success: true };
+        }
         try {
             const remote = await modManager.getRemoteVersion();
             const launcherVersion = getActualLauncherVersion();

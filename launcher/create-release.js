@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '2.0.7';
+const VERSION = '2.0.8';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -61,12 +61,11 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
     const token = getGitHubToken();
     if (!token) { console.error('No token'); process.exit(1); }
 
-    const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
+    const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION} - test**
 
-- 🤝 **Optymalizacja uścisku dłoni (Handshake)** – Zwiększono dystans między graczami do komfortowych 1.20 m, całkowicie eliminując przenikanie kasków i pancerzy.
-- 📐 **Idealne spotkanie dłoni w osi symetrii** – Skierowano prawe ramię obu graczy w lewo ku środkowi sylwetki (yaw = -33°, roll = +10°), dzięki czemu dłonie schodzą się idealnie w punkcie uścisku zamiast mijać w poprzek.
-- 🛡️ **Ochrona pozycjonowania sceny** – Zablokowano nadmiarową translację kości root w trakcie scen interakcji multiplayer, gwarantując stały i powtarzalny dystans.
-- 🤦 **Zachowanie idealnego ułożenia dłoni Facepalm z v2.0.6**.`;
+- 💬 **Stackowanie wiadomości na czacie (Chat Stacking)** – Dodano opcję grupowania powtarzających się wiadomości w licznik [x2], [x3]...
+- 📜 **Nieskończona historia czatu i odporność na clearchat** – Historia zachowuje się po zmianie serwerów.
+- ⚙️ **Niezależne pod-opcje modułu Chat** – Opcje działają natychmiast i niezależnie od master-toggle.`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);

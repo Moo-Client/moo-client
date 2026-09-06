@@ -61,6 +61,31 @@ class ModManager {
         }
     }
 
+    isDevMode() {
+        try {
+            const { app } = require('electron');
+            if (app && !app.isPackaged) return true;
+        } catch (e) { }
+        try {
+            const devBuildDir = path.join(__dirname, '..', '..', 'build', 'libs');
+            if (fs.existsSync(devBuildDir)) return true;
+        } catch (e) { }
+        return false;
+    }
+
+    findDevBuildJar() {
+        try {
+            const libsDir = path.join(__dirname, '..', '..', 'build', 'libs');
+            if (!fs.existsSync(libsDir)) return null;
+            const files = fs.readdirSync(libsDir).filter(f => f.startsWith('moo-client-') && f.endsWith('.jar') && !f.includes('-sources') && !f.includes('-dev'));
+            if (files.length === 0) return null;
+            files.sort((a, b) => fs.statSync(path.join(libsDir, b)).mtimeMs - fs.statSync(path.join(libsDir, a)).mtimeMs);
+            return path.join(libsDir, files[0]);
+        } catch (e) {
+            return null;
+        }
+    }
+
     /**
      * Deploys the bundled mod jar into offline/multiver/ if not already installed.
      */
@@ -69,7 +94,7 @@ class ModManager {
             const pkg = require('../package.json');
             const defaultVer = pkg.version || '1.6.2';
             const bundledPath = path.join(__dirname, '..', 'assets', 'moo-client.jar');
-            const devBuildPath = path.join(__dirname, '..', '..', 'build', 'libs', `moo-client-${defaultVer}.jar`);
+            const devBuildPath = this.findDevBuildJar() || path.join(__dirname, '..', '..', 'build', 'libs', `moo-client-${defaultVer}.jar`);
 
             this.ensureDir(this.offlineDir);
 
@@ -366,6 +391,13 @@ class ModManager {
      */
     async checkAndUpdate(onProgress = () => { }) {
         try {
+            if (this.isDevMode()) {
+                console.log('[ModManager] Dev mode active: skipping GitHub mod update check and keeping local build.');
+                this.ensureBundledMod();
+                onProgress('Tryb developerski — używanie lokalnego buildu', 40);
+                return false;
+            }
+
             onProgress('Checking for mod updates...', 10);
 
             // Try to get remote version

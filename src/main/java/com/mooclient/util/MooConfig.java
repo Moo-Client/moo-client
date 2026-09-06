@@ -154,6 +154,7 @@ public class MooConfig {
             chat.addProperty("transparentBackground",
                     com.mooclient.module.modules.ChatModule.isTransparentBackground());
             chat.addProperty("unlimitedChat", com.mooclient.module.modules.ChatModule.isUnlimitedChat());
+            chat.addProperty("stackMessages", com.mooclient.module.modules.ChatModule.isStackMessages());
             chat.addProperty("smoothChat", com.mooclient.module.modules.ChatModule.isSmoothChat());
             chat.addProperty("textShadow", com.mooclient.module.modules.ChatModule.isTextShadow());
             root.add("chat", chat);
@@ -627,6 +628,9 @@ public class MooConfig {
                 }
                 if (chat.has("unlimitedChat")) {
                     com.mooclient.module.modules.ChatModule.setUnlimitedChat(chat.get("unlimitedChat").getAsBoolean());
+                }
+                if (chat.has("stackMessages")) {
+                    com.mooclient.module.modules.ChatModule.setStackMessages(chat.get("stackMessages").getAsBoolean());
                 }
                 if (chat.has("smoothChat")) {
                     com.mooclient.module.modules.ChatModule.setSmoothChat(chat.get("smoothChat").getAsBoolean());

@@ -27,7 +27,7 @@ public class MooClient implements ClientModInitializer {
 
     public static final String MOD_ID = "mooclient";
     public static final String MOD_NAME = "Moo Client";
-    public static final String VERSION = "2.0.7";
+    public static final String VERSION = "2.0.8";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
 
     private static MooClient instance;
