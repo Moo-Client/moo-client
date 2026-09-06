@@ -108,20 +108,23 @@ class ModManager {
             if (sourceJar) {
                 const srcStats = fs.statSync(sourceJar);
                 const isDev = this.isDevMode();
-                const needsCopy = isDev || !fs.existsSync(this.coreModPath) || 
-                    fs.statSync(this.coreModPath).size !== srcStats.size || 
-                    fs.statSync(this.coreModPath).mtimeMs < srcStats.mtimeMs;
+                const targetModPath = isDev ? path.join(this.offlineDir, 'moo-client-dev.jar') : this.coreModPath;
+                const needsCopy = isDev || !fs.existsSync(targetModPath) || 
+                    fs.statSync(targetModPath).size !== srcStats.size || 
+                    fs.statSync(targetModPath).mtimeMs < srcStats.mtimeMs;
                 if (needsCopy) {
-                    fs.copyFileSync(sourceJar, this.coreModPath);
-                    if (sourceJar !== bundledPath && fs.existsSync(path.dirname(bundledPath))) {
+                    fs.copyFileSync(sourceJar, targetModPath);
+                    if (!isDev && sourceJar !== bundledPath && fs.existsSync(path.dirname(bundledPath))) {
                         try { fs.copyFileSync(sourceJar, bundledPath); } catch (e) {}
                     }
-                    fs.writeFileSync(this.localVersionPath, JSON.stringify({
-                        version: defaultVer,
-                        minecraft: '1.21.4',
-                        installedAt: new Date().toISOString(),
-                    }, null, 2));
-                    console.log(`Core mod deployed to offline folder: ${this.coreModPath}`);
+                    if (!isDev) {
+                        fs.writeFileSync(this.localVersionPath, JSON.stringify({
+                            version: defaultVer,
+                            minecraft: '1.21.4',
+                            installedAt: new Date().toISOString(),
+                        }, null, 2));
+                    }
+                    console.log(`Core mod deployed to offline folder: ${targetModPath}`);
                 }
             }
             this.cleanOldMods();

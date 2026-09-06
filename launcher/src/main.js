@@ -143,7 +143,7 @@ function setupIPC() {
             sendToRenderer('launch-progress', 80);
             discordRPC.updateActivity('Uruchamia grę...', 'Minecraft 1.21.4 (Fabric)');
 
-            await gameManager.launch(options, (status, progress) => {
+            await gameManager.launch({ ...options, isDev: modManager.isDevMode() }, (status, progress) => {
                 sendToRenderer('launch-status', status);
                 sendToRenderer('launch-progress', progress);
             });

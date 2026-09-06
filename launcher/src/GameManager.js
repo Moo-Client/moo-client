@@ -609,8 +609,11 @@ class GameManager {
         if (!fs.existsSync(offlineDir)) {
             fs.mkdirSync(offlineDir, { recursive: true });
         }
-        const offlineModPath = path.join(offlineDir, 'moo-client.jar');
+        const devModPath = path.join(offlineDir, 'moo-client-dev.jar');
+        const prodModPath = path.join(offlineDir, 'moo-client.jar');
+        const offlineModPath = (options.isDev && fs.existsSync(devModPath)) ? devModPath : prodModPath;
         const fabricApiPath = path.join(offlineDir, 'fabric-api.jar');
+        console.log(`[Launch] Core mod selected (${options.isDev ? 'DEV MODE' : 'PRODUCTION'}): ${offlineModPath}`);
 
         // Clean any stray core jars (moo-client and fabric-api) from the public user mods/ folder
         const modsDir = path.join(this.gameDir, 'mods');

@@ -67,17 +67,9 @@ tasks.register('deployDevMod') {
             copy {
                 from remapJar.archiveFile
                 into targetDir
-                rename { 'moo-client.jar' }
+                rename { 'moo-client-dev.jar' }
             }
-            println "[DEV AUTO-DEPLOY] Skopiowano ${remapJar.archiveFileName.get()} do ${targetDir}/moo-client.jar"
-        }
-        def launcherAssets = file("${projectDir}/launcher/assets")
-        if (launcherAssets.exists()) {
-            copy {
-                from remapJar.archiveFile
-                into launcherAssets
-                rename { 'moo-client.jar' }
-            }
+            println "[DEV AUTO-DEPLOY] Skopiowano ${remapJar.archiveFileName.get()} do ${targetDir}/moo-client-dev.jar"
         }
     }
 }
