@@ -107,7 +107,8 @@ class ModManager {
 
             if (sourceJar) {
                 const srcStats = fs.statSync(sourceJar);
-                const needsCopy = !fs.existsSync(this.coreModPath) || 
+                const isDev = this.isDevMode();
+                const needsCopy = isDev || !fs.existsSync(this.coreModPath) || 
                     fs.statSync(this.coreModPath).size !== srcStats.size || 
                     fs.statSync(this.coreModPath).mtimeMs < srcStats.mtimeMs;
                 if (needsCopy) {
