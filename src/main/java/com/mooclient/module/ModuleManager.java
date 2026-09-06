@@ -46,6 +46,7 @@ public class ModuleManager {
         register(new com.mooclient.module.modules.ShulkerTooltipModule()); // "Shulker Tooltip"
         register(new com.mooclient.module.modules.EmotesModule()); // "Emotes"
         register(new com.mooclient.module.modules.InventoryViewModule()); // "Inventory View"
+        register(new com.mooclient.module.modules.ItemScaleModule()); // "Item Scale"
     }
 
     public void register(Module module) {

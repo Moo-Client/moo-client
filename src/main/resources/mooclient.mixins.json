@@ -23,7 +23,9 @@
     "PlayerListHudMixin",
     "ItemStackMixin",
     "TooltipComponentMixin",
-    "HandledScreenMixin"
+    "HandledScreenMixin",
+    "ItemEntityRenderStateMixin",
+    "ItemEntityRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

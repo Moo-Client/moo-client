@@ -2,6 +2,8 @@ package com.mooclient.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mooclient.MooClient;
@@ -291,6 +293,27 @@ public class MooConfig {
             invView.addProperty("offsetX", com.mooclient.module.modules.InventoryViewModule.position.offsetX);
             invView.addProperty("offsetY", com.mooclient.module.modules.InventoryViewModule.position.offsetY);
             root.add("inventoryView", invView);
+
+            // Item Scale Module
+            JsonObject itemScaleObj = new JsonObject();
+            itemScaleObj.addProperty("enabled", com.mooclient.module.modules.ItemScaleModule.isItemScaleEnabled());
+            itemScaleObj.addProperty("activeProfileIndex", com.mooclient.module.modules.ItemScaleModule.getActiveProfileIndex());
+            JsonArray profilesArr = new JsonArray();
+            for (com.mooclient.module.modules.ItemScaleModule.ScaleProfile prof : com.mooclient.module.modules.ItemScaleModule.getProfiles()) {
+                JsonObject profObj = new JsonObject();
+                profObj.addProperty("name", prof.getName());
+                profObj.addProperty("highlightScale", prof.getHighlightScale());
+                profObj.addProperty("defaultScale", prof.getDefaultScale());
+                profObj.addProperty("scaleEnchanted", prof.isScaleEnchanted());
+                JsonArray itemsArr = new JsonArray();
+                for (String itemId : prof.getTargetItemIds()) {
+                    itemsArr.add(itemId);
+                }
+                profObj.add("targetItems", itemsArr);
+                profilesArr.add(profObj);
+            }
+            itemScaleObj.add("profiles", profilesArr);
+            root.add("itemScale", itemScaleObj);
 
             // Global Client Settings
             JsonObject settings = new JsonObject();
@@ -1032,6 +1055,47 @@ public class MooConfig {
                         com.mooclient.module.modules.InventoryViewModule.position.offsetX = invView.get("offsetX").getAsInt();
                         com.mooclient.module.modules.InventoryViewModule.position.offsetY = invView.get("offsetY").getAsInt();
                     } catch (Exception ignored) {}
+                }
+            }
+
+            // Item Scale Module
+            if (root.has("itemScale")) {
+                JsonObject itemScaleObj = root.getAsJsonObject("itemScale");
+                if (itemScaleObj.has("enabled")) {
+                    boolean state = itemScaleObj.get("enabled").getAsBoolean();
+                    com.mooclient.module.modules.ItemScaleModule.setItemScaleEnabled(state);
+                    ModuleManager.getInstance().getModule("Item Scale").ifPresent(m -> m.setEnabled(state, false));
+                }
+                if (itemScaleObj.has("activeProfileIndex")) {
+                    com.mooclient.module.modules.ItemScaleModule.setActiveProfileIndex(itemScaleObj.get("activeProfileIndex").getAsInt());
+                }
+                if (itemScaleObj.has("profiles")) {
+                    JsonArray profilesArr = itemScaleObj.getAsJsonArray("profiles");
+                    java.util.List<com.mooclient.module.modules.ItemScaleModule.ScaleProfile> profs = com.mooclient.module.modules.ItemScaleModule.getProfiles();
+                    for (int i = 0; i < profilesArr.size(); i++) {
+                        JsonObject profObj = profilesArr.get(i).getAsJsonObject();
+                        String name = profObj.has("name") ? profObj.get("name").getAsString() : ("Profil " + (i + 1));
+                        float highlightScale = profObj.has("highlightScale") ? profObj.get("highlightScale").getAsFloat() : 2.2f;
+                        float defaultScale = profObj.has("defaultScale") ? profObj.get("defaultScale").getAsFloat() : 1.0f;
+                        boolean scaleEnchanted = !profObj.has("scaleEnchanted") || profObj.get("scaleEnchanted").getAsBoolean();
+                        java.util.List<String> items = new java.util.ArrayList<>();
+                        if (profObj.has("targetItems")) {
+                            for (JsonElement el : profObj.getAsJsonArray("targetItems")) {
+                                items.add(el.getAsString());
+                            }
+                        }
+                        if (i < profs.size()) {
+                            com.mooclient.module.modules.ItemScaleModule.ScaleProfile existing = profs.get(i);
+                            existing.setName(name);
+                            existing.setHighlightScale(highlightScale);
+                            existing.setDefaultScale(defaultScale);
+                            existing.setScaleEnchanted(scaleEnchanted);
+                            existing.getTargetItemIds().clear();
+                            existing.getTargetItemIds().addAll(items);
+                        } else {
+                            profs.add(new com.mooclient.module.modules.ItemScaleModule.ScaleProfile(name, highlightScale, defaultScale, scaleEnchanted, items));
+                        }
+                    }
                 }
             }
 

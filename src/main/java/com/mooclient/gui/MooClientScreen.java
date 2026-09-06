@@ -743,6 +743,8 @@ public class MooClientScreen extends Screen {
                 icon = "🛡";
             } else if (module.getName().equalsIgnoreCase("Emotki") || module.getName().equalsIgnoreCase("Emotes")) {
                 icon = "🙋";
+            } else if (module.getName().equalsIgnoreCase("Item Scale")) {
+                icon = "📦";
             } else {
                 icon = "⌨";
             }
@@ -832,12 +834,16 @@ public class MooClientScreen extends Screen {
             return MooLanguage.get("emotes_desc");
         if (name.equalsIgnoreCase("Inventory View") || name.equalsIgnoreCase("InventoryView"))
             return MooLanguage.get("invview_desc");
+        if (name.equalsIgnoreCase("Item Scale"))
+            return MooLanguage.get("itemscale_opt_subtitle");
         return MooLanguage.get("macro_desc");
     }
 
     private int getOptionsPanelHeight(String modName) {
         if (modName.equalsIgnoreCase("Armor") || modName.equalsIgnoreCase("Armor HUD")) {
             return 450;
+        } else if (modName.equalsIgnoreCase("Item Scale")) {
+            return 395;
         } else if (modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) {
             return 365;
         } else if (modName.equalsIgnoreCase("Inventory View") || modName.equalsIgnoreCase("InventoryView")) {
@@ -1187,6 +1193,74 @@ public class MooClientScreen extends Screen {
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shadow_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     com.mooclient.module.modules.ChatModule.isTextShadow());
+
+        } else if (modName.equalsIgnoreCase("Item Scale")) {
+            com.mooclient.module.modules.ItemScaleModule.ScaleProfile prof = com.mooclient.module.modules.ItemScaleModule.getActiveProfile();
+
+            // Row 1: Enable / Disable Item Scale Module
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("itemscale_enabled_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.ItemScaleModule.isItemScaleEnabled());
+
+            // Row 2: Profile Selector (PvP / Enchanty / Custom)
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("itemscale_profile_label"));
+            String profText = "[ " + prof.getName() + " ] (kliknij by zmienić)";
+            int btnW = 160;
+            int btnH = 22;
+            int btnX = rowX + rowW - btnW - 10;
+            int btnY = rowY + 6;
+            boolean profHover = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH;
+            context.fill(btnX, btnY, btnX + btnW, btnY + btnH, profHover ? 0xCC252535 : 0x88181824);
+            drawBorder(context, btnX, btnY, btnW, btnH, profHover ? 0xAAFFFFFF : 0x44FFFFFF);
+            drawCenteredText(context, profText, btnX + btnW / 2, btnY + 7, profHover ? COLOR_TEXT_WHITE : 0xFF55FFFF);
+
+            // Row 3: Highlighted Scale Slider (1.0x to 4.0x)
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("itemscale_highlight_scale_label"));
+            int hPercent = Math.round(((prof.getHighlightScale() - 1.0f) / 3.0f) * 100.0f);
+            renderScaleSliderWithLabel(context, rowX + rowW - 160, rowY + 6, 150, 22, String.format(java.util.Locale.US, "%.1fx", prof.getHighlightScale()), hPercent, mouseX, mouseY);
+
+            // Row 4: Default Scale Slider (0.5x to 2.0x)
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("itemscale_default_scale_label"));
+            int dPercent = Math.round(((prof.getDefaultScale() - 0.5f) / 1.5f) * 100.0f);
+            renderScaleSliderWithLabel(context, rowX + rowW - 160, rowY + 6, 150, 22, String.format(java.util.Locale.US, "%.1fx", prof.getDefaultScale()), dPercent, mouseX, mouseY);
+
+            // Row 5: Scale All Enchanted Items Toggle
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("itemscale_enchanted_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY, prof.isScaleEnchanted());
+
+            // Preset items quick toggle grid / list
+            rowY += rowH + 6;
+            context.drawTextWithShadow(this.textRenderer, MooLanguage.get("itemscale_items_list_label") + ":", rowX + 4, rowY + 2, 0xFFA0A0AB);
+            rowY += 14;
+
+            int itemBtnW = (rowW - 12) / 3;
+            int itemBtnH = 20;
+            for (int i = 0; i < com.mooclient.module.modules.ItemScaleModule.PRESET_ITEMS.size() && i < 12; i++) {
+                String[] itemData = com.mooclient.module.modules.ItemScaleModule.PRESET_ITEMS.get(i);
+                String itemId = itemData[0];
+                String itemLabel = itemData[1];
+                int col = i % 3;
+                int row = i / 3;
+                int bX = rowX + col * (itemBtnW + 6);
+                int bY = rowY + row * (itemBtnH + 4);
+
+                boolean isSelected = prof.containsItem(itemId);
+                boolean itemHover = mouseX >= bX && mouseX <= bX + itemBtnW && mouseY >= bY && mouseY <= bY + itemBtnH;
+
+                int bBg = isSelected ? (itemHover ? 0xCC166534 : 0x8814532D) : (itemHover ? 0x66252535 : 0x44141420);
+                int bBorder = isSelected ? 0xFF22C55E : (itemHover ? 0x88FFFFFF : 0x22FFFFFF);
+                int tColor = isSelected ? 0xFF86EFAC : (itemHover ? COLOR_TEXT_WHITE : 0xFF9CA3AF);
+
+                context.fill(bX, bY, bX + itemBtnW, bY + itemBtnH, bBg);
+                drawBorder(context, bX, bY, itemBtnW, itemBtnH, bBorder);
+
+                String shortLabel = this.textRenderer.trimToWidth(itemLabel, itemBtnW - 14);
+                drawCenteredText(context, (isSelected ? "✔ " : "") + shortLabel, bX + itemBtnW / 2, bY + 6, tColor);
+            }
 
         } else if (modName.equalsIgnoreCase("Macro")) {
             // Row 1: Enable / Disable Macro Module
@@ -2429,6 +2503,33 @@ public class MooClientScreen extends Screen {
         context.drawTextWithShadow(this.textRenderer, text, textX, textY, COLOR_TEXT_WHITE);
     }
 
+    private void renderScaleSliderWithLabel(DrawContext context, int x, int y, int w, int h, String label, int percent, int mouseX, int mouseY) {
+        percent = Math.max(0, Math.min(100, percent));
+        int trackW = w - 42;
+        int trackX = x;
+        int trackH = 6;
+        int trackY = y + (h - trackH) / 2;
+
+        context.fill(trackX, trackY, trackX + trackW, trackY + trackH, 0x55181824);
+        drawBorder(context, trackX, trackY, trackW, trackH, 0x33FFFFFF);
+
+        int fillW = Math.round((percent / 100.0f) * trackW);
+        if (fillW > 0) {
+            context.fill(trackX + 1, trackY + 1, trackX + fillW, trackY + trackH - 1,
+                    com.mooclient.util.MooClientSettings.getAccentColor());
+        }
+
+        int knobX = trackX + fillW - 2;
+        boolean hover = mouseX >= trackX && mouseX <= trackX + trackW && mouseY >= trackY - 4 && mouseY <= trackY + trackH + 4;
+        int knobBorder = hover ? 0xFFFFFFFF : com.mooclient.util.MooClientSettings.getAccentColor();
+        context.fill(knobX, trackY - 4, knobX + 5, trackY + trackH + 4, COLOR_TEXT_WHITE);
+        drawBorder(context, knobX, trackY - 4, 5, trackH + 8, knobBorder);
+
+        int textX = trackX + trackW + 6;
+        int textY = y + (h - 8) / 2;
+        context.drawTextWithShadow(this.textRenderer, label, textX, textY, COLOR_TEXT_WHITE);
+    }
+
     private void drawCenteredText(DrawContext context, String text, int centerX, int y, int color) {
         int width = this.textRenderer.getWidth(text);
         context.drawTextWithShadow(this.textRenderer, text, centerX - width / 2, y, color);
@@ -3313,6 +3414,90 @@ public class MooClientScreen extends Screen {
                         com.mooclient.util.MooConfig.save();
                         return true;
                     }
+                } else if (modName.equalsIgnoreCase("Item Scale")) {
+                    com.mooclient.module.modules.ItemScaleModule.ScaleProfile prof = com.mooclient.module.modules.ItemScaleModule.getActiveProfile();
+
+                    // Row 1: Toggle Module
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                        playClickSound();
+                        com.mooclient.module.modules.ItemScaleModule.toggleItemScaleEnabled();
+                        if (selectedModule != null) {
+                            selectedModule.setEnabled(com.mooclient.module.modules.ItemScaleModule.isItemScaleEnabled());
+                        }
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 2: Profile switch
+                    rowY += rowH + 6;
+                    int btnW = 160;
+                    int btnH = 22;
+                    int btnX = rowX + rowW - btnW - 10;
+                    int btnY = rowY + 6;
+                    if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
+                        playClickSound();
+                        com.mooclient.module.modules.ItemScaleModule.nextProfile();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 3: Highlight scale slider
+                    rowY += rowH + 6;
+                    int sW = 150;
+                    int sH = 22;
+                    int sX = rowX + rowW - 160;
+                    int sY = rowY + 6;
+                    int trackW = sW - 42;
+                    if (mouseX >= sX && mouseX <= sX + trackW && mouseY >= sY && mouseY <= sY + sH) {
+                        playClickSound();
+                        float pct = Math.max(0.0f, Math.min(1.0f, (float)(mouseX - sX) / (float)trackW));
+                        float newScale = 1.0f + pct * 3.0f;
+                        prof.setHighlightScale(Math.round(newScale * 10.0f) / 10.0f);
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 4: Default scale slider
+                    rowY += rowH + 6;
+                    sY = rowY + 6;
+                    if (mouseX >= sX && mouseX <= sX + trackW && mouseY >= sY && mouseY <= sY + sH) {
+                        playClickSound();
+                        float pct = Math.max(0.0f, Math.min(1.0f, (float)(mouseX - sX) / (float)trackW));
+                        float newScale = 0.5f + pct * 1.5f;
+                        prof.setDefaultScale(Math.round(newScale * 10.0f) / 10.0f);
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 5: Scale All Enchanted Items
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8 && mouseY <= rowY + 26) {
+                        playClickSound();
+                        prof.toggleScaleEnchanted();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Grid item buttons
+                    rowY += rowH + 6 + 14;
+                    int itemBtnW = (rowW - 12) / 3;
+                    int itemBtnH = 20;
+                    for (int i = 0; i < com.mooclient.module.modules.ItemScaleModule.PRESET_ITEMS.size() && i < 12; i++) {
+                        String[] itemData = com.mooclient.module.modules.ItemScaleModule.PRESET_ITEMS.get(i);
+                        String itemId = itemData[0];
+                        int col = i % 3;
+                        int row = i / 3;
+                        int bX = rowX + col * (itemBtnW + 6);
+                        int bY = rowY + row * (itemBtnH + 4);
+
+                        if (mouseX >= bX && mouseX <= bX + itemBtnW && mouseY >= bY && mouseY <= bY + itemBtnH) {
+                            playClickSound();
+                            prof.toggleItem(itemId);
+                            com.mooclient.util.MooConfig.save();
+                            return true;
+                        }
+                    }
+
                 } else if (modName.equalsIgnoreCase("Macro")) {
                     // Row 1: Enable / Disable Macro Module
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
