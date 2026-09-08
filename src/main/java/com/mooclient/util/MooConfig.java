@@ -331,6 +331,22 @@ public class MooConfig {
             invView.addProperty("offsetY", com.mooclient.module.modules.InventoryViewModule.position.offsetY);
             root.add("inventoryView", invView);
 
+            // Keystrokes Module
+            JsonObject keystrokes = new JsonObject();
+            keystrokes.addProperty("enabled", com.mooclient.module.modules.KeystrokesModule.isKeystrokesEnabled());
+            keystrokes.addProperty("style", com.mooclient.module.modules.KeystrokesModule.getStyle().name());
+            keystrokes.addProperty("spaceMode", com.mooclient.module.modules.KeystrokesModule.getSpaceMode().name());
+            keystrokes.addProperty("showSpace", com.mooclient.module.modules.KeystrokesModule.isShowSpace());
+            keystrokes.addProperty("showBackground", com.mooclient.module.modules.KeystrokesModule.isShowBackground());
+            keystrokes.addProperty("textShadow", com.mooclient.module.modules.KeystrokesModule.isTextShadow());
+            keystrokes.addProperty("anchorX", com.mooclient.module.modules.KeystrokesModule.position.anchorX.name());
+            keystrokes.addProperty("anchorY", com.mooclient.module.modules.KeystrokesModule.position.anchorY.name());
+            keystrokes.addProperty("offsetX", com.mooclient.module.modules.KeystrokesModule.position.offsetX);
+            keystrokes.addProperty("offsetY", com.mooclient.module.modules.KeystrokesModule.position.offsetY);
+            keystrokes.addProperty("posX", com.mooclient.module.modules.KeystrokesModule.posX);
+            keystrokes.addProperty("posY", com.mooclient.module.modules.KeystrokesModule.posY);
+            root.add("keystrokes", keystrokes);
+
             // Global Client Settings
             JsonObject settings = new JsonObject();
             settings.addProperty("accentPreset", MooClientSettings.getAccentPreset().name());
@@ -1128,6 +1144,53 @@ public class MooConfig {
                         com.mooclient.module.modules.InventoryViewModule.position.offsetX = invView.get("offsetX").getAsInt();
                         com.mooclient.module.modules.InventoryViewModule.position.offsetY = invView.get("offsetY").getAsInt();
                     } catch (Exception ignored) {}
+                }
+            }
+
+            // Keystrokes Module
+            if (root.has("keystrokes")) {
+                JsonObject keystrokes = root.getAsJsonObject("keystrokes");
+                if (keystrokes.has("enabled")) {
+                    boolean state = keystrokes.get("enabled").getAsBoolean();
+                    com.mooclient.module.modules.KeystrokesModule.setKeystrokesEnabled(state);
+                    ModuleManager.getInstance().getModule("Keystrokes").ifPresent(m -> m.setEnabled(state));
+                }
+                if (keystrokes.has("style")) {
+                    try {
+                        com.mooclient.module.modules.KeystrokesModule.setStyle(
+                                com.mooclient.module.modules.KeystrokesModule.KeystrokesStyle.valueOf(keystrokes.get("style").getAsString()));
+                    } catch (Exception ignored) {}
+                }
+                if (keystrokes.has("spaceMode")) {
+                    try {
+                        com.mooclient.module.modules.KeystrokesModule.setSpaceMode(
+                                com.mooclient.module.modules.KeystrokesModule.SpaceMode.valueOf(keystrokes.get("spaceMode").getAsString()));
+                    } catch (Exception ignored) {}
+                }
+                if (keystrokes.has("showSpace")) {
+                    com.mooclient.module.modules.KeystrokesModule.setShowSpace(keystrokes.get("showSpace").getAsBoolean());
+                }
+                if (keystrokes.has("showBackground")) {
+                    com.mooclient.module.modules.KeystrokesModule.setShowBackground(keystrokes.get("showBackground").getAsBoolean());
+                }
+                if (keystrokes.has("textShadow")) {
+                    com.mooclient.module.modules.KeystrokesModule.setTextShadow(keystrokes.get("textShadow").getAsBoolean());
+                }
+                if (keystrokes.has("anchorX") && keystrokes.has("anchorY") && keystrokes.has("offsetX") && keystrokes.has("offsetY")) {
+                    try {
+                        com.mooclient.module.modules.KeystrokesModule.position.anchorX =
+                                MooHudPositionHelper.HudAnchorX.valueOf(keystrokes.get("anchorX").getAsString());
+                        com.mooclient.module.modules.KeystrokesModule.position.anchorY =
+                                MooHudPositionHelper.HudAnchorY.valueOf(keystrokes.get("anchorY").getAsString());
+                        com.mooclient.module.modules.KeystrokesModule.position.offsetX = keystrokes.get("offsetX").getAsInt();
+                        com.mooclient.module.modules.KeystrokesModule.position.offsetY = keystrokes.get("offsetY").getAsInt();
+                    } catch (Exception ignored) {}
+                }
+                if (keystrokes.has("posX")) {
+                    com.mooclient.module.modules.KeystrokesModule.posX = keystrokes.get("posX").getAsInt();
+                }
+                if (keystrokes.has("posY")) {
+                    com.mooclient.module.modules.KeystrokesModule.posY = keystrokes.get("posY").getAsInt();
                 }
             }
 

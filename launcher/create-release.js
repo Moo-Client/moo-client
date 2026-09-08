@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '2.0.9';
+const VERSION = '2.1.0';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,13 +63,11 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-- 📦 **Nowy Mod: Item Scale (Skalowanie Przedmiotów na Ziemi)**:
-  - Dynamiczne powiększanie ważnych itemów (Totemy, Koxy, Złote Jabłka, Perły, Potki, Miecze, Zbroje) podczas PvP.
-  - Zaawansowany system profili z możliwością tworzenia, edycji i usuwania.
-  - Inteligentny wybierak wymaganych enchantów (PPM na przedmiocie) oraz poziomów zaklęć.
-  - Wygodny konfigurator GUI ze sliderami i szybkim dodawaniem itemów.
-- 💬 **Stackowanie wiadomości na czacie (Chat Stacking)** – Grupowanie powtarzających się wiadomości w licznik [x2], [x3]...
-- 📜 **Nieskończona historia czatu i odporność na clearchat**.`;
+- ⌨️ **Nowy Mod: Keystrokes (WSAD + Spacja)**:
+  - Wyświetlanie wciśniętych klawiszy ruchu (W, S, A, D) oraz skoku (Spacja) w czasie rzeczywistym na ekranie.
+  - Opcja włączania i wyłączania wyświetlania klawisza spacji z płynnym dopasowaniem wysokości widżetu.
+  - W pełni konfigurowalny styl (Moo Client, Simple, Akcent) oraz wygląd spacji (Pasek / Napis).
+  - Integracja z edytorem HUD, płynnym przeciąganiem i przyciąganiem magnetycznym (snapping).`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);

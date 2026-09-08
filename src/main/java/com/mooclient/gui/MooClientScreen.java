@@ -351,6 +351,28 @@ public class MooClientScreen extends Screen {
             renderWidgetBoundingBox(context, x, y, boxW, boxH, hovered, isDragging);
         }
 
+        // 9. Draggable Keystrokes HUD Widget Preview
+        if (com.mooclient.module.modules.KeystrokesModule.isKeystrokesEnabled()) {
+            int baseW = com.mooclient.module.modules.KeystrokesModule.getBaseWidth();
+            int baseH = com.mooclient.module.modules.KeystrokesModule.getBaseHeight();
+            int boxW = Math.round(baseW * hudScale);
+            int boxH = Math.round(baseH * hudScale);
+            com.mooclient.module.modules.KeystrokesModule.width = boxW;
+            com.mooclient.module.modules.KeystrokesModule.height = boxH;
+
+            int x = com.mooclient.module.modules.KeystrokesModule.position.calculateX(boxW, this.width);
+            int y = com.mooclient.module.modules.KeystrokesModule.position.calculateY(boxH, this.height);
+
+            if (this.client != null && this.client.world == null) {
+                com.mooclient.util.KeystrokesRenderer.render(context, this.client, this.width, this.height, hudScale, hudScale != 1.0f, true);
+            }
+
+            boolean hovered = mouseX >= x && mouseX <= x + boxW && mouseY >= y && mouseY <= y + boxH;
+            boolean isDragging = "KEYSTROKES".equals(draggingWidget);
+
+            renderWidgetBoundingBox(context, x, y, boxW, boxH, hovered, isDragging);
+        }
+
         // 9. Render Active Alignment Guidelines (Smart Magnetic Snapping)
         if (draggingWidget != null && activeGuideLines != null
                 && com.mooclient.util.MooClientSettings.isHudSnapping()) {
@@ -417,6 +439,12 @@ public class MooClientScreen extends Screen {
                     com.mooclient.module.modules.InventoryViewModule.position.calculateX(com.mooclient.module.modules.InventoryViewModule.width, this.width),
                     com.mooclient.module.modules.InventoryViewModule.position.calculateY(com.mooclient.module.modules.InventoryViewModule.height, this.height),
                     com.mooclient.module.modules.InventoryViewModule.width, com.mooclient.module.modules.InventoryViewModule.height));
+        }
+        if (!"KEYSTROKES".equals(currentWidgetId) && com.mooclient.module.modules.KeystrokesModule.isKeystrokesEnabled()) {
+            list.add(new WidgetRect("KEYSTROKES",
+                    com.mooclient.module.modules.KeystrokesModule.position.calculateX(com.mooclient.module.modules.KeystrokesModule.width, this.width),
+                    com.mooclient.module.modules.KeystrokesModule.position.calculateY(com.mooclient.module.modules.KeystrokesModule.height, this.height),
+                    com.mooclient.module.modules.KeystrokesModule.width, com.mooclient.module.modules.KeystrokesModule.height));
         }
         return list;
     }
@@ -755,13 +783,16 @@ public class MooClientScreen extends Screen {
                 icon = "🙋";
             } else if (module.getName().equalsIgnoreCase("Item Scale")) {
                 icon = "📦";
+            } else if (module.getName().equalsIgnoreCase("Keystrokes")) {
+                icon = "⌨";
             } else {
                 icon = "⌨";
             }
             drawCenteredText(context, icon, cardX + cardW / 2, cardY + 20, COLOR_TEXT_WHITE);
             String cardTitle = (module.getName().equalsIgnoreCase("Emotki") || module.getName().equalsIgnoreCase("Emotes"))
                     ? MooLanguage.get("emotes_name")
-                    : ((module.getName().equalsIgnoreCase("Armor") || module.getName().equalsIgnoreCase("Armor HUD")) ? MooLanguage.get("armor_name") : module.getName());
+                    : ((module.getName().equalsIgnoreCase("Armor") || module.getName().equalsIgnoreCase("Armor HUD")) ? MooLanguage.get("armor_name")
+                    : (module.getName().equalsIgnoreCase("Keystrokes") ? MooLanguage.get("keystrokes_name") : module.getName()));
             drawCenteredText(context, cardTitle, cardX + cardW / 2, cardY + 44, COLOR_TEXT_WHITE);
 
             // OPTIONS Bar
@@ -885,6 +916,8 @@ public class MooClientScreen extends Screen {
             return MooLanguage.get("invview_desc");
         if (name.equalsIgnoreCase("Item Scale"))
             return MooLanguage.get("itemscale_opt_subtitle");
+        if (name.equalsIgnoreCase("Keystrokes"))
+            return MooLanguage.get("keystrokes_desc");
         return MooLanguage.get("macro_desc");
     }
 
@@ -902,6 +935,8 @@ public class MooClientScreen extends Screen {
             return 365;
         } else if (modName.equalsIgnoreCase("Inventory View") || modName.equalsIgnoreCase("InventoryView")) {
             return 315;
+        } else if (modName.equalsIgnoreCase("Keystrokes")) {
+            return 350;
         } else if (modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) {
             return 280;
         } else if (modName.equalsIgnoreCase("Macro")) {
@@ -1078,6 +1113,38 @@ public class MooClientScreen extends Screen {
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("cps_prefix_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     com.mooclient.module.modules.CpsModule.isShowPrefix());
+
+        } else if (modName.equalsIgnoreCase("Keystrokes")) {
+            // Row 1: Appearance Style
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("style_label"));
+            renderKeystrokesStyleSelector(context, rowX + rowW - 206, rowY + 6, mouseX, mouseY,
+                    com.mooclient.module.modules.KeystrokesModule.getStyle().ordinal());
+
+            // Row 2: Show Spacebar
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("keystrokes_show_space_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.KeystrokesModule.isShowSpace());
+
+            // Row 3: Spacebar Mode (only if space is visible)
+            if (com.mooclient.module.modules.KeystrokesModule.isShowSpace()) {
+                rowY += rowH + 6;
+                drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("keystrokes_space_mode_label"));
+                renderKeystrokesSpaceModeSelector(context, rowX + rowW - 170, rowY + 6, mouseX, mouseY,
+                        com.mooclient.module.modules.KeystrokesModule.getSpaceMode().ordinal());
+            }
+
+            // Row 4: Show Background
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("bg_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.KeystrokesModule.isShowBackground());
+
+            // Row 5: Text Shadow
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shadow_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    com.mooclient.module.modules.KeystrokesModule.isTextShadow());
 
         } else if (modName.equalsIgnoreCase("Sprint")) {
             // Row 1: Interactive Keybind Selector (Click to change keybind!)
@@ -2658,6 +2725,95 @@ public class MooClientScreen extends Screen {
         return -1;
     }
 
+    private void renderKeystrokesStyleSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
+            int selectedOrdinal) {
+        String[] labels = new String[] { "Moo Client", "Simple", "Akcent" };
+        if (MooLanguage.current.equals(MooLanguage.EN)) {
+            labels = new String[] { "Moo Client", "Simple", "Accent" };
+        }
+        int[] widths = new int[] { 74, 56, 66 };
+        int gap = 4;
+        int curX = startX;
+        int h = 22;
+
+        for (int i = 0; i < labels.length; i++) {
+            int w = widths[i];
+            boolean selected = (i == selectedOrdinal);
+            boolean hover = mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h;
+
+            int bg = selected ? com.mooclient.util.MooClientSettings.getAccentColor()
+                    : (hover ? 0xCC252535 : 0x66141420);
+            int border = selected ? com.mooclient.util.MooClientSettings.getAccentHoverColor()
+                    : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
+            int textColor = selected ? 0xFF0A2514 : (hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
+
+            context.fill(curX, y, curX + w, y + h, bg);
+            drawBorder(context, curX, y, w, h, border);
+            drawCenteredText(context, labels[i], curX + w / 2, y + 7, textColor);
+
+            curX += w + gap;
+        }
+    }
+
+    private int getKeystrokesStyleClick(int startX, int y, int mouseX, int mouseY) {
+        int[] widths = new int[] { 74, 56, 66 };
+        int gap = 4;
+        int curX = startX;
+        int h = 22;
+
+        for (int i = 0; i < widths.length; i++) {
+            int w = widths[i];
+            if (mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h) {
+                return i;
+            }
+            curX += w + gap;
+        }
+        return -1;
+    }
+
+    private void renderKeystrokesSpaceModeSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
+            int selectedOrdinal) {
+        String[] labels = new String[] { MooLanguage.get("keystrokes_space_bar"), MooLanguage.get("keystrokes_space_text") };
+        int[] widths = new int[] { 80, 80 };
+        int gap = 4;
+        int curX = startX;
+        int h = 22;
+
+        for (int i = 0; i < labels.length; i++) {
+            int w = widths[i];
+            boolean selected = (i == selectedOrdinal);
+            boolean hover = mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h;
+
+            int bg = selected ? com.mooclient.util.MooClientSettings.getAccentColor()
+                    : (hover ? 0xCC252535 : 0x66141420);
+            int border = selected ? com.mooclient.util.MooClientSettings.getAccentHoverColor()
+                    : (hover ? 0xAAFFFFFF : 0x33FFFFFF);
+            int textColor = selected ? 0xFF0A2514 : (hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB);
+
+            context.fill(curX, y, curX + w, y + h, bg);
+            drawBorder(context, curX, y, w, h, border);
+            drawCenteredText(context, labels[i], curX + w / 2, y + 7, textColor);
+
+            curX += w + gap;
+        }
+    }
+
+    private int getKeystrokesSpaceModeClick(int startX, int y, int mouseX, int mouseY) {
+        int[] widths = new int[] { 80, 80 };
+        int gap = 4;
+        int curX = startX;
+        int h = 22;
+
+        for (int i = 0; i < widths.length; i++) {
+            int w = widths[i];
+            if (mouseX >= curX && mouseX <= curX + w && mouseY >= y && mouseY <= y + h) {
+                return i;
+            }
+            curX += w + gap;
+        }
+        return -1;
+    }
+
     private void renderPotionStyleSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
             int selectedOrdinal) {
         String[] labels = new String[] { "Moo Client", "Simple", "Compact" };
@@ -3166,6 +3322,20 @@ public class MooClientScreen extends Screen {
                     return true;
                 }
             }
+            if (com.mooclient.module.modules.KeystrokesModule.isKeystrokesEnabled()) {
+                int w = com.mooclient.module.modules.KeystrokesModule.width;
+                int h = com.mooclient.module.modules.KeystrokesModule.height;
+                int x = com.mooclient.module.modules.KeystrokesModule.position.calculateX(w, this.width);
+                int y = com.mooclient.module.modules.KeystrokesModule.position.calculateY(h, this.height);
+                if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
+                    playClickSound();
+                    this.selectedModule = ModuleManager.getInstance().getModule("Keystrokes").orElse(null);
+                    this.openedFromHub = true;
+                    this.listeningForKeybind = false;
+                    this.currentView = View.OPTIONS;
+                    return true;
+                }
+            }
         }
 
         if (button == 0) { // Left click
@@ -3290,6 +3460,19 @@ public class MooClientScreen extends Screen {
                     int y = com.mooclient.module.modules.InventoryViewModule.position.calculateY(h, this.height);
                     if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
                         draggingWidget = "INVENTORY_VIEW";
+                        dragOffsetX = (int) mouseX - x;
+                        dragOffsetY = (int) mouseY - y;
+                        return true;
+                    }
+                }
+
+                if (com.mooclient.module.modules.KeystrokesModule.isKeystrokesEnabled()) {
+                    int w = com.mooclient.module.modules.KeystrokesModule.width;
+                    int h = com.mooclient.module.modules.KeystrokesModule.height;
+                    int x = com.mooclient.module.modules.KeystrokesModule.position.calculateX(w, this.width);
+                    int y = com.mooclient.module.modules.KeystrokesModule.position.calculateY(h, this.height);
+                    if (mouseX >= x - 4 && mouseX <= x + w + 4 && mouseY >= y - 4 && mouseY <= y + h + 4) {
+                        draggingWidget = "KEYSTROKES";
                         dragOffsetX = (int) mouseX - x;
                         dragOffsetY = (int) mouseY - y;
                         return true;
@@ -3738,6 +3921,56 @@ public class MooClientScreen extends Screen {
                             && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.CpsModule.toggleShowPrefix();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+                } else if (modName.equalsIgnoreCase("Keystrokes")) {
+                    int styleClick = getKeystrokesStyleClick(rowX + rowW - 206, rowY + 6, (int) mouseX, (int) mouseY);
+                    if (styleClick >= 0) {
+                        playClickSound();
+                        com.mooclient.module.modules.KeystrokesModule.setStyle(
+                                com.mooclient.module.modules.KeystrokesModule.KeystrokesStyle.values()[styleClick]);
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        com.mooclient.module.modules.KeystrokesModule.toggleShowSpace();
+                        float hudScale = com.mooclient.util.MooClientSettings.getHudScaleFactor();
+                        com.mooclient.module.modules.KeystrokesModule.height = Math.round(com.mooclient.module.modules.KeystrokesModule.getBaseHeight() * hudScale);
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    if (com.mooclient.module.modules.KeystrokesModule.isShowSpace()) {
+                        rowY += rowH + 6;
+                        int spaceClick = getKeystrokesSpaceModeClick(rowX + rowW - 170, rowY + 6, (int) mouseX, (int) mouseY);
+                        if (spaceClick >= 0) {
+                            playClickSound();
+                            com.mooclient.module.modules.KeystrokesModule.setSpaceMode(
+                                    com.mooclient.module.modules.KeystrokesModule.SpaceMode.values()[spaceClick]);
+                            com.mooclient.util.MooConfig.save();
+                            return true;
+                        }
+                    }
+
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        com.mooclient.module.modules.KeystrokesModule.toggleShowBackground();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        com.mooclient.module.modules.KeystrokesModule.toggleTextShadow();
                         com.mooclient.util.MooConfig.save();
                         return true;
                     }
@@ -5200,6 +5433,18 @@ public class MooClientScreen extends Screen {
                 com.mooclient.module.modules.InventoryViewModule.position.setFromScreenCoords(res.snappedX, res.snappedY,
                         com.mooclient.module.modules.InventoryViewModule.width,
                         com.mooclient.module.modules.InventoryViewModule.height, this.width, this.height);
+                return true;
+            } else if ("KEYSTROKES".equals(draggingWidget)) {
+                MooHudPositionHelper.SnapResult res = MooHudPositionHelper.calculateSmartSnap(
+                        rawX, rawY, com.mooclient.module.modules.KeystrokesModule.width,
+                        com.mooclient.module.modules.KeystrokesModule.height, this.width, this.height, others,
+                        snapping, accent);
+                this.activeGuideLines = res.guideLines;
+                com.mooclient.module.modules.KeystrokesModule.position.setFromScreenCoords(res.snappedX, res.snappedY,
+                        com.mooclient.module.modules.KeystrokesModule.width,
+                        com.mooclient.module.modules.KeystrokesModule.height, this.width, this.height);
+                com.mooclient.module.modules.KeystrokesModule.posX = res.snappedX;
+                com.mooclient.module.modules.KeystrokesModule.posY = res.snappedY;
                 return true;
             }
         }

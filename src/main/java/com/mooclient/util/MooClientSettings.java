@@ -195,6 +195,12 @@ public class MooClientSettings {
                 com.mooclient.util.MooHudPositionHelper.HudAnchorX.RIGHT,
                 com.mooclient.util.MooHudPositionHelper.HudAnchorY.BOTTOM, 10, 60);
 
+        com.mooclient.module.modules.KeystrokesModule.position = new com.mooclient.util.MooHudPositionHelper.WidgetPosition(
+                com.mooclient.util.MooHudPositionHelper.HudAnchorX.RIGHT,
+                com.mooclient.util.MooHudPositionHelper.HudAnchorY.TOP, 10, 10);
+        com.mooclient.module.modules.KeystrokesModule.posX = 0;
+        com.mooclient.module.modules.KeystrokesModule.posY = 0;
+
         MooConfig.save();
     }
 

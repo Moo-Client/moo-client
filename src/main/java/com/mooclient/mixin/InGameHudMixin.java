@@ -451,7 +451,12 @@ public class InGameHudMixin {
             com.mooclient.util.InventoryViewRenderer.render(context, client, scaledWidth, scaledHeight, hudScale, customScale, false);
         }
 
-        // 8. Multiplayer Invitation UI (4 switchable HUD variants)
+        // 8. Keystrokes HUD Module Rendering (WSAD + Space)
+        if (com.mooclient.module.modules.KeystrokesModule.isKeystrokesEnabled()) {
+            com.mooclient.util.KeystrokesRenderer.render(context, client, scaledWidth, scaledHeight, hudScale, customScale, false);
+        }
+
+        // 9. Multiplayer Invitation UI (4 switchable HUD variants)
         InvitationUIManager.getInstance().renderHud(context, scaledWidth, scaledHeight, tickCounter.getTickDelta(true));
     }
 
