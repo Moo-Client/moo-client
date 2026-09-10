@@ -1,6 +1,6 @@
 {
   "name": "moo-client-launcher",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Oficjalny launcher dla Moo Client",
   "main": "src/main.js",
   "scripts": {

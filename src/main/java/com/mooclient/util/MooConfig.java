@@ -228,6 +228,12 @@ public class MooConfig {
             waypoints.addProperty("keyCode", com.mooclient.module.modules.WaypointsModule.getKeyCode());
             waypoints.addProperty("keyName", com.mooclient.module.modules.WaypointsModule.getKeyName());
             waypoints.addProperty("isMouseButton", com.mooclient.module.modules.WaypointsModule.isMouseButton());
+            waypoints.addProperty("hasLastColor", com.mooclient.module.modules.WaypointsModule.hasLastColor());
+            waypoints.addProperty("lastColor", com.mooclient.module.modules.WaypointsModule.getLastColor());
+            waypoints.addProperty("lastColorR", com.mooclient.module.modules.WaypointsModule.getLastColorR());
+            waypoints.addProperty("lastColorG", com.mooclient.module.modules.WaypointsModule.getLastColorG());
+            waypoints.addProperty("lastColorB", com.mooclient.module.modules.WaypointsModule.getLastColorB());
+            waypoints.addProperty("lastColorPresetIndex", com.mooclient.module.modules.WaypointsModule.getLastColorPresetIndex());
             root.add("waypoints", waypoints);
 
             // Scoreboard Module
@@ -848,6 +854,21 @@ public class MooConfig {
                     boolean isMouse = waypoints.has("isMouseButton") && waypoints.get("isMouseButton").getAsBoolean();
                     com.mooclient.module.modules.WaypointsModule.setKeybind(waypoints.get("keyCode").getAsInt(),
                             waypoints.get("keyName").getAsString(), isMouse);
+                }
+                if (waypoints.has("lastColorR") && waypoints.has("lastColorG") && waypoints.has("lastColorB")) {
+                    int r = waypoints.get("lastColorR").getAsInt();
+                    int g = waypoints.get("lastColorG").getAsInt();
+                    int b = waypoints.get("lastColorB").getAsInt();
+                    int preset = waypoints.has("lastColorPresetIndex") ? waypoints.get("lastColorPresetIndex").getAsInt() : -1;
+                    boolean hasColor = !waypoints.has("hasLastColor") || waypoints.get("hasLastColor").getAsBoolean();
+                    com.mooclient.module.modules.WaypointsModule.loadLastColor(r, g, b, preset, hasColor);
+                } else if (waypoints.has("lastColor")) {
+                    int c = waypoints.get("lastColor").getAsInt();
+                    int r = (c >> 16) & 0xFF;
+                    int g = (c >> 8) & 0xFF;
+                    int b = c & 0xFF;
+                    boolean hasColor = !waypoints.has("hasLastColor") || waypoints.get("hasLastColor").getAsBoolean();
+                    com.mooclient.module.modules.WaypointsModule.loadLastColor(r, g, b, -1, hasColor);
                 }
             }
 

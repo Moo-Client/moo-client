@@ -107,25 +107,38 @@ class ModManager {
 
             if (sourceJar) {
                 const srcStats = fs.statSync(sourceJar);
-                const isDev = this.isDevMode();
-                const targetModPath = isDev ? path.join(this.offlineDir, 'moo-client-dev.jar') : this.coreModPath;
-                const needsCopy = isDev || !fs.existsSync(targetModPath) || 
-                    fs.statSync(targetModPath).size !== srcStats.size || 
-                    fs.statSync(targetModPath).mtimeMs < srcStats.mtimeMs;
-                if (needsCopy) {
-                    fs.copyFileSync(sourceJar, targetModPath);
-                    if (!isDev && sourceJar !== bundledPath && fs.existsSync(path.dirname(bundledPath))) {
-                        try { fs.copyFileSync(sourceJar, bundledPath); } catch (e) {}
+                const devModPath = path.join(this.offlineDir, 'moo-client-dev.jar');
+                const prodModPath = this.coreModPath;
+
+                // Always synchronize both moo-client-dev.jar and moo-client.jar with the freshest local build
+                const targets = [devModPath, prodModPath];
+                for (const target of targets) {
+                    const needsCopy = this.isDevMode() || !fs.existsSync(target) || 
+                        fs.statSync(target).size !== srcStats.size || 
+                        fs.statSync(target).mtimeMs !== srcStats.mtimeMs;
+                    if (needsCopy) {
+                        try {
+                            fs.copyFileSync(sourceJar, target);
+                            fs.utimesSync(target, srcStats.atime, srcStats.mtime);
+                        } catch (e) {
+                            console.warn(`[ModManager] Could not update ${path.basename(target)}: ${e.message}`);
+                        }
                     }
-                    if (!isDev) {
-                        fs.writeFileSync(this.localVersionPath, JSON.stringify({
-                            version: defaultVer,
-                            minecraft: '1.21.4',
-                            installedAt: new Date().toISOString(),
-                        }, null, 2));
-                    }
-                    console.log(`Core mod deployed to offline folder: ${targetModPath}`);
                 }
+
+                if (sourceJar !== bundledPath && fs.existsSync(path.dirname(bundledPath))) {
+                    try { fs.copyFileSync(sourceJar, bundledPath); } catch (e) {}
+                }
+
+                try {
+                    fs.writeFileSync(this.localVersionPath, JSON.stringify({
+                        version: defaultVer,
+                        minecraft: '1.21.4',
+                        installedAt: new Date().toISOString(),
+                    }, null, 2));
+                } catch (e) {}
+
+                console.log(`Core mod deployed to offline folder: ${prodModPath} and ${devModPath}`);
             }
             this.cleanOldMods();
         } catch (e) {

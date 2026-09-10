@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '2.1.0';
+const VERSION = '2.1.1';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,11 +63,11 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-- ⌨️ **Nowy Mod: Keystrokes (WSAD + Spacja)**:
-  - Wyświetlanie wciśniętych klawiszy ruchu (W, S, A, D) oraz skoku (Spacja) w czasie rzeczywistym na ekranie.
-  - Opcja włączania i wyłączania wyświetlania klawisza spacji z płynnym dopasowaniem wysokości widżetu.
-  - W pełni konfigurowalny styl (Moo Client, Simple, Akcent) oraz wygląd spacji (Pasek / Napis).
-  - Integracja z edytorem HUD, płynnym przeciąganiem i przyciąganiem magnetycznym (snapping).`;
+- 📍 **Waypoints: Zapamiętywanie wybranego koloru**:
+  - Automatyczne i trwałe zapamiętywanie wybranego koloru punktu nawigacyjnego (zarówno z gotowej palety barw, jak i własnych suwaków RGB).
+  - Kolor jest natychmiast zapisywany w konfiguracji i domyślnie aktywny przy tworzeniu kolejnych punktów oraz po ponownym uruchomieniu gry.
+- ⚡ **Optymalizacja launchera i synchronizacji**:
+  - Usprawnienie deploymentu i automatyczny wybór najświeższego buildu JAR.`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);

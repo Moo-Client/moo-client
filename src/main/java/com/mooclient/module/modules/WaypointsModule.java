@@ -171,4 +171,50 @@ public class WaypointsModule extends Module {
         keyName = name;
         isMouseButton = isMouse;
     }
+
+    // Ostatnio wybrany kolor w panelu Waypointów (domyślnie błękit/cyjan z palety: R=85, G=255, B=255, presetIndex=2)
+    private static boolean hasLastColor = false;
+    private static int lastColor = 0x55FFFF;
+    private static int lastColorR = 85;
+    private static int lastColorG = 255;
+    private static int lastColorB = 255;
+    private static int lastColorPresetIndex = 2; // -1 dla custom RGB, 0..7 dla presetów
+
+    public static boolean hasLastColor() {
+        return hasLastColor;
+    }
+
+    public static int getLastColor() {
+        return lastColor;
+    }
+
+    public static int getLastColorR() {
+        return lastColorR;
+    }
+
+    public static int getLastColorG() {
+        return lastColorG;
+    }
+
+    public static int getLastColorB() {
+        return lastColorB;
+    }
+
+    public static int getLastColorPresetIndex() {
+        return lastColorPresetIndex;
+    }
+
+    public static void loadLastColor(int r, int g, int b, int presetIndex, boolean hasColor) {
+        lastColorR = Math.max(0, Math.min(255, r));
+        lastColorG = Math.max(0, Math.min(255, g));
+        lastColorB = Math.max(0, Math.min(255, b));
+        lastColor = ((lastColorR & 0xFF) << 16) | ((lastColorG & 0xFF) << 8) | (lastColorB & 0xFF);
+        lastColorPresetIndex = presetIndex;
+        hasLastColor = hasColor;
+    }
+
+    public static void setLastColor(int r, int g, int b, int presetIndex) {
+        loadLastColor(r, g, b, presetIndex, true);
+        com.mooclient.util.MooConfig.save();
+    }
 }

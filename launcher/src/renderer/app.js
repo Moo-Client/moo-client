@@ -153,7 +153,7 @@ const translations = {
         version_modal_subtitle: 'Choose a version from Modrinth for Fabric 1.21.4',
         no_updates_found: 'All mods are up to date! ✓',
         btn_pick_install: 'Install this version',
-        update_up_to_date: 'Up to date',
+        update_up_to_date: 'Latest',
         update_available_short: 'Update Available!',
         update_checking: 'Checking...',
         update_modal_title: 'New Moo Client Version Available!',
@@ -178,6 +178,7 @@ const translations = {
 };
 
 let currentLang = 'pl';
+let lastKnownClientVersion = '2.1.1';
 
 function setLanguage(lang) {
     currentLang = lang;
@@ -200,6 +201,20 @@ function setLanguage(lang) {
     document.querySelectorAll('.lang-btn').forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.lang === lang);
     });
+
+    const updateText = document.getElementById('update-text');
+    const updatePill = document.getElementById('update-status-pill');
+    if (updateText && updatePill) {
+        if (currentClientUpdateInfo) {
+            const latestVer = String(currentClientUpdateInfo.latestVersion || '').replace(/-/g, '_');
+            const currentVer = String(currentClientUpdateInfo.currentVersion || '').replace(/-/g, '_');
+            updateText.textContent = `v${latestVer} ${t('update_available_short')}`;
+            updatePill.title = `${t('update_modal_title')} (v${currentVer} ➔ v${latestVer})`;
+        } else if (lastKnownClientVersion) {
+            updateText.textContent = `v${lastKnownClientVersion} (${t('update_up_to_date')})`;
+            updatePill.title = `Moo Client v${lastKnownClientVersion} — ${t('update_up_to_date')}`;
+        }
+    }
 
     localStorage.setItem('moo-lang', lang);
 }
@@ -1725,6 +1740,7 @@ async function checkClientCoreUpdate(showToastIfUpToDate = false) {
                         if (updateRes.updated) {
                             currentClientUpdateInfo = null;
                             pill.classList.remove('has-update');
+                            lastKnownClientVersion = latestVer;
                             label.textContent = `v${latestVer} (${t('update_up_to_date')})`;
                             pill.title = `Moo Client v${latestVer} — ${t('update_up_to_date')}`;
                             showToast(`✨ Moo Client został automatycznie zaktualizowany w tle do v${latestVer}!`, 'success');
@@ -1744,7 +1760,8 @@ async function checkClientCoreUpdate(showToastIfUpToDate = false) {
         } else {
             currentClientUpdateInfo = null;
             pill.classList.remove('has-update');
-            const ver = String(res?.currentVersion || '2.1.0').replace(/-/g, '_');
+            const ver = String(res?.currentVersion || '2.1.1').replace(/-/g, '_');
+            lastKnownClientVersion = ver;
             label.textContent = `v${ver} (${t('update_up_to_date')})`;
             pill.title = `Moo Client v${ver} — ${t('update_up_to_date')}`;
 
@@ -1820,6 +1837,7 @@ async function performClientCoreUpdate() {
                 const newVer = res.version || currentClientUpdateInfo?.latestVersion || '1.6.5';
                 currentClientUpdateInfo = null;
                 if (pill) pill.classList.remove('has-update');
+                lastKnownClientVersion = newVer;
                 if (label) label.textContent = `v${newVer} (${t('update_up_to_date')})`;
                 if (pill) pill.title = `Moo Client v${newVer} — ${t('update_up_to_date')}`;
 

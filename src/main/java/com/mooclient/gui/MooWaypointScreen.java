@@ -53,10 +53,10 @@ public class MooWaypointScreen extends Screen {
     private String newY = "64";
     private String newZ = "0";
     private String newDimension = "minecraft:overworld";
-    private int selectedColorIndex = 2; // -1 for custom RGB, 0..7 for presets
-    private int customR = 85;
-    private int customG = 255;
-    private int customB = 255;
+    private int selectedColorIndex = WaypointsModule.getLastColorPresetIndex(); // -1 for custom RGB, 0..7 for presets
+    private int customR = WaypointsModule.getLastColorR();
+    private int customG = WaypointsModule.getLastColorG();
+    private int customB = WaypointsModule.getLastColorB();
     private int draggingSlider = -1; // -1 = none, 0 = R, 1 = G, 2 = B
 
     // Active focused input: 0 = None, 1 = Search, 2 = Name, 3 = X, 4 = Y, 5 = Z
@@ -702,6 +702,7 @@ public class MooWaypointScreen extends Screen {
                     this.customR = (c >> 16) & 0xFF;
                     this.customG = (c >> 8) & 0xFF;
                     this.customB = c & 0xFF;
+                    WaypointsModule.setLastColor(this.customR, this.customG, this.customB, this.selectedColorIndex);
                     return true;
                 }
             }
@@ -717,6 +718,7 @@ public class MooWaypointScreen extends Screen {
             if (mouseX >= rightX && mouseX <= rightX + rightW && mouseY >= rSliderY - 3 && mouseY <= rSliderY + sliderH + 3) {
                 draggingSlider = 0;
                 handleSliderDrag(mouseX, rightX, rightW);
+                WaypointsModule.setLastColor(this.customR, this.customG, this.customB, -1);
                 playClickSound();
                 return true;
             }
@@ -724,6 +726,7 @@ public class MooWaypointScreen extends Screen {
             if (mouseX >= rightX && mouseX <= rightX + rightW && mouseY >= gSliderY - 3 && mouseY <= gSliderY + sliderH + 3) {
                 draggingSlider = 1;
                 handleSliderDrag(mouseX, rightX, rightW);
+                WaypointsModule.setLastColor(this.customR, this.customG, this.customB, -1);
                 playClickSound();
                 return true;
             }
@@ -731,6 +734,7 @@ public class MooWaypointScreen extends Screen {
             if (mouseX >= rightX && mouseX <= rightX + rightW && mouseY >= bSliderY - 3 && mouseY <= bSliderY + sliderH + 3) {
                 draggingSlider = 2;
                 handleSliderDrag(mouseX, rightX, rightW);
+                WaypointsModule.setLastColor(this.customR, this.customG, this.customB, -1);
                 playClickSound();
                 return true;
             }
@@ -773,6 +777,9 @@ public class MooWaypointScreen extends Screen {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (button == 0) {
+            if (draggingSlider >= 0) {
+                WaypointsModule.setLastColor(this.customR, this.customG, this.customB, -1);
+            }
             draggingSlider = -1;
         }
         return super.mouseReleased(mouseX, mouseY, button);
@@ -832,6 +839,8 @@ public class MooWaypointScreen extends Screen {
             wp.setDimension(newDimension);
             wp.setColor(color);
 
+            WaypointsModule.setLastColor(this.customR, this.customG, this.customB, this.selectedColorIndex);
+
             WaypointManager.getInstance().invalidateCache();
             WaypointManager.getInstance().save();
             playClickSound();
@@ -847,11 +856,10 @@ public class MooWaypointScreen extends Screen {
             this.newZ = String.valueOf((int) Math.round(this.client.player.getZ()));
             this.newDimension = WaypointManager.getCurrentDimension(this.client);
         }
-        this.selectedColorIndex = 2;
-        int c = COLOR_PRESETS[2];
-        this.customR = (c >> 16) & 0xFF;
-        this.customG = (c >> 8) & 0xFF;
-        this.customB = c & 0xFF;
+        this.selectedColorIndex = WaypointsModule.getLastColorPresetIndex();
+        this.customR = WaypointsModule.getLastColorR();
+        this.customG = WaypointsModule.getLastColorG();
+        this.customB = WaypointsModule.getLastColorB();
         this.activeInput = 2;
     }
 
@@ -871,10 +879,18 @@ public class MooWaypointScreen extends Screen {
         Waypoint wp = new Waypoint(name, x, y, z, newDimension, server, color, false);
         WaypointManager.getInstance().addWaypoint(wp);
 
+        WaypointsModule.setLastColor(this.customR, this.customG, this.customB, this.selectedColorIndex);
+
         playClickSound();
 
         // Reset input for the next waypoint
         this.newName = "";
+        if (this.client != null && this.client.player != null) {
+            this.newX = String.valueOf((int) Math.round(this.client.player.getX()));
+            this.newY = String.valueOf((int) Math.round(this.client.player.getY()));
+            this.newZ = String.valueOf((int) Math.round(this.client.player.getZ()));
+            this.newDimension = WaypointManager.getCurrentDimension(this.client);
+        }
         this.activeInput = 2;
     }
 

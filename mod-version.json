@@ -1,7 +1,7 @@
 {
-  "version": "2.1.0",
+  "version": "2.1.1",
   "min_launcher_version": "1.0.0",
-  "name": "Moo Client 2.1.0",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.0/moo-client-2.1.0.jar",
-  "changelog": "🚀 Moo Client v2.1.0:\n- Nowy mod keystrokes (WSAD + Spacja)\n- Opcja włączania i wyłączania wyświetlania spacji\n- W pełni konfigurowalny styl (Moo Client, Simple, Akcent) i wygląd spacji\n- Zintegrowany z edytorem HUD i inteligentnym przyciąganiem"
+  "name": "Moo Client 2.1.1",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.1/moo-client-2.1.1.jar",
+  "changelog": "🚀 Moo Client v2.1.1:\n- Zapamiętywanie ostatnio wybranego koloru waypointów (paleta barw i suwaki RGB)\n- Usprawnienia synchronizacji i kompilacji w launcherze"
 }

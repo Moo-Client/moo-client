@@ -611,7 +611,16 @@ class GameManager {
         }
         const devModPath = path.join(offlineDir, 'moo-client-dev.jar');
         const prodModPath = path.join(offlineDir, 'moo-client.jar');
-        const offlineModPath = (options.isDev && fs.existsSync(devModPath)) ? devModPath : prodModPath;
+        let offlineModPath = prodModPath;
+        if (fs.existsSync(devModPath)) {
+            if (!fs.existsSync(prodModPath)) {
+                offlineModPath = devModPath;
+            } else {
+                const devMtime = fs.statSync(devModPath).mtimeMs;
+                const prodMtime = fs.statSync(prodModPath).mtimeMs;
+                offlineModPath = (devMtime >= prodMtime) ? devModPath : prodModPath;
+            }
+        }
         const fabricApiPath = path.join(offlineDir, 'fabric-api.jar');
         console.log(`[Launch] Core mod selected (${options.isDev ? 'DEV MODE' : 'PRODUCTION'}): ${offlineModPath}`);
 
