@@ -100,7 +100,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         process.exit(0);
     }
 
-    // Delete old assets if any
+    // Delete old/wrong assets
     if (release.assets && release.assets.length > 0) {
         for (const asset of release.assets) {
             console.log('Deleting old asset:', asset.name);
@@ -113,7 +113,8 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
     if (fs.existsSync(jarPath)) {
         await uploadAsset(release.upload_url, token, jarPath, `moo-client-${VERSION}.jar`, 'application/java-archive');
     } else {
-        console.warn(`Jar not found at ${jarPath}`);
+        console.error(`ERROR: Jar not found at ${jarPath}`);
+        process.exit(1);
     }
 
     // 2. Upload ASAR
@@ -124,7 +125,8 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
     if (fs.existsSync(asarPath)) {
         await uploadAsset(release.upload_url, token, asarPath, 'app.asar', 'application/octet-stream');
     } else {
-        console.warn(`app.asar not found at ${asarPath}`);
+        console.error(`ERROR: app.asar not found at ${asarPath}`);
+        process.exit(1);
     }
 
     // 3. Upload Bootstrapper (MooClient-Setup.exe)
@@ -138,19 +140,25 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
     if (fs.existsSync(bootstrapperPath)) {
         await uploadAsset(release.upload_url, token, bootstrapperPath, 'MooClient-Setup.exe', 'application/octet-stream');
     } else {
-        console.warn(`Bootstrapper not found at ${bootstrapperPath}`);
+        console.error(`ERROR: Bootstrapper not found at ${bootstrapperPath}`);
+        process.exit(1);
     }
 
-    // 4. Upload NSIS Web Package (required by MooClient-Setup.exe bootstrapper)
+    // 4. Upload NSIS Web Package strictly matching current version
     const nsisDir = path.join(__dirname, 'dist', 'nsis-web');
-    if (fs.existsSync(nsisDir)) {
-        const files = fs.readdirSync(nsisDir).filter(f => f.endsWith('.nsis.7z'));
-        if (files.length > 0) {
-            files.sort((a, b) => fs.statSync(path.join(nsisDir, b)).mtimeMs - fs.statSync(path.join(nsisDir, a)).mtimeMs);
-            const newest7z = files[0];
-            await uploadAsset(release.upload_url, token, path.join(nsisDir, newest7z), newest7z, 'application/octet-stream');
+    const expected7zName = `moo-client-launcher-${VERSION}-x64.nsis.7z`;
+    let target7zPath = path.join(nsisDir, expected7zName);
+    if (!fs.existsSync(target7zPath)) {
+        const matchingFiles = fs.readdirSync(nsisDir).filter(f => f.endsWith('.nsis.7z') && f.includes(VERSION));
+        if (matchingFiles.length > 0) {
+            target7zPath = path.join(nsisDir, matchingFiles[0]);
+        } else {
+            console.error(`FATAL: File ${expected7zName} not found in ${nsisDir}!`);
+            process.exit(1);
         }
     }
+    const final7zName = path.basename(target7zPath);
+    await uploadAsset(release.upload_url, token, target7zPath, final7zName, 'application/octet-stream');
 
     // 5. Upload Standalone Installer EXE (if exists)
     let exePath = path.join(__dirname, 'dist', `Moo Client Setup ${VERSION}.exe`);
