@@ -63,11 +63,10 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-- 💬 **Kompleksowa naprawa Stack Messages w czacie**:
-  - **Odświeżanie widoczności (fading)**: Powtórzona wiadomość natychmiast odświeża licznik widoczności do bieżącego ticku gry (\`client.inGameHud.getTicks()\`), rozbłyskując z powrotem 100% jasnością — całkowicie rozwiązuje to problem wygaszania/znikania powtarzających się komunikatów po 10 sekundach.
-  - **Prawidłowa obsługa wiadomości wielolinijkowych**: Dynamiczne usuwanie wszystkich linii należących do poprzedniego wpisu i ponowne dzielenie tekstu z licznikiem \`[xN]\` — wyeliminowano ucinanie tekstu oraz nakładanie się linijek.
-  - **Pełna autonomia**: Usunięto zależność od opcji Unlimited Chat — funkcja stackowania działa niezależnie od innych ustawień.
-  - **Czyszczenie stanu**: W metodzie \`clear()\` stan licznika i ostatniej wiadomości jest poprawnie resetowany.`;
+💬 **Usprawnienia i poprawki czatu (Stack Messages)**:
+- 👁️ **Wiadomości już nie znikają**: Powtarzające się wiadomości na czacie nie gasną ani nie znikają po kilku sekundach — licznik [x2], [x3] pojawia się od razu, a wiadomość pozostaje w pełni widoczna.
+- 📜 **Poprawne wyświetlanie długich wiadomości**: Dłuższe teksty i ogłoszenia zajmujące kilka linijek nie ucinają się i nie nakładają na siebie.
+- ⚡ **Płynne działanie**: Łączenie powtarzających się wiadomości działa teraz w pełni niezależnie i niezawodnie w każdej sytuacji.`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);
@@ -78,6 +77,7 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
             name: `Moo Client v${VERSION}`,
             body: CHANGELOG_BODY
         });
+        console.log('Updated release title and changelog body on GitHub.');
     } else {
         res = await apiRequest('POST', '/repos/Moo-Client/moo-client/releases', token, {
             tag_name: `v${VERSION}`,
@@ -93,6 +93,11 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
             console.error('Error creating release:', res.data);
             process.exit(1);
         }
+    }
+
+    if (process.argv.includes('--body-only')) {
+        console.log('Changelog description updated successfully (--body-only). Exiting.');
+        process.exit(0);
     }
 
     // Delete old assets if any

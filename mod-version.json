@@ -3,5 +3,5 @@
   "min_launcher_version": "1.0.0",
   "name": "Moo Client 2.1.2",
   "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.2/moo-client-2.1.2.jar",
-  "changelog": "🚀 Moo Client v2.1.2:\n- Poprawka Stack Messages w czacie: odświeżanie czasu zanikania (brak wygaszania/znikania powtarzanych wiadomości po 10s)\n- Prawidłowa obsługa wielolinijkowych wiadomości w czacie (brak ucinania i nakładania się tekstu)\n- Pełna niezależność Stack Messages od opcji Unlimited Chat"
+  "changelog": "🚀 Moo Client v2.1.2:\n- Naprawiono znikanie i wygaszanie łączonych wiadomości na czacie\n- Dłuższe wiadomości nie ucinają się już i wyświetlają poprawnie\n- Stackowanie wiadomości działa teraz płynnie i niezależnie w każdej sytuacji"
 }
