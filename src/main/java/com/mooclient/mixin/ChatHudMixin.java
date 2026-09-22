@@ -1,12 +1,14 @@
 package com.mooclient.mixin;
 
 import com.mooclient.module.modules.ChatModule;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.ChatHudLine;
 import net.minecraft.client.gui.hud.MessageIndicator;
 import net.minecraft.network.message.MessageSignatureData;
 import net.minecraft.text.MutableText;
+import net.minecraft.text.OrderedText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Final;
@@ -138,53 +140,63 @@ public abstract class ChatHudMixin {
 
     @Inject(method = "addMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/message/MessageSignatureData;Lnet/minecraft/client/gui/hud/MessageIndicator;)V", at = @At("HEAD"), cancellable = true)
     private void mooClient$onAddMessage(Text message, MessageSignatureData signatureData, MessageIndicator indicator, CallbackInfo ci) {
-        if (!ChatModule.isUnlimitedChat()) return;
-
         String plain = message.getString().trim();
 
         // Anti-ClearChat: suppress empty/whitespace-only messages (server spam to clear chat)
-        if (plain.isEmpty()) {
+        if (ChatModule.isUnlimitedChat() && plain.isEmpty()) {
             ci.cancel();
             return;
         }
 
         // Stack Messages: collapse consecutive identical messages into [xN]
-        if (ChatModule.isStackMessages()) {
+        if (ChatModule.isStackMessages() && !plain.isEmpty()) {
             if (plain.equals(mooClient$lastMessageText) && !this.messages.isEmpty()) {
                 mooClient$stackCount++;
 
-                // Build stacked text: original + gray [xN]
+                // Build stacked text: original message + gray [xN]
                 MutableText stacked = message.copy().append(
                     Text.literal(" [x" + mooClient$stackCount + "]")
                         .setStyle(Style.EMPTY.withColor(0xAAAAAA))
                 );
 
-                // Replace the top message in messages list
+                MinecraftClient client = MinecraftClient.getInstance();
+                int currentTick = (client != null && client.inGameHud != null) ? client.inGameHud.getTicks() : 0;
+
+                // Replace top entry in messages with the updated text and refreshed currentTick
                 if (!this.messages.isEmpty()) {
-                    ChatHudLine oldLine = this.messages.get(0);
-                    this.messages.set(0, new ChatHudLine(oldLine.creationTick(), stacked, signatureData, indicator));
+                    this.messages.remove(0);
+                    this.messages.add(0, new ChatHudLine(currentTick, stacked, signatureData, indicator));
                 }
 
-                // Replace the top visible message
+                // Remove all visible lines belonging to the previous version of this message
                 if (!this.visibleMessages.isEmpty()) {
-                    ChatHudLine.Visible oldVisible = this.visibleMessages.get(0);
-                    // Re-wrap the text for visible display
-                    net.minecraft.client.MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
-                    if (client != null && client.textRenderer != null) {
-                        int chatWidth = net.minecraft.client.gui.hud.ChatHud.getWidth(
-                            client.options.getChatWidth().getValue()
-                        );
-                        List<net.minecraft.text.OrderedText> wrapped = net.minecraft.client.util.ChatMessages.breakRenderedChatMessageLines(
-                            stacked, chatWidth, client.textRenderer
-                        );
-                        if (!wrapped.isEmpty()) {
-                            this.visibleMessages.set(0, new ChatHudLine.Visible(
-                                oldVisible.addedTime(), wrapped.get(wrapped.size() - 1), indicator, oldVisible.endOfEntry()
-                            ));
-                        }
+                    int linesToRemove = 1;
+                    while (linesToRemove < this.visibleMessages.size() && !this.visibleMessages.get(linesToRemove).endOfEntry()) {
+                        linesToRemove++;
+                    }
+                    for (int i = 0; i < linesToRemove; i++) {
+                        this.visibleMessages.remove(0);
                     }
                 }
 
+                // Re-wrap the stacked text and insert all lines with updated currentTick
+                if (client != null && client.textRenderer != null) {
+                    int chatWidth = ChatHud.getWidth(client.options.getChatWidth().getValue());
+                    if (indicator != null && indicator.icon() != null) {
+                        chatWidth -= indicator.icon().width + 4 + 2;
+                    }
+                    List<OrderedText> wrapped = net.minecraft.client.util.ChatMessages.breakRenderedChatMessageLines(
+                        stacked, chatWidth, client.textRenderer
+                    );
+                    for (int j = 0; j < wrapped.size(); ++j) {
+                        boolean endOfEntry = (j == wrapped.size() - 1);
+                        this.visibleMessages.add(0, new ChatHudLine.Visible(
+                            currentTick, wrapped.get(j), indicator, endOfEntry
+                        ));
+                    }
+                }
+
+                ChatModule.onMessageAdded();
                 ci.cancel();
                 return;
             }
@@ -192,6 +204,12 @@ public abstract class ChatHudMixin {
             // New unique message: reset stack counter
             mooClient$lastMessageText = plain;
             mooClient$stackCount = 1;
+        } else if (!plain.isEmpty()) {
+            mooClient$lastMessageText = plain;
+            mooClient$stackCount = 1;
+        } else {
+            mooClient$lastMessageText = "";
+            mooClient$stackCount = 0;
         }
     }
 
@@ -199,6 +217,9 @@ public abstract class ChatHudMixin {
 
     @Inject(method = "clear", at = @At("HEAD"), cancellable = true)
     private void mooClient$onClear(boolean clearHistory, CallbackInfo ci) {
+        mooClient$lastMessageText = "";
+        mooClient$stackCount = 0;
+
         if (ChatModule.isUnlimitedChat() && clearHistory) {
             // Save current messages before clear
             if (!this.messages.isEmpty()) {

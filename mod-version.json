@@ -1,7 +1,7 @@
 {
-  "version": "2.1.1",
+  "version": "2.1.2",
   "min_launcher_version": "1.0.0",
-  "name": "Moo Client 2.1.1",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.1/moo-client-2.1.1.jar",
-  "changelog": "🚀 Moo Client v2.1.1:\n- Zapamiętywanie ostatnio wybranego koloru waypointów (paleta barw i suwaki RGB)\n- Usprawnienia synchronizacji i kompilacji w launcherze"
+  "name": "Moo Client 2.1.2",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.2/moo-client-2.1.2.jar",
+  "changelog": "🚀 Moo Client v2.1.2:\n- Poprawka Stack Messages w czacie: odświeżanie czasu zanikania (brak wygaszania/znikania powtarzanych wiadomości po 10s)\n- Prawidłowa obsługa wielolinijkowych wiadomości w czacie (brak ucinania i nakładania się tekstu)\n- Pełna niezależność Stack Messages od opcji Unlimited Chat"
 }

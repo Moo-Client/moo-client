@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '2.1.1';
+const VERSION = '2.1.2';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,11 +63,11 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-- 📍 **Waypoints: Zapamiętywanie wybranego koloru**:
-  - Automatyczne i trwałe zapamiętywanie wybranego koloru punktu nawigacyjnego (zarówno z gotowej palety barw, jak i własnych suwaków RGB).
-  - Kolor jest natychmiast zapisywany w konfiguracji i domyślnie aktywny przy tworzeniu kolejnych punktów oraz po ponownym uruchomieniu gry.
-- ⚡ **Optymalizacja launchera i synchronizacji**:
-  - Usprawnienie deploymentu i automatyczny wybór najświeższego buildu JAR.`;
+- 💬 **Kompleksowa naprawa Stack Messages w czacie**:
+  - **Odświeżanie widoczności (fading)**: Powtórzona wiadomość natychmiast odświeża licznik widoczności do bieżącego ticku gry (\`client.inGameHud.getTicks()\`), rozbłyskując z powrotem 100% jasnością — całkowicie rozwiązuje to problem wygaszania/znikania powtarzających się komunikatów po 10 sekundach.
+  - **Prawidłowa obsługa wiadomości wielolinijkowych**: Dynamiczne usuwanie wszystkich linii należących do poprzedniego wpisu i ponowne dzielenie tekstu z licznikiem \`[xN]\` — wyeliminowano ucinanie tekstu oraz nakładanie się linijek.
+  - **Pełna autonomia**: Usunięto zależność od opcji Unlimited Chat — funkcja stackowania działa niezależnie od innych ustawień.
+  - **Czyszczenie stanu**: W metodzie \`clear()\` stan licznika i ostatniej wiadomości jest poprawnie resetowany.`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);
