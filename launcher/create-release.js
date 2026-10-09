@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '2.1.2';
+const VERSION = '2.1.3';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,10 +63,10 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-💬 **Usprawnienia i poprawki czatu (Stack Messages)**:
-- 👁️ **Wiadomości już nie znikają**: Powtarzające się wiadomości na czacie nie gasną ani nie znikają po kilku sekundach — licznik [x2], [x3] pojawia się od razu, a wiadomość pozostaje w pełni widoczna.
-- 📜 **Poprawne wyświetlanie długich wiadomości**: Dłuższe teksty i ogłoszenia zajmujące kilka linijek nie ucinają się i nie nakładają na siebie.
-- ⚡ **Płynne działanie**: Łączenie powtarzających się wiadomości działa teraz w pełni niezależnie i niezawodnie w każdej sytuacji.`;
+🎬 **Wsparcie dla programów do nagrywania i powtórek**:
+- 🎥 **Medal.tv i SteelSeries Moments**: Klient jest teraz bezproblemowo wykrywany jako Minecraft — automatyczne nagrywanie klipów i powtórek działa od razu bez konieczności ręcznego dodawania gry.
+- 🔴 **OBS & GeForce Experience / ShadowPlay**: Przechwytywanie gry (Game Capture) działa w 100% stabilnie i płynnie.
+- 🏷️ **Tytuł okna**: Poprawiono identyfikację okna gry, zapewniając pełną kompatybilność ze wszystkimi zewnętrznymi aplikacjami dla graczy.`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);
