@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '2.1.3';
+const VERSION = '2.1.4';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,10 +63,9 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-🎬 **Wsparcie dla programów do nagrywania i powtórek**:
-- 🎥 **Medal.tv i SteelSeries Moments**: Klient jest teraz bezproblemowo wykrywany jako Minecraft — automatyczne nagrywanie klipów i powtórek działa od razu bez konieczności ręcznego dodawania gry.
-- 🔴 **OBS & GeForce Experience / ShadowPlay**: Przechwytywanie gry (Game Capture) działa w 100% stabilnie i płynnie.
-- 🏷️ **Tytuł okna**: Poprawiono identyfikację okna gry, zapewniając pełną kompatybilność ze wszystkimi zewnętrznymi aplikacjami dla graczy.`;
+✨ **Nowości i zmiany**:
+- 🎯 **Nowy mod Hitbox**: Własne kolory hitboxów, możliwość wyłączenia czerwonej linii poziomu oczu oraz niebieskiej strzałki wzroku, tryb renderowania tylko podczas elytry lub pływania.
+- 🛡️ **Poprawki dotyczące moda Armor Status**: Wyświetlanie aktualnego zużycia setu w czasie rzeczywistym pod nickiem gracza, natychmiastowe odświeżanie przy otrzymaniu ciosu oraz brak kolizji ze statystykami serwerowymi (np. punktami na TabMC).`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);

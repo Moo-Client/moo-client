@@ -1,7 +1,7 @@
 {
-  "version": "2.1.3",
+  "version": "2.1.4",
   "min_launcher_version": "1.0.0",
-  "name": "Moo Client 2.1.3",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.3/moo-client-2.1.3.jar",
-  "changelog": "🚀 Moo Client v2.1.3:\n- Pełne wsparcie dla programów do nagrywania i powtórek (Medal.tv, SteelSeries Moments, OBS, ShadowPlay)\n- Zaktualizowano tytuł okna gry dla bezproblemowej detekcji przez aplikacje zewnętrzne"
+  "name": "Moo Client 2.1.4",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.4/moo-client-2.1.4.jar",
+  "changelog": "🚀 Moo Client v2.1.4:\n- Nowy mod Hitbox\n- Poprawki dotyczące moda Armor Status"
 }

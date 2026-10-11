@@ -240,6 +240,19 @@ public class MooNetworkHandler implements IMooTransport {
             if (username != null && !username.trim().isEmpty()) {
                 MooUserManager.registerUser(username, uuid);
             }
+
+            if (obj.has("armor") && obj.get("armor").isJsonArray()) {
+                try {
+                    com.google.gson.JsonArray arr = obj.getAsJsonArray("armor");
+                    if (arr.size() >= 4) {
+                        int head = arr.get(0).getAsInt();
+                        int chest = arr.get(1).getAsInt();
+                        int legs = arr.get(2).getAsInt();
+                        int feet = arr.get(3).getAsInt();
+                        com.mooclient.util.PlayerArmorDurabilityTracker.setExactDurability(username, uuid, head, chest, legs, feet);
+                    }
+                } catch (Exception ignored) {}
+            }
         }
     }
 
@@ -364,6 +377,24 @@ public class MooNetworkHandler implements IMooTransport {
             payload.addProperty("u", username);
             payload.addProperty("uuid", uuid != null ? uuid.toString() : "");
             payload.addProperty("t", System.currentTimeMillis());
+
+            MinecraftClient client = MinecraftClient.getInstance();
+            if (client != null && client.player != null) {
+                com.google.gson.JsonArray arr = new com.google.gson.JsonArray();
+                for (net.minecraft.entity.EquipmentSlot slot : new net.minecraft.entity.EquipmentSlot[]{
+                        net.minecraft.entity.EquipmentSlot.HEAD,
+                        net.minecraft.entity.EquipmentSlot.CHEST,
+                        net.minecraft.entity.EquipmentSlot.LEGS,
+                        net.minecraft.entity.EquipmentSlot.FEET}) {
+                    net.minecraft.item.ItemStack st = client.player.getEquippedStack(slot);
+                    if (st != null && !st.isEmpty() && st.isDamageable()) {
+                        arr.add(Math.max(0, st.getMaxDamage() - st.getDamage()));
+                    } else {
+                        arr.add(-1);
+                    }
+                }
+                payload.add("armor", arr);
+            }
 
             publishMqtt(TOPIC_PRESENCE, payload.toString());
         } catch (Exception e) {

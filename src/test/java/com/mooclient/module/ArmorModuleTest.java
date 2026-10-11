@@ -21,6 +21,7 @@ public class ArmorModuleTest {
         ArmorModule.setShowEmptySlots(true);
         ArmorModule.setShowOffhand(false);
         ArmorModule.setShowMainHand(false);
+        ArmorModule.setShowNametagDurability(true);
     }
 
     @Test
@@ -154,9 +155,49 @@ public class ArmorModuleTest {
     }
 
     @Test
+    public void testShowNametagDurabilityToggle() {
+        ArmorModule.setShowNametagDurability(true);
+        assertTrue(ArmorModule.isShowNametagDurability());
+
+        ArmorModule.toggleShowNametagDurability();
+        assertFalse(ArmorModule.isShowNametagDurability());
+
+        ArmorModule.setShowNametagDurability(true);
+        assertTrue(ArmorModule.isShowNametagDurability());
+    }
+
+    @Test
+    public void testDurabilityColorProgression() {
+        // > 70% -> GREEN
+        assertEquals(net.minecraft.util.Formatting.GREEN, ArmorModule.getDurabilityColor(80, 100));
+        assertEquals(net.minecraft.util.Formatting.GREEN, ArmorModule.getDurabilityColor(100, 100));
+
+        // 40% - 70% -> YELLOW
+        assertEquals(net.minecraft.util.Formatting.YELLOW, ArmorModule.getDurabilityColor(50, 100));
+        assertEquals(net.minecraft.util.Formatting.YELLOW, ArmorModule.getDurabilityColor(70, 100));
+
+        // 20% - 40% -> GOLD
+        assertEquals(net.minecraft.util.Formatting.GOLD, ArmorModule.getDurabilityColor(30, 100));
+        assertEquals(net.minecraft.util.Formatting.GOLD, ArmorModule.getDurabilityColor(21, 100));
+
+        // <= 20% -> RED
+        assertEquals(net.minecraft.util.Formatting.RED, ArmorModule.getDurabilityColor(20, 100));
+        assertEquals(net.minecraft.util.Formatting.RED, ArmorModule.getDurabilityColor(5, 100));
+        assertEquals(net.minecraft.util.Formatting.RED, ArmorModule.getDurabilityColor(0, 100));
+
+        // Non-damageable or invalid -> GRAY
+        assertEquals(net.minecraft.util.Formatting.GRAY, ArmorModule.getDurabilityColor(0, 0));
+    }
+
+    @Test
+    public void testNametagArmorTextNullWhenNoPlayer() {
+        assertNull(ArmorModule.getNametagArmorText(null));
+    }
+
+    @Test
     public void testModuleManagerRegistration() {
         ModuleManager manager = ModuleManager.getInstance();
-        manager.init();
+        manager.register(new ArmorModule());
         assertTrue(manager.getModule("Armor HUD").isPresent());
         assertNotNull(manager.getModule(ArmorModule.class));
     }

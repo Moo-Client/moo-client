@@ -191,6 +191,7 @@ public class MooLanguage {
                 case "durability_warning_label" -> "Dźwięk krówki (< 12.5% zbroi)";
                 case "durability_critical_alert" -> "Uwaga! Wytrzymałość Twojej zbroi jest krytycznie niska!";
                 case "show_empty_slots_label" -> "Puste sloty";
+                case "show_nametag_durability_label" -> "Wytrzymałość seta pod nickiem";
                 case "shulker_desc" -> "Podgląd zawartości Shulker Boxów w ekwipunku";
                 case "shulker_opt_title" -> "SHULKER TOOLTIP";
                 case "shulker_opt_subtitle" -> "Podgląd zawartości Shulker Boxów bezpośrednio w okienku tooltip.";
@@ -244,6 +245,15 @@ public class MooLanguage {
                 case "open_browser" -> "Otwórz link";
                 case "cancel" -> "Anuluj";
                 case "logged_in_as" -> "Zalogowano jako ";
+                case "hitboxes_name" -> "Hitboxy";
+                case "hitboxes_desc" -> "Własne kolory hitboxów, ukrywanie linii oczu i strzałki, filtr elytry/pływania";
+                case "hitboxes_opt_title" -> "HITBOXY";
+                case "hitboxes_opt_subtitle" -> "Personalizacja hitboxów F3+B, kolory i filtry elytry.";
+                case "hitboxes_enabled_label" -> "Włącz moduł";
+                case "hitboxes_color_label" -> "Kolor hitboxów";
+                case "hitboxes_eye_height_label" -> "Czerwona linia oczu (głowa)";
+                case "hitboxes_look_vec_label" -> "Niebieska strzałka (wzrok)";
+                case "hitboxes_elytra_swim_label" -> "Tylko elytra / pływanie";
                 default -> key;
             };
         } else {
@@ -427,6 +437,7 @@ public class MooLanguage {
                 case "durability_warning_label" -> "Cow Sound Warning (< 12.5% dur)";
                 case "durability_critical_alert" -> "Warning! Your armor durability is critically low!";
                 case "show_empty_slots_label" -> "Show Empty Slots";
+                case "show_nametag_durability_label" -> "Armor Durability under Nametag";
                 case "shulker_desc" -> "Preview Shulker Box inventory in tooltips";
                 case "shulker_opt_title" -> "SHULKER TOOLTIP";
                 case "shulker_opt_subtitle" -> "Preview Shulker Box contents directly in item tooltips.";
@@ -480,6 +491,15 @@ public class MooLanguage {
                 case "open_browser" -> "Open Link";
                 case "cancel" -> "Cancel";
                 case "logged_in_as" -> "Logged in as ";
+                case "hitboxes_name" -> "Hitboxes";
+                case "hitboxes_desc" -> "Custom hitbox colors, toggle eye height & look vector, elytra/swim filter";
+                case "hitboxes_opt_title" -> "HITBOXES";
+                case "hitboxes_opt_subtitle" -> "Customize F3+B hitboxes, colors and elytra filters.";
+                case "hitboxes_enabled_label" -> "Enable Module";
+                case "hitboxes_color_label" -> "Hitbox Color";
+                case "hitboxes_eye_height_label" -> "Red Eye-Height Line";
+                case "hitboxes_look_vec_label" -> "Blue Look Vector Arrow";
+                case "hitboxes_elytra_swim_label" -> "Only Elytra / Swimming";
                 default -> key;
             };
         }

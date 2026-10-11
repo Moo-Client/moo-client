@@ -195,5 +195,52 @@ public abstract class NametagBackgroundMixin {
                 }
             }
         }
+
+        // 3. Render Armor Set Durability UNDER nickname in real time when Armor HUD option is active
+        if (com.mooclient.module.modules.ArmorModule.isArmorEnabled()
+                && com.mooclient.module.modules.ArmorModule.isShowNametagDurability()) {
+            Text armorText = com.mooclient.module.modules.ArmorModule.getNametagArmorText(playerState);
+            if (armorText != null) {
+                float armorWidth = this.getTextRenderer().getWidth(armorText);
+                float armorX = -armorWidth / 2.0f;
+                // If a scoreboard below-name objective is present (e.g. "1600 pk" on TabMC or health hearts),
+                // shift armor durability down so it renders cleanly below the points/health instead of overlapping them!
+                float armorY = (playerState.playerName != null) ? 21.5f : 11.0f;
+                boolean textShadow = NametagsModule.isNametagsEnabled() ? NametagsModule.isTextShadow() : true;
+                boolean removeBg = NametagsModule.isNametagsEnabled() && NametagsModule.isRemoveBackground();
+                int bgAlpha = removeBg ? 0 : (int)(net.minecraft.client.MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F) * 255.0F);
+                int bgColor = bgAlpha << 24;
+
+                boolean seeThrough = !playerState.sneaking;
+
+                this.getTextRenderer().draw(
+                    armorText,
+                    armorX,
+                    armorY,
+                    -2130706433,
+                    textShadow,
+                    matrix,
+                    vertexConsumers,
+                    seeThrough ? TextRenderer.TextLayerType.SEE_THROUGH : TextRenderer.TextLayerType.NORMAL,
+                    bgColor,
+                    light
+                );
+
+                if (seeThrough) {
+                    this.getTextRenderer().draw(
+                        armorText,
+                        armorX,
+                        armorY,
+                        -1,
+                        textShadow,
+                        matrix,
+                        vertexConsumers,
+                        TextRenderer.TextLayerType.NORMAL,
+                        0,
+                        net.minecraft.client.render.LightmapTextureManager.applyEmission(light, 2)
+                    );
+                }
+            }
+        }
     }
 }

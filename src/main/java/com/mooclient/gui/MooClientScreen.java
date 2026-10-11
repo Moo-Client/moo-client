@@ -6,6 +6,7 @@ import com.mooclient.module.modules.ArmorModule;
 import com.mooclient.module.modules.CpsModule;
 import com.mooclient.module.modules.FpsModule;
 import com.mooclient.module.modules.FreelookModule;
+import com.mooclient.module.modules.HitboxModule;
 import com.mooclient.module.modules.PingModule;
 import com.mooclient.module.modules.PotionEffectsModule;
 import com.mooclient.module.modules.ScoreboardModule;
@@ -918,12 +919,14 @@ public class MooClientScreen extends Screen {
             return MooLanguage.get("itemscale_opt_subtitle");
         if (name.equalsIgnoreCase("Keystrokes"))
             return MooLanguage.get("keystrokes_desc");
+        if (name.equalsIgnoreCase("Hitbox") || name.equalsIgnoreCase("Hitboxes"))
+            return MooLanguage.get("hitboxes_desc");
         return MooLanguage.get("macro_desc");
     }
 
     private int getOptionsPanelHeight(String modName) {
         if (modName.equalsIgnoreCase("Armor") || modName.equalsIgnoreCase("Armor HUD")) {
-            return 450;
+            return 488;
         } else if (modName.equalsIgnoreCase("Item Scale") || modName.equalsIgnoreCase("ItemScale")) {
             if (this.itemScaleEditingProfileIndex < 0) {
                 int count = com.mooclient.module.modules.ItemScaleModule.getProfiles().size();
@@ -938,6 +941,8 @@ public class MooClientScreen extends Screen {
         } else if (modName.equalsIgnoreCase("Keystrokes")) {
             return 350;
         } else if (modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) {
+            return 280;
+        } else if (modName.equalsIgnoreCase("Hitbox") || modName.equalsIgnoreCase("Hitboxes")) {
             return 280;
         } else if (modName.equalsIgnoreCase("Macro")) {
             int count = com.mooclient.module.modules.MacroModule.getMacros().size();
@@ -1012,6 +1017,9 @@ public class MooClientScreen extends Screen {
         } else if (modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) {
             optTitle = MooLanguage.get("shulker_opt_title");
             optSubtitle = MooLanguage.get("shulker_opt_subtitle");
+        } else if (modName.equalsIgnoreCase("Hitbox") || modName.equalsIgnoreCase("Hitboxes")) {
+            optTitle = MooLanguage.get("hitboxes_opt_title");
+            optSubtitle = MooLanguage.get("hitboxes_opt_subtitle");
         } else if (modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) {
             optTitle = MooLanguage.get("emotes_opt_title");
             optSubtitle = MooLanguage.get("emotes_opt_subtitle");
@@ -1581,6 +1589,12 @@ public class MooClientScreen extends Screen {
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     ArmorModule.isShowOffhand());
 
+            // Row 10: Show Armor Durability under Nametag
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("show_nametag_durability_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    ArmorModule.isShowNametagDurability());
+
         } else if (modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) {
             // Row 1: Enable / Disable
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shulker_enabled_label"));
@@ -1610,6 +1624,36 @@ public class MooClientScreen extends Screen {
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("shulker_require_shift_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     com.mooclient.module.modules.ShulkerTooltipModule.isRequireShift());
+
+        } else if (modName.equalsIgnoreCase("Hitbox") || modName.equalsIgnoreCase("Hitboxes")) {
+            // Row 1: Enable / Disable
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("hitboxes_enabled_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    HitboxModule.isHitboxEnabled());
+
+            // Row 2: Hitbox Color
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("hitboxes_color_label"));
+            renderHitboxColorSelector(context, rowX + rowW - 185, rowY + 6, mouseX, mouseY,
+                    HitboxModule.getColor());
+
+            // Row 3: Red Eye-Height Line
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("hitboxes_eye_height_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    HitboxModule.isShowEyeHeight());
+
+            // Row 4: Blue Look Vector Arrow
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("hitboxes_look_vec_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    HitboxModule.isShowLookVector());
+
+            // Row 5: Only Elytra / Swimming
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("hitboxes_elytra_swim_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    HitboxModule.isOnlyGlidingOrSwimming());
 
         } else if (modName.equalsIgnoreCase("Emotki") || modName.equalsIgnoreCase("Emotes")) {
             int btnW = 140;
@@ -2623,6 +2667,28 @@ public class MooClientScreen extends Screen {
             curX += w + gap;
         }
         return -1;
+    }
+
+    private void renderHitboxColorSelector(DrawContext context, int x, int y, int mouseX, int mouseY,
+            HitboxModule.HitboxColor color) {
+        int w = 175;
+        int h = 22;
+        boolean hover = mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h;
+        int bg = hover ? 0xCC252535 : 0x88181824;
+        int border = hover ? 0xAAFFFFFF : 0x44FFFFFF;
+
+        context.fill(x, y, x + w, y + h, bg);
+        drawBorder(context, x, y, w, h, border);
+
+        int swatchSize = 10;
+        int swatchX = x + 8;
+        int swatchY = y + (h - swatchSize) / 2;
+        context.fill(swatchX, swatchY, swatchX + swatchSize, swatchY + swatchSize, color.getPreviewColor() | 0xFF000000);
+        drawBorder(context, swatchX - 1, swatchY - 1, swatchSize + 2, swatchSize + 2, 0x88FFFFFF);
+
+        String text = color.getDisplayName();
+        int textColor = hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB;
+        context.drawTextWithShadow(this.textRenderer, text, swatchX + swatchSize + 8, y + 7, textColor);
     }
 
     private void renderModeSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
@@ -4842,6 +4908,16 @@ public class MooClientScreen extends Screen {
                         com.mooclient.util.MooConfig.save();
                         return true;
                     }
+
+                    // Row 10: Show Armor Durability under Nametag Toggle
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        ArmorModule.toggleShowNametagDurability();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
                 } else if (modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) {
                     // Row 1: Enable / Disable
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
@@ -4891,6 +4967,61 @@ public class MooClientScreen extends Screen {
                             && mouseY <= rowY + 26) {
                         playClickSound();
                         com.mooclient.module.modules.ShulkerTooltipModule.toggleRequireShift();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+                } else if (modName.equalsIgnoreCase("Hitbox") || modName.equalsIgnoreCase("Hitboxes")) {
+                    // Row 1: Enable / Disable
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        HitboxModule.toggleHitboxEnabled();
+                        if (selectedModule != null) {
+                            selectedModule.setEnabled(HitboxModule.isHitboxEnabled());
+                        }
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 2: Color selector
+                    rowY += rowH + 6;
+                    int colorBtnW = 175;
+                    int colorBtnH = 22;
+                    int colorBtnX = rowX + rowW - colorBtnW - 10;
+                    int colorBtnY = rowY + 6;
+                    if (mouseX >= colorBtnX && mouseX <= colorBtnX + colorBtnW && mouseY >= colorBtnY && mouseY <= colorBtnY + colorBtnH) {
+                        playClickSound();
+                        HitboxModule.cycleColor();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 3: Red Eye-Height Line
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        HitboxModule.toggleShowEyeHeight();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 4: Blue Look Vector Arrow
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        HitboxModule.toggleShowLookVector();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 5: Only Elytra / Swimming
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        HitboxModule.toggleOnlyGlidingOrSwimming();
                         com.mooclient.util.MooConfig.save();
                         return true;
                     }

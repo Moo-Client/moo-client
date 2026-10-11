@@ -25,7 +25,10 @@
     "TooltipComponentMixin",
     "HandledScreenMixin",
     "ItemEntityRenderStateMixin",
-    "ItemEntityRendererMixin"
+    "ItemEntityRendererMixin",
+    "EntityRenderDispatcherMixin",
+    "ClientPlayNetworkHandlerMixin",
+    "ClientPlayerInteractionManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -2,6 +2,14 @@ package com.mooclient.module.modules;
 
 import com.mooclient.module.Module;
 import com.mooclient.util.MooHudPositionHelper;
+import com.mooclient.util.PlayerArmorDurabilityTracker;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 /**
  * Armor HUD module displaying equipped armor set (Helmet, Chestplate, Leggings, Boots),
@@ -85,6 +93,7 @@ public class ArmorModule extends Module {
     private static boolean showEmptySlots = true;
     private static boolean showOffhand = false;
     private static boolean showMainHand = false;
+    private static boolean showNametagDurability = true;
 
     // Draggable coordinates & anchor (default LEFT, TOP just like FPS, Ping, Sprint)
     public static MooHudPositionHelper.WidgetPosition position =
@@ -390,5 +399,108 @@ public class ArmorModule extends Module {
 
     public static int calculateBoxHeight(float hudScale) {
         return Math.round(calculateUnscaledHeight() * hudScale);
+    }
+
+    public static boolean isShowNametagDurability() {
+        return showNametagDurability;
+    }
+
+    public static void setShowNametagDurability(boolean state) {
+        showNametagDurability = state;
+    }
+
+    public static void toggleShowNametagDurability() {
+        showNametagDurability = !showNametagDurability;
+    }
+
+    public static Formatting getDurabilityColor(int remaining, int maxDamage) {
+        if (maxDamage <= 0) return Formatting.GRAY;
+        float ratio = (float) remaining / (float) maxDamage;
+        if (ratio > 0.70f) {
+            return Formatting.GREEN;
+        } else if (ratio > 0.40f) {
+            return Formatting.YELLOW;
+        } else if (ratio > 0.20f) {
+            return Formatting.GOLD;
+        } else {
+            return Formatting.RED;
+        }
+    }
+
+    public static void appendSlotDurabilityText(MutableText parent, ItemStack stack) {
+        appendSlotDurabilityText(parent, null, null, stack);
+    }
+
+    public static void appendSlotDurabilityText(MutableText parent, PlayerEntity player, EquipmentSlot slot, ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            parent.append(Text.literal("-").formatted(Formatting.DARK_GRAY));
+            return;
+        }
+
+        if (stack.isDamageable() && stack.getMaxDamage() > 0) {
+            int max = stack.getMaxDamage();
+            int remaining = -1;
+            if (slot != null) {
+                remaining = PlayerArmorDurabilityTracker.getRemainingDurability(player, slot, stack);
+            }
+            if (remaining < 0) {
+                remaining = Math.max(0, max - stack.getDamage());
+            }
+            Formatting color = getDurabilityColor(remaining, max);
+            parent.append(Text.literal(String.valueOf(remaining)).formatted(color));
+        } else {
+            parent.append(Text.literal("-").formatted(Formatting.GRAY));
+        }
+    }
+
+    public static Text getNametagArmorText(net.minecraft.client.render.entity.state.PlayerEntityRenderState playerState) {
+        if (playerState == null) {
+            return null;
+        }
+
+        ItemStack head = null;
+        ItemStack chest = null;
+        ItemStack legs = null;
+        ItemStack feet = null;
+        PlayerEntity player = null;
+
+        try {
+            MinecraftClient client = MinecraftClient.getInstance();
+            if (client != null && client.world != null) {
+                net.minecraft.entity.Entity entity = client.world.getEntityById(playerState.id);
+                if (entity instanceof PlayerEntity p) {
+                    player = p;
+                    head = player.getEquippedStack(EquipmentSlot.HEAD);
+                    chest = player.getEquippedStack(EquipmentSlot.CHEST);
+                    legs = player.getEquippedStack(EquipmentSlot.LEGS);
+                    feet = player.getEquippedStack(EquipmentSlot.FEET);
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        if (head == null || head.isEmpty()) head = playerState.equippedHeadStack;
+        if (chest == null || chest.isEmpty()) chest = playerState.equippedChestStack;
+        if (legs == null || legs.isEmpty()) legs = playerState.equippedLegsStack;
+        if (feet == null || feet.isEmpty()) feet = playerState.equippedFeetStack;
+
+        boolean allEmpty = (head == null || head.isEmpty())
+                && (chest == null || chest.isEmpty())
+                && (legs == null || legs.isEmpty())
+                && (feet == null || feet.isEmpty());
+
+        if (allEmpty) {
+            return null;
+        }
+
+        MutableText result = Text.empty();
+        appendSlotDurabilityText(result, player, EquipmentSlot.HEAD, head);
+        result.append(Text.literal(" | ").formatted(Formatting.DARK_GRAY));
+        appendSlotDurabilityText(result, player, EquipmentSlot.CHEST, chest);
+        result.append(Text.literal(" | ").formatted(Formatting.DARK_GRAY));
+        appendSlotDurabilityText(result, player, EquipmentSlot.LEGS, legs);
+        result.append(Text.literal(" | ").formatted(Formatting.DARK_GRAY));
+        appendSlotDurabilityText(result, player, EquipmentSlot.FEET, feet);
+
+        return result;
     }
 }

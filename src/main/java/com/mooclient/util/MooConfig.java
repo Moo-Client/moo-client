@@ -280,6 +280,7 @@ public class MooConfig {
             armor.addProperty("showEmptySlots", com.mooclient.module.modules.ArmorModule.isShowEmptySlots());
             armor.addProperty("showOffhand", com.mooclient.module.modules.ArmorModule.isShowOffhand());
             armor.addProperty("showMainHand", com.mooclient.module.modules.ArmorModule.isShowMainHand());
+            armor.addProperty("showNametagDurability", com.mooclient.module.modules.ArmorModule.isShowNametagDurability());
             armor.addProperty("anchorX", com.mooclient.module.modules.ArmorModule.position.anchorX.name());
             armor.addProperty("anchorY", com.mooclient.module.modules.ArmorModule.position.anchorY.name());
             armor.addProperty("offsetX", com.mooclient.module.modules.ArmorModule.position.offsetX);
@@ -368,6 +369,15 @@ public class MooConfig {
             settings.addProperty("activeProfile", MooClientSettings.getActiveProfile().name());
             settings.addProperty("invitationUiVariant", MooClientSettings.getInvitationUiVariant().name());
             root.add("settings", settings);
+
+            // Hitbox Module
+            JsonObject hitboxes = new JsonObject();
+            hitboxes.addProperty("enabled", com.mooclient.module.modules.HitboxModule.isHitboxEnabled());
+            hitboxes.addProperty("color", com.mooclient.module.modules.HitboxModule.getColor().name());
+            hitboxes.addProperty("showEyeHeight", com.mooclient.module.modules.HitboxModule.isShowEyeHeight());
+            hitboxes.addProperty("showLookVector", com.mooclient.module.modules.HitboxModule.isShowLookVector());
+            hitboxes.addProperty("onlyGlidingOrSwimming", com.mooclient.module.modules.HitboxModule.isOnlyGlidingOrSwimming());
+            root.add("hitboxes", hitboxes);
 
             Files.writeString(getConfigPath(), GSON.toJson(root));
             MooClient.LOGGER.info("Saved config to {}", getConfigPath());
@@ -1023,6 +1033,9 @@ public class MooConfig {
                 if (armor.has("showMainHand")) {
                     com.mooclient.module.modules.ArmorModule.setShowMainHand(armor.get("showMainHand").getAsBoolean());
                 }
+                if (armor.has("showNametagDurability")) {
+                    com.mooclient.module.modules.ArmorModule.setShowNametagDurability(armor.get("showNametagDurability").getAsBoolean());
+                }
                 if (armor.has("anchorX") && armor.has("anchorY") && armor.has("offsetX") && armor.has("offsetY")) {
                     try {
                         com.mooclient.module.modules.ArmorModule.position.anchorX = MooHudPositionHelper.HudAnchorX.valueOf(armor.get("anchorX").getAsString());
@@ -1250,6 +1263,28 @@ public class MooConfig {
                     try {
                         MooClientSettings.setInvitationUiVariant(InvitationUIManager.UiVariant.valueOf(settings.get("invitationUiVariant").getAsString()));
                     } catch (Exception ignored) {}
+                }
+            }
+
+            // Hitbox Module
+            if (root.has("hitboxes")) {
+                JsonObject hitboxes = root.getAsJsonObject("hitboxes");
+                if (hitboxes.has("enabled")) {
+                    com.mooclient.module.modules.HitboxModule.setHitboxEnabled(hitboxes.get("enabled").getAsBoolean());
+                }
+                if (hitboxes.has("color")) {
+                    try {
+                        com.mooclient.module.modules.HitboxModule.setColor(com.mooclient.module.modules.HitboxModule.HitboxColor.valueOf(hitboxes.get("color").getAsString()));
+                    } catch (Exception ignored) {}
+                }
+                if (hitboxes.has("showEyeHeight")) {
+                    com.mooclient.module.modules.HitboxModule.setShowEyeHeight(hitboxes.get("showEyeHeight").getAsBoolean());
+                }
+                if (hitboxes.has("showLookVector")) {
+                    com.mooclient.module.modules.HitboxModule.setShowLookVector(hitboxes.get("showLookVector").getAsBoolean());
+                }
+                if (hitboxes.has("onlyGlidingOrSwimming")) {
+                    com.mooclient.module.modules.HitboxModule.setOnlyGlidingOrSwimming(hitboxes.get("onlyGlidingOrSwimming").getAsBoolean());
                 }
             }
 
