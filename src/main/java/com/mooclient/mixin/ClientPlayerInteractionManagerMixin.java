@@ -15,7 +15,8 @@ public class ClientPlayerInteractionManagerMixin {
     @Inject(method = "attackEntity", at = @At("HEAD"))
     private void mooClient$onAttackEntity(PlayerEntity player, Entity target, CallbackInfo ci) {
         if (target instanceof PlayerEntity targetPlayer) {
-            PlayerArmorDurabilityTracker.recordLocalAttack(targetPlayer, player.getMainHandStack());
+            boolean isCrit = player != null && player.fallDistance > 0.0f && !player.isOnGround() && !player.isClimbing() && !player.isTouchingWater();
+            PlayerArmorDurabilityTracker.recordLocalAttackAttempt(targetPlayer.getId(), player != null ? player.getMainHandStack() : null, isCrit);
         }
     }
 }

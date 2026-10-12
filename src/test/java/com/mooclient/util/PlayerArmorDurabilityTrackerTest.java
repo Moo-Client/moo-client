@@ -32,6 +32,24 @@ public class PlayerArmorDurabilityTrackerTest {
     }
 
     @Test
+    public void testLocalAttackAttemptDoesNotDamageDurabilityImmediately() {
+        String username = "SpawnPlayer";
+        UUID uuid = UUID.randomUUID();
+        int entityId = 202;
+
+        PlayerArmorDurabilityTracker.TrackedPlayerArmor tracked =
+                new PlayerArmorDurabilityTracker.TrackedPlayerArmor(entityId, username, uuid);
+        tracked.slots[0] = new PlayerArmorDurabilityTracker.TrackedSlot(null, 407.0f, 407, 3);
+        PlayerArmorDurabilityTracker.registerTrackedPlayer(tracked);
+
+        // Simulate local attack attempt (e.g. hitting on spawn)
+        PlayerArmorDurabilityTracker.recordLocalAttackAttempt(entityId, null, false);
+
+        // Armor durability should remain 100% untouched because no server damage packet was received!
+        assertEquals(407, Math.round(tracked.slots[0].currentDurability));
+    }
+
+    @Test
     public void testClearEntity() {
         int entityId = 999;
         PlayerArmorDurabilityTracker.clearEntity(entityId);

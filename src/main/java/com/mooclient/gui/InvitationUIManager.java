@@ -55,6 +55,10 @@ public class InvitationUIManager {
         return INSTANCE;
     }
 
+    public boolean hasActiveBillboard() {
+        return MooClientSettings.getInvitationUiVariant() == UiVariant.OVERHEAD_BILLBOARD && !activeInvitations.isEmpty();
+    }
+
     private InvitationUIManager() {
     }
 

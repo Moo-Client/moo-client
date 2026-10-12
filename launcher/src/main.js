@@ -299,7 +299,7 @@ function setupIPC() {
     });
 
 function getActualLauncherVersion() {
-    let ver = '2.1.4';
+    let ver = '2.1.5';
     try {
         const pkg = require('../package.json');
         if (pkg && pkg.version) ver = pkg.version;

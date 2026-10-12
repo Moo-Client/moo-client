@@ -45,6 +45,54 @@ import java.util.List;
 @Mixin(InGameHud.class)
 public class InGameHudMixin {
 
+    // High-performance caches for HUD modules
+    private static int lastFpsValue = -1;
+    private static FpsModule.FpsStyle lastFpsStyle = null;
+    private static boolean lastFpsPrefix = false;
+    private static String cachedFpsText = "";
+    private static int cachedFpsTextWidth = 0;
+
+    private static String lastSprintKey = "";
+    private static String cachedSprintText = "";
+    private static int cachedSprintTextWidth = 0;
+
+    private static int lastPingValue = -1;
+    private static PingModule.PingStyle lastPingStyle = null;
+    private static boolean lastPingPrefix = false;
+    private static String cachedPingText = "";
+    private static int cachedPingTextWidth = 0;
+
+    private static int lastLeftCps = -1;
+    private static int lastRightCps = -1;
+    private static CpsModule.CpsStyle lastCpsStyle = null;
+    private static String cachedCpsText = "";
+    private static int cachedCpsTextWidth = 0;
+
+    private static class CachedScoreboardRow {
+        final Text nameText;
+        final Text scoreText;
+        final int scoreWidth;
+
+        CachedScoreboardRow(Text nameText, Text scoreText, int scoreWidth) {
+            this.nameText = nameText;
+            this.scoreText = scoreText;
+            this.scoreWidth = scoreWidth;
+        }
+    }
+
+    private static class CachedScoreboardData {
+        ScoreboardObjective objective;
+        int rawSize;
+        long lastUpdateTick = -1;
+        Text titleText;
+        int titleWidth;
+        int totalWidth;
+        int totalHeight;
+        List<CachedScoreboardRow> rows;
+    }
+
+    private static final CachedScoreboardData SCOREBOARD_CACHE = new CachedScoreboardData();
+
     @Inject(method = "renderStatusEffectOverlay", at = @At("HEAD"), cancellable = true)
     private void mooClient$cancelVanillaStatusEffectOverlay(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         ci.cancel();
@@ -66,17 +114,24 @@ public class InGameHudMixin {
         if (FpsModule.isFpsEnabled()) {
             int fps = client.getCurrentFps();
             FpsModule.FpsStyle style = FpsModule.getStyle();
+            boolean prefix = FpsModule.isShowPrefix();
 
-            String fpsText;
-            if (style == FpsModule.FpsStyle.BRACKETS) {
-                fpsText = "[" + fps + " FPS]";
-            } else if (FpsModule.isShowPrefix()) {
-                fpsText = "FPS: " + fps;
-            } else {
-                fpsText = fps + " FPS";
+            if (fps != lastFpsValue || style != lastFpsStyle || prefix != lastFpsPrefix) {
+                lastFpsValue = fps;
+                lastFpsStyle = style;
+                lastFpsPrefix = prefix;
+                if (style == FpsModule.FpsStyle.BRACKETS) {
+                    cachedFpsText = "[" + fps + " FPS]";
+                } else if (prefix) {
+                    cachedFpsText = "FPS: " + fps;
+                } else {
+                    cachedFpsText = fps + " FPS";
+                }
+                cachedFpsTextWidth = client.textRenderer.getWidth(cachedFpsText);
             }
 
-            int textWidth = client.textRenderer.getWidth(fpsText);
+            String fpsText = cachedFpsText;
+            int textWidth = cachedFpsTextWidth;
             int boxW = Math.round((textWidth + 6) * hudScale);
             int boxH = Math.round(12 * hudScale);
             FpsModule.width = boxW;
@@ -115,17 +170,23 @@ public class InGameHudMixin {
         if (ToggleSprintModule.isSprintEnabled() && (ToggleSprintModule.shouldSprint()
                 || client.currentScreen instanceof com.mooclient.gui.MooClientScreen)) {
             ToggleSprintModule.SprintStyle style = ToggleSprintModule.getStyle();
+            boolean isSprinting = ToggleSprintModule.shouldSprint();
+            String sprintKey = style.name() + "_" + isSprinting;
 
-            String sprintText;
-            if (style == ToggleSprintModule.SprintStyle.BRACKETS) {
-                sprintText = "[Sprinting]";
-            } else if (style == ToggleSprintModule.SprintStyle.SIMPLE) {
-                sprintText = "Sprinting";
-            } else {
-                sprintText = "Sprinting (Toggled)";
+            if (!sprintKey.equals(lastSprintKey)) {
+                lastSprintKey = sprintKey;
+                if (style == ToggleSprintModule.SprintStyle.BRACKETS) {
+                    cachedSprintText = "[Sprinting]";
+                } else if (style == ToggleSprintModule.SprintStyle.SIMPLE) {
+                    cachedSprintText = "Sprinting";
+                } else {
+                    cachedSprintText = "Sprinting (Toggled)";
+                }
+                cachedSprintTextWidth = client.textRenderer.getWidth(cachedSprintText);
             }
 
-            int textWidth = client.textRenderer.getWidth(sprintText);
+            String sprintText = cachedSprintText;
+            int textWidth = cachedSprintTextWidth;
             int boxW = Math.round((textWidth + 6) * hudScale);
             int boxH = Math.round(12 * hudScale);
             ToggleSprintModule.width = boxW;
@@ -349,17 +410,24 @@ public class InGameHudMixin {
         if (PingModule.isPingEnabled()) {
             int ping = PingModule.getCurrentPing();
             PingModule.PingStyle style = PingModule.getStyle();
+            boolean prefix = PingModule.isShowPrefix();
 
-            String pingText;
-            if (style == PingModule.PingStyle.BRACKETS) {
-                pingText = "[" + ping + " ms]";
-            } else if (PingModule.isShowPrefix()) {
-                pingText = "Ping: " + ping + " ms";
-            } else {
-                pingText = ping + " ms";
+            if (ping != lastPingValue || style != lastPingStyle || prefix != lastPingPrefix) {
+                lastPingValue = ping;
+                lastPingStyle = style;
+                lastPingPrefix = prefix;
+                if (style == PingModule.PingStyle.BRACKETS) {
+                    cachedPingText = "[" + ping + " ms]";
+                } else if (prefix) {
+                    cachedPingText = "Ping: " + ping + " ms";
+                } else {
+                    cachedPingText = ping + " ms";
+                }
+                cachedPingTextWidth = client.textRenderer.getWidth(cachedPingText);
             }
 
-            int textWidth = client.textRenderer.getWidth(pingText);
+            String pingText = cachedPingText;
+            int textWidth = cachedPingTextWidth;
             int boxW = Math.round((textWidth + 6) * hudScale);
             int boxH = Math.round(12 * hudScale);
             PingModule.width = boxW;
@@ -402,9 +470,16 @@ public class InGameHudMixin {
             int rightCps = CpsModule.getRightCps();
             CpsModule.CpsStyle style = CpsModule.getStyle();
 
-            String cpsText = CpsModule.getFormattedText(leftCps, rightCps);
+            if (leftCps != lastLeftCps || rightCps != lastRightCps || style != lastCpsStyle) {
+                lastLeftCps = leftCps;
+                lastRightCps = rightCps;
+                lastCpsStyle = style;
+                cachedCpsText = CpsModule.getFormattedText(leftCps, rightCps);
+                cachedCpsTextWidth = client.textRenderer.getWidth(cachedCpsText);
+            }
 
-            int textWidth = client.textRenderer.getWidth(cpsText);
+            String cpsText = cachedCpsText;
+            int textWidth = cachedCpsTextWidth;
             int boxW = Math.round((textWidth + 6) * hudScale);
             int boxH = Math.round(12 * hudScale);
             CpsModule.width = boxW;
@@ -487,41 +562,58 @@ public class InGameHudMixin {
         }
 
         Scoreboard scoreboard = objective.getScoreboard();
-        NumberFormat numberFormat = objective.getNumberFormatOr(StyledNumberFormat.RED);
-
         Collection<ScoreboardEntry> rawEntries = scoreboard.getScoreboardEntries(objective);
-        List<ScoreboardEntry> filtered = rawEntries.stream()
-                .filter(e -> !e.hidden())
-                .sorted(Comparator.comparing(ScoreboardEntry::value).reversed().thenComparing(ScoreboardEntry::owner,
-                        String.CASE_INSENSITIVE_ORDER))
-                .limit(15)
-                .toList();
-
-        Text titleText = objective.getDisplayName();
-        int titleWidth = client.textRenderer.getWidth(titleText);
-        int maxEntryWidth = titleWidth;
-        int colonWidth = client.textRenderer.getWidth(": ");
         boolean showScores = ScoreboardModule.isShowScores();
+        long currentTick = client.world != null ? client.world.getTime() : System.currentTimeMillis() / 50;
 
-        for (ScoreboardEntry entry : filtered) {
-            Team team = scoreboard.getScoreHolderTeam(entry.owner());
-            Text nameText = Team.decorateName(team, entry.name());
-            int nameWidth = client.textRenderer.getWidth(nameText);
-            int rowW = nameWidth;
-            if (showScores) {
-                Text scoreText = entry.formatted(numberFormat);
-                int scoreWidth = client.textRenderer.getWidth(scoreText);
-                if (scoreWidth > 0) {
-                    rowW += colonWidth + scoreWidth;
+        CachedScoreboardData cache = SCOREBOARD_CACHE;
+        if (cache.objective != objective || cache.rawSize != rawEntries.size() || cache.lastUpdateTick != currentTick) {
+            NumberFormat numberFormat = objective.getNumberFormatOr(StyledNumberFormat.RED);
+            List<ScoreboardEntry> filtered = rawEntries.stream()
+                    .filter(e -> !e.hidden())
+                    .sorted(Comparator.comparing(ScoreboardEntry::value).reversed().thenComparing(ScoreboardEntry::owner,
+                            String.CASE_INSENSITIVE_ORDER))
+                    .limit(15)
+                    .toList();
+
+            Text titleText = objective.getDisplayName();
+            int titleWidth = client.textRenderer.getWidth(titleText);
+            int maxEntryWidth = titleWidth;
+            int colonWidth = client.textRenderer.getWidth(": ");
+
+            List<CachedScoreboardRow> rows = new java.util.ArrayList<>(filtered.size());
+            for (ScoreboardEntry entry : filtered) {
+                Team team = scoreboard.getScoreHolderTeam(entry.owner());
+                Text nameText = Team.decorateName(team, entry.name());
+                int nameWidth = client.textRenderer.getWidth(nameText);
+                int rowW = nameWidth;
+                Text scoreText = null;
+                int scoreWidth = 0;
+                if (showScores) {
+                    scoreText = entry.formatted(numberFormat);
+                    scoreWidth = client.textRenderer.getWidth(scoreText);
+                    if (scoreWidth > 0) {
+                        rowW += colonWidth + scoreWidth;
+                    }
                 }
+                maxEntryWidth = Math.max(maxEntryWidth, rowW);
+                rows.add(new CachedScoreboardRow(nameText, scoreText, scoreWidth));
             }
-            maxEntryWidth = Math.max(maxEntryWidth, rowW);
+
+            cache.objective = objective;
+            cache.rawSize = rawEntries.size();
+            cache.lastUpdateTick = currentTick;
+            cache.titleText = titleText;
+            cache.titleWidth = titleWidth;
+            cache.totalWidth = maxEntryWidth;
+            cache.totalHeight = (rows.size() + 1) * 9;
+            cache.rows = rows;
         }
 
-        int totalWidth = maxEntryWidth;
+        int totalWidth = cache.totalWidth;
         int lineHeight = 9;
-        int entryCount = filtered.size();
-        int totalHeight = (entryCount + 1) * lineHeight;
+        int entryCount = (cache.rows != null) ? cache.rows.size() : 0;
+        int totalHeight = cache.totalHeight;
 
         int scaledWidth = context.getScaledWindowWidth();
         int scaledHeight = context.getScaledWindowHeight();
@@ -558,22 +650,18 @@ public class InGameHudMixin {
 
         boolean shadow = ScoreboardModule.isTextShadow();
 
-        int titleX = startX + (totalWidth - titleWidth) / 2;
-        context.drawText(client.textRenderer, titleText, titleX, startY, 0xFFFFFFFF, shadow);
+        int titleX = startX + (totalWidth - cache.titleWidth) / 2;
+        context.drawText(client.textRenderer, cache.titleText, titleX, startY, 0xFFFFFFFF, shadow);
 
         for (int i = 0; i < entryCount; i++) {
-            ScoreboardEntry entry = filtered.get(i);
-            Team team = scoreboard.getScoreHolderTeam(entry.owner());
-            Text nameText = Team.decorateName(team, entry.name());
+            CachedScoreboardRow row = cache.rows.get(i);
             int rowY = startY + (i + 1) * lineHeight;
 
-            context.drawText(client.textRenderer, nameText, startX, rowY, 0xFFFFFFFF, shadow);
+            context.drawText(client.textRenderer, row.nameText, startX, rowY, 0xFFFFFFFF, shadow);
 
-            if (showScores) {
-                Text scoreText = entry.formatted(numberFormat);
-                int scoreWidth = client.textRenderer.getWidth(scoreText);
-                int scoreX = startX + totalWidth - scoreWidth;
-                context.drawText(client.textRenderer, scoreText, scoreX, rowY, 0xFFFF5555, shadow);
+            if (showScores && row.scoreText != null && row.scoreWidth > 0) {
+                int scoreX = startX + totalWidth - row.scoreWidth;
+                context.drawText(client.textRenderer, row.scoreText, scoreX, rowY, 0xFFFF5555, shadow);
             }
         }
 

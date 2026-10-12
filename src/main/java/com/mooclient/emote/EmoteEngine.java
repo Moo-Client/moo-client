@@ -33,6 +33,11 @@ public class EmoteEngine {
     private record PendingEmotePlay(UUID uuid, String username, String emoteId, int slotIndex, long startEpochMs) {}
 
     private boolean startedInFirstPerson = false;
+    private volatile boolean hasAnyActiveEmotes = false;
+
+    public boolean hasAnyActiveEmotes() {
+        return hasAnyActiveEmotes || (localState != null && localState.isRendering());
+    }
 
     public static EmoteEngine getInstance() {
         return INSTANCE;
@@ -267,11 +272,24 @@ public class EmoteEngine {
                 state.onTick();
             }
         }
-        for (EmotePlayerState state : remoteStatesByName.values()) {
-            if (state.isRendering() && !remoteStatesByUuid.containsValue(state)) {
-                state.onTick();
+        boolean active = localState.isRendering();
+        if (!active && !remoteStatesByUuid.isEmpty()) {
+            for (EmotePlayerState state : remoteStatesByUuid.values()) {
+                if (state != null && state.isRendering()) {
+                    active = true;
+                    break;
+                }
             }
         }
+        if (!active && !remoteStatesByName.isEmpty()) {
+            for (EmotePlayerState state : remoteStatesByName.values()) {
+                if (state != null && state.isRendering()) {
+                    active = true;
+                    break;
+                }
+            }
+        }
+        this.hasAnyActiveEmotes = active;
     }
 
     public void clearAll() {
@@ -279,5 +297,6 @@ public class EmoteEngine {
         remoteStatesByUuid.clear();
         remoteStatesByName.clear();
         pendingEmotes.clear();
+        this.hasAnyActiveEmotes = false;
     }
 }

@@ -25,6 +25,7 @@ public class MooUserManager {
     private static final Set<String> MOO_USERS_NAMES = Collections.synchronizedSet(new HashSet<>());
     private static final Set<UUID> MOO_USERS_UUIDS = Collections.synchronizedSet(new HashSet<>());
     private static final Map<String, Boolean> LOOKUP_CACHE = new ConcurrentHashMap<>();
+    private static final Map<Integer, Boolean> LOOKUP_CACHE_BY_ID = new ConcurrentHashMap<>();
     private static final Pattern USERNAME_PATTERN = Pattern.compile("[a-zA-Z0-9_]{3,16}");
 
     public static void registerUser(String username, UUID uuid) {
@@ -33,11 +34,13 @@ public class MooUserManager {
             if (!clean.isEmpty()) {
                 MOO_USERS_NAMES.add(clean);
                 LOOKUP_CACHE.clear();
+                LOOKUP_CACHE_BY_ID.clear();
             }
         }
         if (uuid != null) {
             MOO_USERS_UUIDS.add(uuid);
             LOOKUP_CACHE.clear();
+            LOOKUP_CACHE_BY_ID.clear();
         }
     }
 
@@ -47,11 +50,13 @@ public class MooUserManager {
             if (!clean.isEmpty()) {
                 MOO_USERS_NAMES.remove(clean);
                 LOOKUP_CACHE.clear();
+                LOOKUP_CACHE_BY_ID.clear();
             }
         }
         if (uuid != null) {
             MOO_USERS_UUIDS.remove(uuid);
             LOOKUP_CACHE.clear();
+            LOOKUP_CACHE_BY_ID.clear();
         }
     }
 
@@ -59,6 +64,7 @@ public class MooUserManager {
         MOO_USERS_NAMES.clear();
         MOO_USERS_UUIDS.clear();
         LOOKUP_CACHE.clear();
+        LOOKUP_CACHE_BY_ID.clear();
     }
 
     public static String cleanName(String name) {
@@ -144,6 +150,13 @@ public class MooUserManager {
             return true;
         }
 
+        if (entityId >= 0) {
+            Boolean cachedById = LOOKUP_CACHE_BY_ID.get(entityId);
+            if (cachedById != null) {
+                return cachedById;
+            }
+        }
+
         String targetClean = cleanName(playerName);
         if (targetClean.isEmpty()) return false;
 
@@ -163,6 +176,9 @@ public class MooUserManager {
         // 2. Check LRU / Fast Cache
         Boolean cached = LOOKUP_CACHE.get(targetClean);
         if (cached != null) {
+            if (entityId >= 0) {
+                LOOKUP_CACHE_BY_ID.put(entityId, cached);
+            }
             return cached;
         }
 
@@ -171,6 +187,12 @@ public class MooUserManager {
             LOOKUP_CACHE.clear();
         }
         LOOKUP_CACHE.put(targetClean, result);
+        if (entityId >= 0) {
+            if (LOOKUP_CACHE_BY_ID.size() > 500) {
+                LOOKUP_CACHE_BY_ID.clear();
+            }
+            LOOKUP_CACHE_BY_ID.put(entityId, result);
+        }
         return result;
     }
 

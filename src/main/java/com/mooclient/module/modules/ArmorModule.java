@@ -428,10 +428,14 @@ public class ArmorModule extends Module {
     }
 
     public static void appendSlotDurabilityText(MutableText parent, ItemStack stack) {
-        appendSlotDurabilityText(parent, null, null, stack);
+        appendSlotDurabilityText(parent, -1, null, null, stack);
     }
 
     public static void appendSlotDurabilityText(MutableText parent, PlayerEntity player, EquipmentSlot slot, ItemStack stack) {
+        appendSlotDurabilityText(parent, player != null ? player.getId() : -1, player, slot, stack);
+    }
+
+    public static void appendSlotDurabilityText(MutableText parent, int entityId, PlayerEntity player, EquipmentSlot slot, ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             parent.append(Text.literal("-").formatted(Formatting.DARK_GRAY));
             return;
@@ -441,7 +445,7 @@ public class ArmorModule extends Module {
             int max = stack.getMaxDamage();
             int remaining = -1;
             if (slot != null) {
-                remaining = PlayerArmorDurabilityTracker.getRemainingDurability(player, slot, stack);
+                remaining = PlayerArmorDurabilityTracker.getRemainingDurability(entityId, player, slot, stack);
             }
             if (remaining < 0) {
                 remaining = Math.max(0, max - stack.getDamage());
@@ -453,35 +457,63 @@ public class ArmorModule extends Module {
         }
     }
 
+    public static class NametagArmorCacheEntry {
+        public net.minecraft.item.Item headItem;
+        public net.minecraft.item.Item chestItem;
+        public net.minecraft.item.Item legsItem;
+        public net.minecraft.item.Item feetItem;
+        public int headDur = -1;
+        public int chestDur = -1;
+        public int legsDur = -1;
+        public int feetDur = -1;
+        public Text cachedText;
+        public float cachedWidth = -1f;
+    }
+
+    private static final java.util.Map<Integer, NametagArmorCacheEntry> NAMETAG_ARMOR_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public static void clearNametagArmorCache(int entityId) {
+        NAMETAG_ARMOR_CACHE.remove(entityId);
+    }
+
+    public static void clearAllNametagArmorCache() {
+        NAMETAG_ARMOR_CACHE.clear();
+    }
+
+    public static float getNametagArmorWidth(int entityId, Text text, net.minecraft.client.font.TextRenderer textRenderer) {
+        if (entityId > 0) {
+            NametagArmorCacheEntry entry = NAMETAG_ARMOR_CACHE.get(entityId);
+            if (entry != null && entry.cachedWidth > 0f) {
+                return entry.cachedWidth;
+            }
+            if (entry != null && textRenderer != null && text != null) {
+                entry.cachedWidth = textRenderer.getWidth(text);
+                return entry.cachedWidth;
+            }
+        }
+        return textRenderer != null && text != null ? textRenderer.getWidth(text) : 0f;
+    }
+
     public static Text getNametagArmorText(net.minecraft.client.render.entity.state.PlayerEntityRenderState playerState) {
         if (playerState == null) {
             return null;
         }
 
-        ItemStack head = null;
-        ItemStack chest = null;
-        ItemStack legs = null;
-        ItemStack feet = null;
-        PlayerEntity player = null;
-
+        // Never render armor under the local player's own nametag in F5 / third person!
         try {
             MinecraftClient client = MinecraftClient.getInstance();
-            if (client != null && client.world != null) {
-                net.minecraft.entity.Entity entity = client.world.getEntityById(playerState.id);
-                if (entity instanceof PlayerEntity p) {
-                    player = p;
-                    head = player.getEquippedStack(EquipmentSlot.HEAD);
-                    chest = player.getEquippedStack(EquipmentSlot.CHEST);
-                    legs = player.getEquippedStack(EquipmentSlot.LEGS);
-                    feet = player.getEquippedStack(EquipmentSlot.FEET);
+            if (client != null && client.player != null) {
+                if (playerState.id == client.player.getId()
+                        || (playerState.name != null && playerState.name.equalsIgnoreCase(client.player.getGameProfile().getName()))) {
+                    return null;
                 }
             }
         } catch (Throwable ignored) {}
 
-        if (head == null || head.isEmpty()) head = playerState.equippedHeadStack;
-        if (chest == null || chest.isEmpty()) chest = playerState.equippedChestStack;
-        if (legs == null || legs.isEmpty()) legs = playerState.equippedLegsStack;
-        if (feet == null || feet.isEmpty()) feet = playerState.equippedFeetStack;
+        ItemStack head = playerState.equippedHeadStack;
+        ItemStack chest = playerState.equippedChestStack;
+        ItemStack legs = playerState.equippedLegsStack;
+        ItemStack feet = playerState.equippedFeetStack;
 
         boolean allEmpty = (head == null || head.isEmpty())
                 && (chest == null || chest.isEmpty())
@@ -492,15 +524,77 @@ public class ArmorModule extends Module {
             return null;
         }
 
+        int entityId = playerState.id;
+        int headDur = PlayerArmorDurabilityTracker.getRemainingDurability(entityId, null, EquipmentSlot.HEAD, head);
+        int chestDur = PlayerArmorDurabilityTracker.getRemainingDurability(entityId, null, EquipmentSlot.CHEST, chest);
+        int legsDur = PlayerArmorDurabilityTracker.getRemainingDurability(entityId, null, EquipmentSlot.LEGS, legs);
+        int feetDur = PlayerArmorDurabilityTracker.getRemainingDurability(entityId, null, EquipmentSlot.FEET, feet);
+
+        net.minecraft.item.Item headItem = (head != null && !head.isEmpty()) ? head.getItem() : null;
+        net.minecraft.item.Item chestItem = (chest != null && !chest.isEmpty()) ? chest.getItem() : null;
+        net.minecraft.item.Item legsItem = (legs != null && !legs.isEmpty()) ? legs.getItem() : null;
+        net.minecraft.item.Item feetItem = (feet != null && !feet.isEmpty()) ? feet.getItem() : null;
+
+        NametagArmorCacheEntry entry = NAMETAG_ARMOR_CACHE.get(entityId);
+        if (entry != null && entry.cachedText != null
+                && entry.headItem == headItem
+                && entry.chestItem == chestItem
+                && entry.legsItem == legsItem
+                && entry.feetItem == feetItem
+                && entry.headDur == headDur
+                && entry.chestDur == chestDur
+                && entry.legsDur == legsDur
+                && entry.feetDur == feetDur) {
+            return entry.cachedText;
+        }
+
         MutableText result = Text.empty();
-        appendSlotDurabilityText(result, player, EquipmentSlot.HEAD, head);
+        appendSlotDurabilityWithPrecomputed(result, head, headDur);
         result.append(Text.literal(" | ").formatted(Formatting.DARK_GRAY));
-        appendSlotDurabilityText(result, player, EquipmentSlot.CHEST, chest);
+        appendSlotDurabilityWithPrecomputed(result, chest, chestDur);
         result.append(Text.literal(" | ").formatted(Formatting.DARK_GRAY));
-        appendSlotDurabilityText(result, player, EquipmentSlot.LEGS, legs);
+        appendSlotDurabilityWithPrecomputed(result, legs, legsDur);
         result.append(Text.literal(" | ").formatted(Formatting.DARK_GRAY));
-        appendSlotDurabilityText(result, player, EquipmentSlot.FEET, feet);
+        appendSlotDurabilityWithPrecomputed(result, feet, feetDur);
+
+        if (NAMETAG_ARMOR_CACHE.size() > 256) {
+            NAMETAG_ARMOR_CACHE.clear();
+        }
+
+        if (entry == null) {
+            entry = new NametagArmorCacheEntry();
+            NAMETAG_ARMOR_CACHE.put(entityId, entry);
+        }
+        entry.headItem = headItem;
+        entry.chestItem = chestItem;
+        entry.legsItem = legsItem;
+        entry.feetItem = feetItem;
+        entry.headDur = headDur;
+        entry.chestDur = chestDur;
+        entry.legsDur = legsDur;
+        entry.feetDur = feetDur;
+        entry.cachedText = result;
+        entry.cachedWidth = -1f;
 
         return result;
+    }
+
+    private static void appendSlotDurabilityWithPrecomputed(MutableText parent, ItemStack stack, int durability) {
+        if (stack == null || stack.isEmpty()) {
+            parent.append(Text.literal("-").formatted(Formatting.DARK_GRAY));
+            return;
+        }
+
+        if (stack.isDamageable() && stack.getMaxDamage() > 0) {
+            int max = stack.getMaxDamage();
+            int remaining = durability;
+            if (remaining < 0) {
+                remaining = Math.max(0, max - stack.getDamage());
+            }
+            Formatting color = getDurabilityColor(remaining, max);
+            parent.append(Text.literal(String.valueOf(remaining)).formatted(color));
+        } else {
+            parent.append(Text.literal("-").formatted(Formatting.GRAY));
+        }
     }
 }

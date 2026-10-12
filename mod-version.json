@@ -1,7 +1,7 @@
 {
-  "version": "2.1.4",
+  "version": "2.1.5",
   "min_launcher_version": "1.0.0",
-  "name": "Moo Client 2.1.4",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.4/moo-client-2.1.4.jar",
-  "changelog": "🚀 Moo Client v2.1.4:\n- Nowy mod Hitbox\n- Poprawki dotyczące moda Armor Status"
+  "name": "Moo Client 2.1.5",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.5/moo-client-2.1.5.jar",
+  "changelog": "🚀 Moo Client v2.1.5:\n- ⚡ Olbrzymia optymalizacja FPS w multiplayer (cache nametagów, scoreboardu, pingu)\n- 🛡️ Naprawiono pokazywanie durabilitów pod nickiem (brak fałszywych spadków na spawnie, ukryto własny armor w F5)"
 }

@@ -40,7 +40,7 @@ public class PlayerEntityRendererMixin {
             if (state.playerName != null && text == state.playerName) {
                 return text;
             }
-            if (state.name != null && !text.getString().toLowerCase().contains(state.name.toLowerCase())) {
+            if (!NametagsModule.isShowPing() || NametagsModule.getPingPosition() != NametagsModule.PingPosition.BESIDE) {
                 return text;
             }
             return NametagsModule.formatNametag(text, state.id, state.name);
@@ -54,6 +54,7 @@ public class PlayerEntityRendererMixin {
     )
     private void mooClient$renderInWorldBillboard(PlayerEntityRenderState state, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         if (state == null) return;
+        if (!InvitationUIManager.getInstance().hasActiveBillboard()) return;
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.world == null) return;
 
@@ -69,6 +70,7 @@ public class PlayerEntityRendererMixin {
     )
     private void mooClient$applyEmoteVisualTransforms(PlayerEntityRenderState state, MatrixStack matrices, float bodyYaw, float baseTickDelta, CallbackInfo ci) {
         if (state == null) return;
+        if (!EmoteEngine.getInstance().hasAnyActiveEmotes()) return;
 
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.world == null) return;

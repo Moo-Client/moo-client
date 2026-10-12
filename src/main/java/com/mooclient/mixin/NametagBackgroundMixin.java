@@ -1,6 +1,7 @@
 package com.mooclient.mixin;
 
 import com.mooclient.module.modules.NametagsModule;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.render.RenderLayer;
@@ -39,14 +40,7 @@ public abstract class NametagBackgroundMixin {
     private static boolean isPlayerNicknameLabel(PlayerEntityRenderState playerState, Text text) {
         if (playerState == null || text == null) return false;
         // In 1.21.4 PlayerEntityRenderState: playerState.playerName is the SCOREBOARD sub-label (e.g. "20 ❤") when present.
-        if (playerState.playerName != null && text == playerState.playerName) {
-            return false;
-        }
-        // Sub-labels do not contain the player's username
-        if (playerState.name != null && !text.getString().toLowerCase().contains(playerState.name.toLowerCase())) {
-            return false;
-        }
-        return true;
+        return playerState.playerName == null || text != playerState.playerName;
     }
 
     @Inject(method = "renderLabelIfPresent", at = @At("HEAD"))
@@ -199,9 +193,14 @@ public abstract class NametagBackgroundMixin {
         // 3. Render Armor Set Durability UNDER nickname in real time when Armor HUD option is active
         if (com.mooclient.module.modules.ArmorModule.isArmorEnabled()
                 && com.mooclient.module.modules.ArmorModule.isShowNametagDurability()) {
+            MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
+            if (client != null && client.player != null && (playerState.id == client.player.getId()
+                    || (playerState.name != null && playerState.name.equalsIgnoreCase(client.player.getGameProfile().getName())))) {
+                return;
+            }
             Text armorText = com.mooclient.module.modules.ArmorModule.getNametagArmorText(playerState);
             if (armorText != null) {
-                float armorWidth = this.getTextRenderer().getWidth(armorText);
+                float armorWidth = com.mooclient.module.modules.ArmorModule.getNametagArmorWidth(playerState.id, armorText, this.getTextRenderer());
                 float armorX = -armorWidth / 2.0f;
                 // If a scoreboard below-name objective is present (e.g. "1600 pk" on TabMC or health hearts),
                 // shift armor durability down so it renders cleanly below the points/health instead of overlapping them!

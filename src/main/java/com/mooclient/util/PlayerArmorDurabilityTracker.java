@@ -110,29 +110,67 @@ public class PlayerArmorDurabilityTracker {
         return tracked;
     }
 
+    private static volatile int lastAttackedTargetId = -1;
+    private static volatile ItemStack lastAttackedWeapon = null;
+    private static volatile boolean lastAttackWasCrit = false;
+    private static volatile long lastAttackAttemptTimeMs = 0;
+
+    /**
+     * Records that the local player attempted to attack a target.
+     * We do NOT immediately decrement armor. Instead, we wait for the server
+     * to confirm the hit via onEntityDamage or onEntityStatus (status 2).
+     * If the target is on spawn or protected, the attack is cancelled by the server,
+     * no damage packet arrives, and their armor is never falsely decremented!
+     */
+    public static void recordLocalAttackAttempt(int targetEntityId, ItemStack weapon, boolean isCrit) {
+        lastAttackedTargetId = targetEntityId;
+        lastAttackedWeapon = (weapon != null && !weapon.isEmpty()) ? weapon.copy() : null;
+        lastAttackWasCrit = isCrit;
+        lastAttackAttemptTimeMs = System.currentTimeMillis();
+    }
+
     /**
      * Gets remaining durability for an armor piece.
      * For the local player, always uses authoritative local inventory.
-     * For opponents, returns real-time tracked durability that updates on every hit.
+     * For opponents, returns real-time tracked durability that updates on confirmed hits.
      */
-    public static int getRemainingDurability(PlayerEntity player, EquipmentSlot slot, ItemStack stack) {
+    public static int getRemainingDurability(int entityId, PlayerEntity player, EquipmentSlot slot, ItemStack stack) {
         if (stack == null || stack.isEmpty() || !stack.isDamageable() || stack.getMaxDamage() <= 0) {
+            if (entityId > 0) {
+                int slotIdx = getSlotIndex(slot);
+                if (slotIdx >= 0) {
+                    TrackedPlayerArmor tr = BY_ENTITY_ID.get(entityId);
+                    if (tr != null) {
+                        tr.slots[slotIdx] = null;
+                    }
+                }
+            }
             return -1;
         }
 
         MinecraftClient client = MinecraftClient.getInstance();
-        if (player != null && client != null && client.player != null && player.getId() == client.player.getId()) {
-            return Math.max(0, stack.getMaxDamage() - stack.getDamage());
-        }
-
-        if (player == null) {
-            return Math.max(0, stack.getMaxDamage() - stack.getDamage());
+        if (client != null && client.player != null) {
+            if ((player != null && player.getId() == client.player.getId()) || (entityId > 0 && entityId == client.player.getId())) {
+                return Math.max(0, stack.getMaxDamage() - stack.getDamage());
+            }
         }
 
         int slotIdx = getSlotIndex(slot);
         if (slotIdx < 0) return Math.max(0, stack.getMaxDamage() - stack.getDamage());
 
-        TrackedPlayerArmor tracked = getOrCreate(player);
+        TrackedPlayerArmor tracked = null;
+        if (entityId > 0) {
+            tracked = BY_ENTITY_ID.get(entityId);
+        }
+        if (tracked == null && player != null) {
+            tracked = getOrCreate(player);
+        }
+        if (tracked == null && entityId > 0 && client != null && client.world != null) {
+            net.minecraft.entity.Entity ent = client.world.getEntityById(entityId);
+            if (ent instanceof PlayerEntity pe) {
+                tracked = getOrCreate(pe);
+            }
+        }
         if (tracked == null) {
             return Math.max(0, stack.getMaxDamage() - stack.getDamage());
         }
@@ -140,30 +178,31 @@ public class PlayerArmorDurabilityTracker {
         TrackedSlot ts = tracked.slots[slotIdx];
         Item item = stack.getItem();
         int max = stack.getMaxDamage();
-        int unbreaking = extractUnbreakingLevel(stack);
 
         if (ts == null || ts.item != item || ts.maxDurability != max) {
             int initDamage = stack.getDamage();
             float initDur = (initDamage > 0) ? (max - initDamage) : (float) max;
+            int unbreaking = extractUnbreakingLevel(stack);
             ts = new TrackedSlot(item, initDur, max, unbreaking);
             tracked.slots[slotIdx] = ts;
         } else {
-            // Update unbreaking level if changed
-            ts.unbreakingLevel = unbreaking;
-            // If server packet gave explicit higher damage, adapt down
+            // If server packet gave explicit damage (> 0), adopt the real server value!
             if (stack.getDamage() > 0) {
                 int serverRemaining = max - stack.getDamage();
-                if (serverRemaining < ts.currentDurability) {
-                    ts.currentDurability = serverRemaining;
-                }
+                ts.currentDurability = serverRemaining;
             }
         }
 
         return Math.max(0, Math.round(ts.currentDurability));
     }
 
+    public static int getRemainingDurability(PlayerEntity player, EquipmentSlot slot, ItemStack stack) {
+        return getRemainingDurability(player != null ? player.getId() : -1, player, slot, stack);
+    }
+
     /**
-     * Records damage dealt to a player entity and immediately decrements armor durability.
+     * Records damage dealt to a player entity and decrements armor durability.
+     * Only invoked upon server-confirmed damage events (onEntityDamage / onEntityStatus).
      */
     public static void recordDamage(PlayerEntity player, float rawAmount, DamageSource source) {
         if (player == null) return;
@@ -183,10 +222,37 @@ public class PlayerArmorDurabilityTracker {
         }
         tracked.lastDamageTimeMs = now;
 
+        // Check if damage source bypasses armor in Minecraft (poison, wither, starving, drown, void, magic)
+        if (source != null) {
+            try {
+                if (source.isIn(net.minecraft.registry.tag.DamageTypeTags.BYPASSES_ARMOR)) {
+                    return;
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        float calculatedRawDamage = rawAmount;
+        // If this damage was confirmed by the server and matches our recent local attack attempt:
+        if (calculatedRawDamage <= 0 && (now - lastAttackAttemptTimeMs < 600) && lastAttackedTargetId == player.getId()) {
+            calculatedRawDamage = 7.0f; // Base unarmed hit
+            if (lastAttackedWeapon != null && !lastAttackedWeapon.isEmpty()) {
+                Item item = lastAttackedWeapon.getItem();
+                if (item instanceof SwordItem) {
+                    calculatedRawDamage = 11.0f; // Typical sword in PvP
+                } else if (item instanceof AxeItem) {
+                    calculatedRawDamage = 14.0f; // Typical axe in PvP
+                }
+            }
+            if (lastAttackWasCrit) {
+                calculatedRawDamage *= 1.5f;
+            }
+            lastAttackedTargetId = -1;
+        }
+
         // Calculate raw armor damage
         float damageToArmor;
-        if (rawAmount > 0) {
-            damageToArmor = Math.max(1.0f, rawAmount / 4.0f);
+        if (calculatedRawDamage > 0) {
+            damageToArmor = Math.max(1.0f, calculatedRawDamage / 4.0f);
         } else if (source != null) {
             if (source.isOf(DamageTypes.FALL)) {
                 // Fall damage only damages boots
@@ -229,10 +295,6 @@ public class PlayerArmorDurabilityTracker {
         }
 
         // Unbreaking reduction factor:
-        // Level 3 -> 0.40 (60% ignore chance in vanilla)
-        // Level 2 -> 0.55
-        // Level 1 -> 0.70
-        // Level 0 -> 1.00
         float factor = switch (ts.unbreakingLevel) {
             case 3 -> 0.40f;
             case 2 -> 0.55f;
@@ -246,29 +308,16 @@ public class PlayerArmorDurabilityTracker {
 
     /**
      * Called when local player attacks another player.
-     * Computes weapon damage and updates armor durability immediately.
+     * Records the pending attack attempt without immediately decrementing durability.
      */
     public static void recordLocalAttack(PlayerEntity targetPlayer, ItemStack weapon) {
         if (targetPlayer == null) return;
-        float rawDamage = 7.0f; // Default fist / base
-        if (weapon != null && !weapon.isEmpty()) {
-            Item item = weapon.getItem();
-            if (item instanceof SwordItem) {
-                rawDamage = 11.0f; // Typical Netherite/Diamond sword with sharpness in PvP
-            } else if (item instanceof AxeItem) {
-                rawDamage = 14.0f; // Typical Axe
-            }
-        }
-
         MinecraftClient client = MinecraftClient.getInstance();
+        boolean isCrit = false;
         if (client != null && client.player != null) {
-            // Critical hit check
-            if (client.player.fallDistance > 0.0f && !client.player.isOnGround() && !client.player.isClimbing() && !client.player.isTouchingWater()) {
-                rawDamage *= 1.5f;
-            }
+            isCrit = client.player.fallDistance > 0.0f && !client.player.isOnGround() && !client.player.isClimbing() && !client.player.isTouchingWater();
         }
-
-        recordDamage(targetPlayer, rawDamage, null);
+        recordLocalAttackAttempt(targetPlayer.getId(), weapon, isCrit);
     }
 
     /**
@@ -280,6 +329,7 @@ public class PlayerArmorDurabilityTracker {
             if (tracked.username != null) BY_USERNAME.remove(tracked.username.toLowerCase());
             if (tracked.uuid != null) BY_UUID.remove(tracked.uuid);
         }
+        com.mooclient.module.modules.ArmorModule.clearNametagArmorCache(entityId);
     }
 
     /**

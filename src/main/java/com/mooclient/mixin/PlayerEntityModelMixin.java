@@ -52,6 +52,7 @@ public abstract class PlayerEntityModelMixin extends BipedEntityModel<PlayerEnti
     @Inject(method = "setAngles(Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;)V", at = @At("TAIL"))
     private void mooClient$onSetAngles(PlayerEntityRenderState state, CallbackInfo ci) {
         if (state == null) return;
+        if (!EmoteEngine.getInstance().hasAnyActiveEmotes()) return;
 
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.world == null) return;

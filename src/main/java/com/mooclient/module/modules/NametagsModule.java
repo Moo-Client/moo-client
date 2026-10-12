@@ -159,6 +159,17 @@ public class NametagsModule extends Module {
         return false;
     }
 
+    private static final java.util.regex.Pattern SERVER_PING_PATTERN = java.util.regex.Pattern.compile(".*\\[\\d+\\s*ms\\].*");
+    private static final java.util.regex.Pattern SERVER_PING_CLEANUP_PATTERN = java.util.regex.Pattern.compile("\\s*\\[\\d+\\s*ms\\]");
+
+    private static class PingCacheEntry {
+        int ping;
+        long lastCheckMs;
+        Text formattedText;
+    }
+
+    private static final java.util.Map<Integer, PingCacheEntry> PING_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
+
     /**
      * Retrieves colored latency Text indicator for the given entity ID and playerName.
      */
@@ -170,6 +181,14 @@ public class NametagsModule extends Module {
         // Check if self-ping is disabled
         if (!showSelfPing && isLocalPlayer(entityId, playerName)) {
             return null;
+        }
+
+        long now = System.currentTimeMillis();
+        if (entityId > 0) {
+            PingCacheEntry cached = PING_CACHE.get(entityId);
+            if (cached != null && (now - cached.lastCheckMs < 1000L)) {
+                return cached.formattedText;
+            }
         }
 
         MinecraftClient client = MinecraftClient.getInstance();
@@ -204,6 +223,14 @@ public class NametagsModule extends Module {
             return null;
         }
 
+        if (entityId > 0) {
+            PingCacheEntry cached = PING_CACHE.get(entityId);
+            if (cached != null && cached.ping == ping && cached.formattedText != null) {
+                cached.lastCheckMs = now;
+                return cached.formattedText;
+            }
+        }
+
         Formatting pingColor;
         if (ping <= 50) {
             pingColor = Formatting.GREEN;      // §a (0-50ms)
@@ -217,7 +244,20 @@ public class NametagsModule extends Module {
             pingColor = Formatting.RED;        // §c (250ms+)
         }
 
-        return Text.literal("[" + ping + "ms]").formatted(pingColor);
+        Text result = Text.literal("[" + ping + "ms]").formatted(pingColor);
+
+        if (entityId > 0) {
+            if (PING_CACHE.size() > 256) {
+                PING_CACHE.clear();
+            }
+            PingCacheEntry entry = new PingCacheEntry();
+            entry.ping = ping;
+            entry.lastCheckMs = now;
+            entry.formattedText = result;
+            PING_CACHE.put(entityId, entry);
+        }
+
+        return result;
     }
 
     public static Text getPingText(int entityId) {
@@ -239,7 +279,7 @@ public class NametagsModule extends Module {
         }
 
         String raw = originalText.getString();
-        boolean hasServerPing = raw != null && raw.matches(".*\\[\\d+\\s*ms\\].*");
+        boolean hasServerPing = raw != null && raw.indexOf("ms]") >= 0 && SERVER_PING_PATTERN.matcher(raw).matches();
 
         if (showPing && pingPosition == PingPosition.BESIDE) {
             if (!hasServerPing) {
@@ -255,7 +295,7 @@ public class NametagsModule extends Module {
             // In ABOVE mode: if the server already embedded "[XXms]" in the nametag,
             // remove that duplicate text from the nametag line so it's cleanly shown ONLY above!
             if (hasServerPing) {
-                String cleaned = raw.replaceAll("\\s*\\[\\d+\\s*ms\\]", "");
+                String cleaned = SERVER_PING_CLEANUP_PATTERN.matcher(raw).replaceAll("");
                 return Text.literal(cleaned).setStyle(originalText.getStyle());
             }
         }

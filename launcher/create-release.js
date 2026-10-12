@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '2.1.4';
+const VERSION = '2.1.5';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,9 +63,15 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-✨ **Nowości i zmiany**:
-- 🎯 **Nowy mod Hitbox**: Własne kolory hitboxów, możliwość wyłączenia czerwonej linii poziomu oczu oraz niebieskiej strzałki wzroku, tryb renderowania tylko podczas elytry lub pływania.
-- 🛡️ **Poprawki dotyczące moda Armor Status**: Wyświetlanie aktualnego zużycia setu w czasie rzeczywistym pod nickiem gracza, natychmiastowe odświeżanie przy otrzymaniu ciosu oraz brak kolizji ze statystykami serwerowymi (np. punktami na TabMC).`;
+⚡ **Olbrzymia optymalizacja FPS i płynności gry**:
+- 🏎️ **Szybki bufor nametagów**: Zoptymalizowano renderowanie etykiet i wytrzymałości pancerza pod nickami (eliminacja ciągłego pobierania encji ze świata, przeszukiwania komponentów NBT i kalkulacji szerokości czcionki).
+- 📊 **Optymalizacja Scoreboardu**: Przetwarzanie i sortowanie linii tablicy wyników jest teraz buforowane (oszczędność tysięcy operacji Java Streams i pomiarów tekstu co sekundę).
+- 📶 **Stabilny Ping i O(1) Moo Tag**: Szybkie buforowanie pingu graczy z interwałem 1s oraz natychmiastowe rozpoznawanie loga Moo Client bez alokacji stringów i regexów co klatkę.
+- 💃 **Wydajność Emotek**: Wyciszenie obliczeń transformacji modeli graczy, gdy nikt w pobliżu nie odtwarza animacji.
+
+🛡️ **Poprawki Durability Pancerza**:
+- 🏰 **Ochrona stref bez obrażeń (Spawn/Safezone)**: Wytrzymałość pancerza przeciwnika nie spada już fałszywie, gdy atakujesz gracza znajdującego się na zabezpieczonym spawnie – wartość aktualizuje się wyłącznie przy realnych obrażeniach potwierdzonych przez serwer.
+- 👤 **Widok trzecioosobowy (F5)**: Usunięto niepożądane wyświetlanie paska wytrzymałości nad własną głową gracza w widoku F5.`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);
