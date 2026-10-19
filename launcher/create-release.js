@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '2.1.7';
+const VERSION = '2.1.8';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,14 +63,12 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-🖥️ **Dynamiczny tytuł okna gry i statusy:**
-- 🏷️ **Poprawka tytułu okna**: Usunięto sztywne oznaczenie 1.21.4 z lewego górnego rogu okna gry. Okno dynamicznie wyświetla teraz dokładną wersję Minecrafta, na której uruchomiono klienta (np. \`Minecraft 1.21.11 - Moo Client\` lub \`Minecraft 1.21.4 - Moo Client\`).
-- 🎮 **Discord RPC i GUI**: Statusy Discord Rich Presence oraz nagłówki wewnątrz klienta pobierają teraz rzeczywistą wersję gry przez Fabric Loader API.
+🧹 **Launcher:**
+- Usunięto automatyczne zmienianie, auto-aktualizację i migrację modów z wersji 1.21.4 do 1.21.11 przy uruchamianiu gry oraz dodawaniu plików (Drag & Drop). Mody w katalogach poszczególnych wersji pozostają nienaruszone zgodnie z decyzją gracza.
 
-🔄 **Inteligentny silnik auto-aktualizacji i migracji modów:**
-- ⚡ **Auto-konwersja Drag & Drop**: Przy upuszczeniu modów z wersji 1.21.4 do wersji 1.21.11 launcher automatycznie odpytuje Modrinth, pobiera najnowszą kompatybilną wersję .jar dla 1.21.11 i zastępuje niekompatybilny plik.
-- 🛡️ **Weryfikacja przed startem gry (Pre-Launch check)**: Przed uruchomieniem Minecrafta 1.21.11 launcher automatycznie sprawdza wszystkie zainstalowane mody i aktualizuje niekompatybilne pliki z 1.21.4 do 1.21.11, zapobiegając błędom Fabric Loadera.
-- 📥 **Przycisk migracji i aktualizacji w GUI**: W zakładce Modyfikacje dodano dedykowany przycisk *„Aktualizuj do wersji gry”* oraz banner umożliwiający natychmiastowe przeniesienie i uaktualnienie całej kolekcji modów z 1.21.4 do 1.21.11 jednym kliknięciem.`;
+🖥️ **Dynamiczny tytuł okna gry i statusy:**
+- 🏷️ **Tytuł okna**: Okno gry dynamicznie wyświetla dokładną wersję Minecrafta (np. \`Minecraft 1.21.11 - Moo Client\` lub \`Minecraft 1.21.4 - Moo Client\`).
+- 🎮 **Discord RPC i GUI**: Statusy Discord Rich Presence pobierają rzeczywistą wersję gry przez Fabric Loader API.`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);
