@@ -29,7 +29,8 @@ class ModManager {
         this._modMetadataCache = new Map();
         this.migrateRootMods();
         this.cleanOldMods();
-        this.ensureBundledMod();
+        this.ensureBundledMod('1.21.4');
+        this.ensureBundledMod('1.21.11');
     }
 
     getModsDir(gameVersion = '1.21.4') {
@@ -138,8 +139,10 @@ class ModManager {
     ensureBundledMod(gameVersion = '1.21.4') {
         try {
             const pkg = require('../package.json');
-            const defaultVer = pkg.version || '1.6.2';
-            const bundledPath = path.join(__dirname, '..', 'assets', 'moo-client.jar');
+            const defaultVer = pkg.version || '2.1.6';
+            const versionedBundledPath = path.join(__dirname, '..', 'assets', `moo-client-${gameVersion}.jar`);
+            const fallbackBundledPath = path.join(__dirname, '..', 'assets', 'moo-client.jar');
+            const bundledPath = fs.existsSync(versionedBundledPath) ? versionedBundledPath : fallbackBundledPath;
             const devBuildPath = this.findDevBuildJar(gameVersion) || path.join(__dirname, '..', '..', 'build', 'libs', `moo-client-${defaultVer}.jar`);
 
             this.ensureDir(this.offlineDir);
@@ -157,9 +160,10 @@ class ModManager {
                 const prodModName = (gameVersion === '1.21.4') ? 'moo-client.jar' : `moo-client-${gameVersion}.jar`;
                 const devModPath = path.join(this.offlineDir, devModName);
                 const prodModPath = path.join(this.offlineDir, prodModName);
+                const versionedProdPath = path.join(this.offlineDir, `moo-client-${gameVersion}.jar`);
 
-                // Always synchronize both dev and prod jars with the freshest local build
-                const targets = [devModPath, prodModPath];
+                // Always synchronize both dev and prod jars with the freshest build
+                const targets = [devModPath, prodModPath, versionedProdPath];
                 for (const target of targets) {
                     const needsCopy = this.isDevMode() || !fs.existsSync(target) || 
                         fs.statSync(target).size !== srcStats.size || 
@@ -175,7 +179,10 @@ class ModManager {
                 }
 
                 if (sourceJar !== bundledPath && fs.existsSync(path.dirname(bundledPath))) {
-                    try { fs.copyFileSync(sourceJar, bundledPath); } catch (e) {}
+                    try { 
+                        fs.copyFileSync(sourceJar, versionedBundledPath);
+                        if (gameVersion === '1.21.4') fs.copyFileSync(sourceJar, fallbackBundledPath);
+                    } catch (e) {}
                 }
 
                 try {
@@ -186,7 +193,7 @@ class ModManager {
                     }, null, 2));
                 } catch (e) {}
 
-                console.log(`Core mod deployed to offline folder: ${prodModPath} and ${devModPath}`);
+                console.log(`Core mod (${gameVersion}) deployed to offline folder: ${prodModPath}`);
             }
             this.cleanOldMods();
         } catch (e) {
@@ -217,13 +224,18 @@ class ModManager {
      * and download URL is extracted from the release assets (moo-client-*.jar).
      * Falls back to mod-version.json if the Releases API fails.
      */
-    async getRemoteVersion() {
+    async getRemoteVersion(gameVersion = '1.21.4') {
         try {
-            return await this.fetchFromReleasesAPI();
+            return await this.fetchFromReleasesAPI(gameVersion);
         } catch (e) {
             console.warn('Releases API fetch failed, falling back to raw version:', e.message);
             try {
-                return await this.fetchRawVersion();
+                const raw = await this.fetchRawVersion();
+                if (raw && raw.versions && raw.versions[gameVersion]) {
+                    raw.download_url = raw.versions[gameVersion];
+                    raw.minecraft = gameVersion;
+                }
+                return raw;
             } catch (e2) {
                 return await this.fetchFromContentsAPI();
             }
@@ -234,7 +246,7 @@ class ModManager {
      * PRIMARY: Fetches latest version from GitHub Releases API (/releases/latest).
      * No manual file updates needed — creating a GitHub release is enough.
      */
-    async fetchFromReleasesAPI() {
+    async fetchFromReleasesAPI(gameVersion = '1.21.4') {
         return new Promise((resolve, reject) => {
             const apiUrl = 'https://api.github.com/repos/Moo-Client/moo-client/releases/latest';
             https.get(apiUrl, { headers: { 'User-Agent': 'MooClient-Launcher', 'Accept': 'application/vnd.github.v3+json' } }, (res) => {
@@ -253,22 +265,29 @@ class ModManager {
                             return;
                         }
 
-                        // Find the .jar asset download URL
+                        // Find the .jar asset download URL specifically matching gameVersion if multi-version
                         let downloadUrl = '';
                         if (release.assets && Array.isArray(release.assets)) {
-                            const jarAsset = release.assets.find(a => a.name && a.name.match(/^moo-client.*\.jar$/i));
-                            if (jarAsset) {
-                                downloadUrl = jarAsset.browser_download_url;
+                            // 1. Try exact gameVersion match, e.g. moo-client-1.21.11-2.1.6.jar
+                            const versionedJar = release.assets.find(a => a.name && a.name.includes(gameVersion) && a.name.match(/\.jar$/i) && !a.name.includes('-sources') && !a.name.includes('-dev'));
+                            if (versionedJar) {
+                                downloadUrl = versionedJar.browser_download_url;
+                            } else {
+                                // 2. Generic moo-client-*.jar
+                                const jarAsset = release.assets.find(a => a.name && a.name.match(/^moo-client.*\.jar$/i) && !a.name.includes('-sources') && !a.name.includes('-dev'));
+                                if (jarAsset) {
+                                    downloadUrl = jarAsset.browser_download_url;
+                                }
                             }
                         }
                         // Fallback download URL if no asset found
                         if (!downloadUrl) {
-                            downloadUrl = `https://github.com/Moo-Client/moo-client/releases/download/v${version}/moo-client-${version}.jar`;
+                            downloadUrl = `https://github.com/Moo-Client/moo-client/releases/download/v${version}/moo-client-${gameVersion}-${version}.jar`;
                         }
 
                         resolve({
                             version: version,
-                            minecraft: '1.21.4',
+                            minecraft: gameVersion,
                             download_url: downloadUrl,
                             changelog: release.body || ''
                         });
@@ -465,11 +484,18 @@ class ModManager {
      * @param {Function} onProgress - Callback (status, progressPercent)
      * @returns {boolean} true if mod was updated, false if already up to date
      */
-    async checkAndUpdate(onProgress = () => { }) {
+    async checkAndUpdate(gameVersion = '1.21.4', onProgress = () => { }) {
+        if (typeof gameVersion === 'function') {
+            onProgress = gameVersion;
+            gameVersion = '1.21.4';
+        }
+
         try {
+            // Guarantee bundled mod is installed for requested game version first
+            this.ensureBundledMod(gameVersion);
+
             if (this.isDevMode()) {
                 console.log('[ModManager] Dev mode active: skipping GitHub mod update check and keeping local build.');
-                this.ensureBundledMod();
                 onProgress('Tryb developerski — używanie lokalnego buildu', 40);
                 return false;
             }
@@ -479,7 +505,7 @@ class ModManager {
             // Try to get remote version
             let remoteVersion;
             try {
-                remoteVersion = await this.getRemoteVersion();
+                remoteVersion = await this.getRemoteVersion(gameVersion);
             } catch (e) {
                 console.log('Could not check for mod updates (offline?):', e.message);
                 onProgress('Offline — using cached mod', 30);
@@ -487,19 +513,32 @@ class ModManager {
             }
 
             const localVersion = this.getLocalVersion();
-            onProgress(`Latest mod version: v${remoteVersion.version}`, 20);
+            const versionedTarget = path.join(this.offlineDir, `moo-client-${gameVersion}.jar`);
+            const legacyTarget = path.join(this.offlineDir, 'moo-client.jar');
+            const targetModPath = (gameVersion === '1.21.4') ? legacyTarget : versionedTarget;
 
-            // Compare versions using semver
-            if (!ModManager.isNewerVersion(remoteVersion.version, localVersion.version)) {
+            const isSameVersion = (remoteVersion.version === localVersion.version);
+            const isMissingTarget = !fs.existsSync(versionedTarget) || !fs.existsSync(targetModPath);
+            const isVersionMismatch = (localVersion.minecraft !== gameVersion);
+
+            onProgress(`Latest mod version: v${remoteVersion.version} (${gameVersion})`, 20);
+
+            // If same version and target file is present for this Minecraft version, no download needed
+            if (isSameVersion && !isMissingTarget && !isVersionMismatch) {
+                onProgress('Mod is up to date!', 40);
+                return false;
+            }
+
+            if (!ModManager.isNewerVersion(remoteVersion.version, localVersion.version) && !isMissingTarget && !isVersionMismatch) {
                 onProgress('Mod is up to date!', 40);
                 return false;
             }
 
             // Download new version
-            onProgress(`Downloading core update v${remoteVersion.version}...`, 30);
+            onProgress(`Downloading core update v${remoteVersion.version} (${gameVersion})...`, 30);
 
             this.ensureDir(this.offlineDir);
-            const tempJarPath = path.join(this.offlineDir, `moo-client-${remoteVersion.version}.download`);
+            const tempJarPath = path.join(this.offlineDir, `moo-client-${gameVersion}-${remoteVersion.version}.download`);
 
             await this.downloadFile(remoteVersion.download_url, tempJarPath, (percent) => {
                 const scaledPercent = 30 + Math.round(percent * 0.4); // Scale to 30-70 range
@@ -507,11 +546,12 @@ class ModManager {
             });
 
             if (fs.existsSync(tempJarPath) && fs.statSync(tempJarPath).size > 10000) {
-                // Save to offline/multiver/moo-client.jar
-                if (fs.existsSync(this.coreModPath)) {
-                    try { fs.unlinkSync(this.coreModPath); } catch (e) { }
+                // Save to versioned path: offline/multiver/moo-client-${gameVersion}.jar
+                fs.copyFileSync(tempJarPath, versionedTarget);
+                if (gameVersion === '1.21.4') {
+                    fs.copyFileSync(tempJarPath, this.coreModPath);
                 }
-                fs.renameSync(tempJarPath, this.coreModPath);
+                try { fs.unlinkSync(tempJarPath); } catch (e) { }
 
                 // Clean any stray mods from mods/
                 this.cleanOldMods();
@@ -519,11 +559,11 @@ class ModManager {
                 // Save installed version info
                 fs.writeFileSync(this.localVersionPath, JSON.stringify({
                     version: remoteVersion.version,
-                    minecraft: remoteVersion.minecraft || '1.21.4',
+                    minecraft: gameVersion,
                     installedAt: new Date().toISOString(),
                 }, null, 2));
 
-                onProgress(`Mod updated to v${remoteVersion.version}!`, 70);
+                onProgress(`Mod updated to v${remoteVersion.version} (${gameVersion})!`, 70);
                 return true;
             } else {
                 if (fs.existsSync(tempJarPath)) {

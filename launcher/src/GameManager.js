@@ -611,11 +611,26 @@ class GameManager {
         }
         const devModVersioned = path.join(offlineDir, `moo-client-${versionNumber}-dev.jar`);
         const prodModVersioned = path.join(offlineDir, `moo-client-${versionNumber}.jar`);
-        const devModPath = fs.existsSync(devModVersioned) ? devModVersioned : path.join(offlineDir, 'moo-client-dev.jar');
-        const prodModPath = fs.existsSync(prodModVersioned) ? prodModVersioned : path.join(offlineDir, 'moo-client.jar');
-        let offlineModPath = prodModPath;
-        if (fs.existsSync(devModPath)) {
-            if (!fs.existsSync(prodModPath)) {
+        let devModPath = fs.existsSync(devModVersioned) ? devModVersioned : (versionNumber === '1.21.4' ? path.join(offlineDir, 'moo-client-dev.jar') : null);
+        let prodModPath = fs.existsSync(prodModVersioned) ? prodModVersioned : (versionNumber === '1.21.4' ? path.join(offlineDir, 'moo-client.jar') : null);
+
+        if (!prodModPath && !devModPath) {
+            try {
+                const ModManager = require('./ModManager');
+                const mm = new ModManager();
+                mm.ensureBundledMod(versionNumber);
+                if (fs.existsSync(prodModVersioned)) prodModPath = prodModVersioned;
+                if (fs.existsSync(devModVersioned)) devModPath = devModVersioned;
+            } catch (e) {}
+        }
+        if (!prodModPath && !devModPath) {
+            prodModPath = path.join(offlineDir, 'moo-client.jar');
+            devModPath = path.join(offlineDir, 'moo-client-dev.jar');
+        }
+
+        let offlineModPath = prodModPath || devModPath;
+        if (devModPath && fs.existsSync(devModPath)) {
+            if (!prodModPath || !fs.existsSync(prodModPath)) {
                 offlineModPath = devModPath;
             } else {
                 const devMtime = fs.statSync(devModPath).mtimeMs;

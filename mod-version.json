@@ -3,5 +3,9 @@
   "min_launcher_version": "1.0.0",
   "name": "Moo Client 2.1.6",
   "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.6/moo-client-2.1.6.jar",
+  "versions": {
+    "1.21.4": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.6/moo-client-1.21.4-2.1.6.jar",
+    "1.21.11": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.6/moo-client-1.21.11-2.1.6.jar"
+  },
   "changelog": "🚀 Moo Client v2.1.6:\n- 🎮 Pełne wsparcie dla Minecraft 1.21.11 oraz 1.21.4 (Stonecutter)\n- ⚡ Aktualizacja Fabric Loader do 0.17.3+ i pełna zgodność z nowym Fabric API\n- 🛡️ Przeniesienie cache scoreboardu do ScoreboardCache (zgodność z Knot ClassLoaderem)\n- ⌨️ Obsługa nowych interfejsów wejściowych (KeyInput, MouseInput, Click) na 1.21.11"
 }

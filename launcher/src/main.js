@@ -131,7 +131,7 @@ function setupIPC() {
 
             // Step 2: Check & update mod from GitHub (bypassed in dev mode)
             if (!modManager.isDevMode()) {
-                const modUpdated = await modManager.checkAndUpdate((status, progress) => {
+                const modUpdated = await modManager.checkAndUpdate(version, (status, progress) => {
                     sendToRenderer('launch-status', status);
                     sendToRenderer('launch-progress', progress);
                 });
@@ -384,8 +384,11 @@ function getActualLauncherVersion() {
             // 1. Fast Delta Update for Fabric Mod Jar (only ~200 KB!)
             if (modNeedsUpdate) {
                 sendToRenderer('client-update-progress', { status: 'Pobieranie zaktualizowanego kodu klienta...', percent: 20 });
-                await modManager.checkAndUpdate((status, percent) => {
-                    sendToRenderer('client-update-progress', { status: `Kod klienta: ${status}`, percent: 20 + Math.round(percent * 0.3) });
+                await modManager.checkAndUpdate('1.21.4', (status, percent) => {
+                    sendToRenderer('client-update-progress', { status: `Kod klienta (1.21.4): ${status}`, percent: 20 + Math.round(percent * 0.15) });
+                });
+                await modManager.checkAndUpdate('1.21.11', (status, percent) => {
+                    sendToRenderer('client-update-progress', { status: `Kod klienta (1.21.11): ${status}`, percent: 35 + Math.round(percent * 0.15) });
                 });
             }
 
