@@ -212,7 +212,7 @@ public class NametagsModule extends Module {
         // 2. Fallback: Search player list by username
         if (ping < 0 && playerName != null && !playerName.trim().isEmpty()) {
             for (PlayerListEntry entry : client.getNetworkHandler().getPlayerList()) {
-                if (entry.getProfile() != null && playerName.equalsIgnoreCase(entry.getProfile().getName())) {
+                if (entry.getProfile() != null && playerName.equalsIgnoreCase(com.mooclient.util.MooUserManager.getProfileName(entry.getProfile()))) {
                     ping = entry.getLatency();
                     break;
                 }

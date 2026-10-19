@@ -26,7 +26,7 @@
             <!-- Moo Client Update Status Pill -->
             <div class="update-status-pill" id="update-status-pill" title="Sprawdź stan aktualizacji">
                 <span class="update-dot" id="update-dot"></span>
-                <span class="update-text" id="update-text">v2.1.5</span>
+                <span class="update-text" id="update-text">v2.1.6</span>
                 <button class="update-check-btn" id="btn-manual-update-check" title="Sprawdź aktualizacje">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
                 </button>
@@ -117,6 +117,10 @@
                                         <span>1.21.4 (Fabric)</span>
                                         <svg class="item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                                     </div>
+                                    <div class="dropdown-item" data-value="1.21.11">
+                                        <span>1.21.11 (Fabric)</span>
+                                        <svg class="item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                    </div>
                                 </div>
                                 <input type="hidden" id="version-select" value="1.21.4">
                             </div>
@@ -198,6 +202,10 @@
                                     <span>1.21.4 (Fabric)</span>
                                     <svg class="item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                                 </div>
+                                <div class="dropdown-item" data-value="1.21.11">
+                                    <span>1.21.11 (Fabric)</span>
+                                    <svg class="item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -219,8 +227,14 @@
                         <input type="text" id="mods-search-input" class="mods-search-input" placeholder="Szukaj modów na Modrinth..." data-i18n-placeholder="search_mods_placeholder">
                     </div>
                     <div class="mods-tabs">
-                        <button class="mods-tab active" data-tab="browse" id="tab-browse-mods" data-i18n="tab_browse">Przeglądaj</button>
-                        <button class="mods-tab" data-tab="installed" id="tab-installed-mods" data-i18n="tab_installed">Zainstalowane (<span id="installed-count">0</span>)</button>
+                        <button class="mods-tab active" data-tab="browse" id="tab-browse-mods">
+                            <span data-i18n="tab_browse">Przeglądaj</span>
+                        </button>
+                        <button class="mods-tab" data-tab="installed" id="tab-installed-mods">
+                            <span data-i18n="tab_installed">Zainstalowane</span>
+                            <span class="tab-badge" id="installed-count-badge">(<span id="installed-count">0</span>)</span>
+                            <span id="installed-updates-badge"></span>
+                        </button>
                     </div>
                 </div>
 

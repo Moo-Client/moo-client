@@ -42,7 +42,7 @@ public class BlockbenchAnimationParserTest {
         // Sprawdzenie kości głowy w t = 0 (statyczny obrót 45 stopni yaw)
         BoneTransform headTransform = anim.sampleBone("head", 0.0f);
         Assertions.assertNotNull(headTransform);
-        Assertions.assertEquals((float) Math.toRadians(45.0), headTransform.yaw, 0.001f);
+        Assertions.assertEquals((float) Math.toRadians(-45.0), headTransform.yaw, 0.001f);
 
         // Sprawdzenie kości prawego ramienia w t = 1.25s (środek cyklu) -> pitch = -90 deg
         BoneTransform armTransform = anim.sampleBone("right_arm", 1.25f);

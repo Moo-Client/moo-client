@@ -37,13 +37,26 @@ public abstract class NametagBackgroundMixin {
     private final ThreadLocal<EntityRenderState> mooClient$currentState = new ThreadLocal<>();
     private final ThreadLocal<Text> mooClient$currentText = new ThreadLocal<>();
 
-    private static boolean isPlayerNicknameLabel(PlayerEntityRenderState playerState, Text text) {
-        if (playerState == null || text == null) return false;
-        // In 1.21.4 PlayerEntityRenderState: playerState.playerName is the SCOREBOARD sub-label (e.g. "20 ❤") when present.
-        return playerState.playerName == null || text != playerState.playerName;
+    private static String getPlayerName(PlayerEntityRenderState playerState) {
+//? if >=1.21.11 {
+        return playerState.playerName != null ? playerState.playerName.getString() : "";
+//?} else {
+      /*return playerState.name;
+*///?}
     }
 
-    @Inject(method = "renderLabelIfPresent", at = @At("HEAD"))
+    private static boolean isPlayerNicknameLabel(PlayerEntityRenderState playerState, Text text) {
+        if (playerState == null || text == null) return false;
+//? if >=1.21.11 {
+        return playerState.playerName != null && text.getString().contains(playerState.playerName.getString());
+//?} else {
+      /*// In 1.21.4 PlayerEntityRenderState: playerState.playerName is the SCOREBOARD sub-label (e.g. "20 ❤") when present.
+        return playerState.playerName == null || text != playerState.playerName;
+*///?}
+    }
+
+//? if <1.21.11 {
+    /*@Inject(method = "renderLabelIfPresent", at = @At("HEAD"))
     private void mooClient$captureState(EntityRenderState state, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         this.mooClient$currentState.set(state);
         this.mooClient$currentText.set(text);
@@ -76,7 +89,7 @@ public abstract class NametagBackgroundMixin {
         Text text = this.mooClient$currentText.get();
         if (state instanceof PlayerEntityRenderState playerState
                 && isPlayerNicknameLabel(playerState, text)
-                && com.mooclient.util.MooUserManager.isMooUser(playerState.name, playerState.id)) {
+                && com.mooclient.util.MooUserManager.isMooUser(getPlayerName(playerState), playerState.id)) {
             float badgeTotalWidth = 11.0f; // iconSize (8.5f) + gap (2.5f)
             return originalX + (badgeTotalWidth / 2.0f);
         }
@@ -112,7 +125,7 @@ public abstract class NametagBackgroundMixin {
         Matrix4f matrix = matrices.peek().getPositionMatrix();
 
         // 1. Authentic Moo Client Cow Logo Badge rendering (EXCLUSIVELY in front of nickname)
-        if (com.mooclient.util.MooUserManager.isMooUser(playerState.name, playerState.id)) {
+        if (com.mooclient.util.MooUserManager.isMooUser(getPlayerName(playerState), playerState.id)) {
             float textWidth = this.getTextRenderer().getWidth(text);
             float badgeTotalWidth = 11.0f;
             float iconSize = 8.5f;
@@ -150,7 +163,7 @@ public abstract class NametagBackgroundMixin {
 
         // 2. Render Ping ABOVE nickname for all players when ABOVE mode is active
         if (NametagsModule.isNametagsEnabled() && NametagsModule.isShowPing() && NametagsModule.getPingPosition() == NametagsModule.PingPosition.ABOVE) {
-            Text pingText = NametagsModule.getPingText(playerState.id, playerState.name);
+            Text pingText = NametagsModule.getPingText(playerState.id, getPlayerName(playerState));
             if (pingText != null) {
                 float pingWidth = this.getTextRenderer().getWidth(pingText);
                 float pingX = -pingWidth / 2.0f;
@@ -195,15 +208,13 @@ public abstract class NametagBackgroundMixin {
                 && com.mooclient.module.modules.ArmorModule.isShowNametagDurability()) {
             MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
             if (client != null && client.player != null && (playerState.id == client.player.getId()
-                    || (playerState.name != null && playerState.name.equalsIgnoreCase(client.player.getGameProfile().getName())))) {
+                    || (getPlayerName(playerState) != null && getPlayerName(playerState).equalsIgnoreCase(com.mooclient.util.MooUserManager.getProfileName(client.player.getGameProfile()))))) {
                 return;
             }
             Text armorText = com.mooclient.module.modules.ArmorModule.getNametagArmorText(playerState);
             if (armorText != null) {
                 float armorWidth = com.mooclient.module.modules.ArmorModule.getNametagArmorWidth(playerState.id, armorText, this.getTextRenderer());
                 float armorX = -armorWidth / 2.0f;
-                // If a scoreboard below-name objective is present (e.g. "1600 pk" on TabMC or health hearts),
-                // shift armor durability down so it renders cleanly below the points/health instead of overlapping them!
                 float armorY = (playerState.playerName != null) ? 21.5f : 11.0f;
                 boolean textShadow = NametagsModule.isNametagsEnabled() ? NametagsModule.isTextShadow() : true;
                 boolean removeBg = NametagsModule.isNametagsEnabled() && NametagsModule.isRemoveBackground();
@@ -242,4 +253,5 @@ public abstract class NametagBackgroundMixin {
             }
         }
     }
+*///?}
 }

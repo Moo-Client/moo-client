@@ -374,6 +374,14 @@ public class MooConfig {
             JsonObject hitboxes = new JsonObject();
             hitboxes.addProperty("enabled", com.mooclient.module.modules.HitboxModule.isHitboxEnabled());
             hitboxes.addProperty("color", com.mooclient.module.modules.HitboxModule.getColor().name());
+            hitboxes.addProperty("customRed", com.mooclient.module.modules.HitboxModule.getCustomRed());
+            hitboxes.addProperty("customGreen", com.mooclient.module.modules.HitboxModule.getCustomGreen());
+            hitboxes.addProperty("customBlue", com.mooclient.module.modules.HitboxModule.getCustomBlue());
+            hitboxes.addProperty("villagerColorEnabled", com.mooclient.module.modules.HitboxModule.isVillagerColorEnabled());
+            hitboxes.addProperty("villagerColor", com.mooclient.module.modules.HitboxModule.getVillagerColor().name());
+            hitboxes.addProperty("villagerCustomRed", com.mooclient.module.modules.HitboxModule.getVillagerCustomRed());
+            hitboxes.addProperty("villagerCustomGreen", com.mooclient.module.modules.HitboxModule.getVillagerCustomGreen());
+            hitboxes.addProperty("villagerCustomBlue", com.mooclient.module.modules.HitboxModule.getVillagerCustomBlue());
             hitboxes.addProperty("showEyeHeight", com.mooclient.module.modules.HitboxModule.isShowEyeHeight());
             hitboxes.addProperty("showLookVector", com.mooclient.module.modules.HitboxModule.isShowLookVector());
             hitboxes.addProperty("onlyGlidingOrSwimming", com.mooclient.module.modules.HitboxModule.isOnlyGlidingOrSwimming());
@@ -1276,6 +1284,32 @@ public class MooConfig {
                     try {
                         com.mooclient.module.modules.HitboxModule.setColor(com.mooclient.module.modules.HitboxModule.HitboxColor.valueOf(hitboxes.get("color").getAsString()));
                     } catch (Exception ignored) {}
+                }
+                if (hitboxes.has("customRed")) {
+                    com.mooclient.module.modules.HitboxModule.setCustomRed(hitboxes.get("customRed").getAsInt());
+                }
+                if (hitboxes.has("customGreen")) {
+                    com.mooclient.module.modules.HitboxModule.setCustomGreen(hitboxes.get("customGreen").getAsInt());
+                }
+                if (hitboxes.has("customBlue")) {
+                    com.mooclient.module.modules.HitboxModule.setCustomBlue(hitboxes.get("customBlue").getAsInt());
+                }
+                if (hitboxes.has("villagerColorEnabled")) {
+                    com.mooclient.module.modules.HitboxModule.setVillagerColorEnabled(hitboxes.get("villagerColorEnabled").getAsBoolean());
+                }
+                if (hitboxes.has("villagerColor")) {
+                    try {
+                        com.mooclient.module.modules.HitboxModule.setVillagerColor(com.mooclient.module.modules.HitboxModule.HitboxColor.valueOf(hitboxes.get("villagerColor").getAsString()));
+                    } catch (Exception ignored) {}
+                }
+                if (hitboxes.has("villagerCustomRed")) {
+                    com.mooclient.module.modules.HitboxModule.setVillagerCustomRed(hitboxes.get("villagerCustomRed").getAsInt());
+                }
+                if (hitboxes.has("villagerCustomGreen")) {
+                    com.mooclient.module.modules.HitboxModule.setVillagerCustomGreen(hitboxes.get("villagerCustomGreen").getAsInt());
+                }
+                if (hitboxes.has("villagerCustomBlue")) {
+                    com.mooclient.module.modules.HitboxModule.setVillagerCustomBlue(hitboxes.get("villagerCustomBlue").getAsInt());
                 }
                 if (hitboxes.has("showEyeHeight")) {
                     com.mooclient.module.modules.HitboxModule.setShowEyeHeight(hitboxes.get("showEyeHeight").getAsBoolean());

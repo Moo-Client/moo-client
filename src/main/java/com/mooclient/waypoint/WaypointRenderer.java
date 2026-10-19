@@ -40,7 +40,11 @@ public class WaypointRenderer {
         Camera camera = client.gameRenderer.getCamera();
         if (camera == null) return;
 
-        Vec3d cameraPos = camera.getPos();
+//? if >=1.21.11 {
+        Vec3d cameraPos = camera.getCameraPos();
+//?} else {
+      /*Vec3d cameraPos = camera.getPos();
+*///?}
         tempCamRotInv.set(camera.getRotation()).conjugate();
 
         int screenW = context.getScaledWindowWidth();
@@ -99,11 +103,19 @@ public class WaypointRenderer {
 
             int wpColor = wp.getColor() | 0xFF000000;
 
-            context.getMatrices().push();
+//? if >=1.21.11 {
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate((float) sx, (float) sy);
+            if (userScale != 1.0f) {
+                context.getMatrices().scale(userScale, userScale);
+            }
+//?} else {
+          /*context.getMatrices().push();
             context.getMatrices().translate(sx, sy, 0);
             if (userScale != 1.0f) {
                 context.getMatrices().scale(userScale, userScale, 1.0f);
             }
+*///?}
 
             int boxX = -halfW;
             int boxY = -halfH;
@@ -131,7 +143,11 @@ public class WaypointRenderer {
                 context.drawText(client.textRenderer, distStr, distX, distY, 0xFFE0E0E0, shadow);
             }
 
-            context.getMatrices().pop();
+//? if >=1.21.11 {
+            context.getMatrices().popMatrix();
+//?} else {
+          /*context.getMatrices().pop();
+*///?}
         }
     }
 }

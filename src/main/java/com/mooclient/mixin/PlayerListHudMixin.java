@@ -42,7 +42,29 @@ public class PlayerListHudMixin {
         return width;
     }
 
+//? if >=1.21.11 {
     @Redirect(
+        method = "render",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/DrawContext;drawTextWithShadow(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;III)V"
+        )
+    )
+    private void mooClient$renderPlayerNameWithLogo(DrawContext context, TextRenderer textRenderer, Text text, int x, int y, int color) {
+        if (text != null && NametagsModule.isNametagsEnabled() && NametagsModule.isShowLogo()) {
+            String rawText = text.getString();
+            if (rawText != null && !rawText.isEmpty() && MooUserManager.isMooUser(rawText, -1)) {
+                // Draw 8x8 cow logo badge before player nickname
+                context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, MOO_LOGO, x, y, 0.0f, 0.0f, 8, 8, 8, 8);
+                // Draw player nickname shifted right by 10px
+                context.drawTextWithShadow(textRenderer, text, x + 10, y, color);
+                return;
+            }
+        }
+        context.drawTextWithShadow(textRenderer, text, x, y, color);
+    }
+//?} else {
+    /*@Redirect(
         method = "render",
         at = @At(
             value = "INVOKE",
@@ -61,4 +83,5 @@ public class PlayerListHudMixin {
         }
         return context.drawTextWithShadow(textRenderer, text, x, y, color);
     }
+*///?}
 }

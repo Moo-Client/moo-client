@@ -251,6 +251,8 @@ public class MooLanguage {
                 case "hitboxes_opt_subtitle" -> "Personalizacja hitboxów F3+B, kolory i filtry elytry.";
                 case "hitboxes_enabled_label" -> "Włącz moduł";
                 case "hitboxes_color_label" -> "Kolor hitboxów";
+                case "hitboxes_villager_enabled_label" -> "Osobny kolor dla osadników";
+                case "hitboxes_villager_color_label" -> "Kolor hitboxa osadnika";
                 case "hitboxes_eye_height_label" -> "Czerwona linia oczu (głowa)";
                 case "hitboxes_look_vec_label" -> "Niebieska strzałka (wzrok)";
                 case "hitboxes_elytra_swim_label" -> "Tylko elytra / pływanie";
@@ -497,6 +499,8 @@ public class MooLanguage {
                 case "hitboxes_opt_subtitle" -> "Customize F3+B hitboxes, colors and elytra filters.";
                 case "hitboxes_enabled_label" -> "Enable Module";
                 case "hitboxes_color_label" -> "Hitbox Color";
+                case "hitboxes_villager_enabled_label" -> "Custom Villager Color";
+                case "hitboxes_villager_color_label" -> "Villager Hitbox Color";
                 case "hitboxes_eye_height_label" -> "Red Eye-Height Line";
                 case "hitboxes_look_vec_label" -> "Blue Look Vector Arrow";
                 case "hitboxes_elytra_swim_label" -> "Only Elytra / Swimming";

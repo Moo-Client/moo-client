@@ -199,14 +199,22 @@ public class EmoteWheelEditScreen extends Screen {
                 if (emote.getIcon() != null) {
                     int ix = iconCenterX - (iconSize / 2);
                     int iy = iconCenterY - (iconSize / 2);
-                    context.drawTexture(RenderLayer::getGuiTextured, emote.getIcon(), ix, iy, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
+//? if >=1.21.11 {
+                    context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, emote.getIcon(), ix, iy, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
+//?} else {
+                    /*context.drawTexture(RenderLayer::getGuiTextured, emote.getIcon(), ix, iy, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
+*///?}
                 }
 
                 if (!isUnlocked) {
                     int lockSize = 12;
                     int lockX = iconCenterX + (iconSize / 2) - 6;
                     int lockY = iconCenterY - (iconSize / 2) - 2;
-                    context.drawTexture(RenderLayer::getGuiTextured, LOCK_ICON, lockX, lockY, 0.0f, 0.0f, lockSize, lockSize, lockSize, lockSize);
+//? if >=1.21.11 {
+                    context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, LOCK_ICON, lockX, lockY, 0.0f, 0.0f, lockSize, lockSize, lockSize, lockSize);
+//?} else {
+                    /*context.drawTexture(RenderLayer::getGuiTextured, LOCK_ICON, lockX, lockY, 0.0f, 0.0f, lockSize, lockSize, lockSize, lockSize);
+*///?}
                 }
 
                 String displayName = emote.getDisplayName().toUpperCase();
@@ -246,7 +254,11 @@ public class EmoteWheelEditScreen extends Screen {
         drawCircleFill(context, cx, cy, centerRadius, 0xFA0E0E14);
         drawCircleOutline(context, cx, cy, centerRadius, 0xFF6A8EAE);
         int logoSize = 48;
-        context.drawTexture(RenderLayer::getGuiTextured, MOO_LOGO, cx - logoSize / 2, cy - logoSize / 2, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
+//? if >=1.21.11 {
+        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, MOO_LOGO, cx - logoSize / 2, cy - logoSize / 2, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
+//?} else {
+        /*context.drawTexture(RenderLayer::getGuiTextured, MOO_LOGO, cx - logoSize / 2, cy - logoSize / 2, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
+*///?}
 
         // Center Info Callout
         if (hoveredWheelSlot >= 0) {
@@ -337,12 +349,20 @@ public class EmoteWheelEditScreen extends Screen {
 
                 int iconSize = 32;
                 if (emote.getIcon() != null) {
-                    context.drawTexture(RenderLayer::getGuiTextured, emote.getIcon(), cardX + 8, cardY + 9, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
+//? if >=1.21.11 {
+                    context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, emote.getIcon(), cardX + 8, cardY + 9, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
+//?} else {
+                    /*context.drawTexture(RenderLayer::getGuiTextured, emote.getIcon(), cardX + 8, cardY + 9, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
+*///?}
                 }
 
                 if (!isUnlocked) {
                     int lockSize = 12;
-                    context.drawTexture(RenderLayer::getGuiTextured, LOCK_ICON, cardX + 28, cardY + 6, 0.0f, 0.0f, lockSize, lockSize, lockSize, lockSize);
+//? if >=1.21.11 {
+                    context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, LOCK_ICON, cardX + 28, cardY + 6, 0.0f, 0.0f, lockSize, lockSize, lockSize, lockSize);
+//?} else {
+                    /*context.drawTexture(RenderLayer::getGuiTextured, LOCK_ICON, cardX + 28, cardY + 6, 0.0f, 0.0f, lockSize, lockSize, lockSize, lockSize);
+*///?}
                 }
 
                 String cardName = emote.getDisplayName();
@@ -385,15 +405,27 @@ public class EmoteWheelEditScreen extends Screen {
 
             Emote dragEmote = EmoteRegistry.get(draggingEmoteId);
             if (dragEmote != null && dragEmote.getIcon() != null) {
-                context.drawTexture(RenderLayer::getGuiTextured, dragEmote.getIcon(), dragX + 9, dragY + 9, 0.0f, 0.0f, 32, 32, 32, 32);
+//? if >=1.21.11 {
+                context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, dragEmote.getIcon(), dragX + 9, dragY + 9, 0.0f, 0.0f, 32, 32, 32, 32);
+//?} else {
+                /*context.drawTexture(RenderLayer::getGuiTextured, dragEmote.getIcon(), dragX + 9, dragY + 9, 0.0f, 0.0f, 32, 32, 32, 32);
+*///?}
             }
         }
 
         super.render(context, mouseX, mouseY, delta);
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean mouseClicked(net.minecraft.client.gui.Click click, boolean doubled) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
+//?} else {
+    /*@Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+*///?}
         if (button == 0) {
             int cx = this.width / 2;
             int cy = this.height / 2 - 25;
@@ -445,11 +477,23 @@ public class EmoteWheelEditScreen extends Screen {
                 return true;
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+//? if >=1.21.11 {
+        return super.mouseClicked(click, doubled);
+//?} else {
+        /*return super.mouseClicked(mouseX, mouseY, button);
+*///?}
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean mouseReleased(net.minecraft.client.gui.Click click) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
+//?} else {
+    /*@Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+*///?}
         if (button == 0 && draggingEmoteId != null) {
             if (hoveredTrashZone) {
                 if (dragSourceSlotIndex >= 0) {
@@ -484,7 +528,11 @@ public class EmoteWheelEditScreen extends Screen {
             dragSourceSlotIndex = -1;
             return true;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+//? if >=1.21.11 {
+        return super.mouseReleased(click);
+//?} else {
+        /*return super.mouseReleased(mouseX, mouseY, button);
+*///?}
     }
 
     @Override
@@ -527,13 +575,25 @@ public class EmoteWheelEditScreen extends Screen {
         }
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean keyPressed(net.minecraft.client.input.KeyInput input) {
+        int keyCode = input.key();
+        int scanCode = input.scancode();
+        int modifiers = input.modifiers();
+//?} else {
+    /*@Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+*///?}
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             applyAndClose();
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+//? if >=1.21.11 {
+        return super.keyPressed(input);
+//?} else {
+        /*return super.keyPressed(keyCode, scanCode, modifiers);
+*///?}
     }
 
     private void drawCurvedWedge(DrawContext context, int cx, int cy, float rIn, float rOut, double startDeg, double endDeg, int fillColor, int borderColor, boolean isSelected) {

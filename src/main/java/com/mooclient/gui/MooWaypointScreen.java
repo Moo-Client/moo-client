@@ -115,7 +115,11 @@ public class MooWaypointScreen extends Screen {
 
         // Header Logo & Title
         int logoSize = 22;
-        context.drawTexture(RenderLayer::getGuiTextured, COW_LOGO, panelX + 96, panelY + 12, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
+//? if >=1.21.11 {
+        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, COW_LOGO, panelX + 96, panelY + 12, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
+//?} else {
+        /*context.drawTexture(RenderLayer::getGuiTextured, COW_LOGO, panelX + 96, panelY + 12, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
+*///?}
         context.drawTextWithShadow(this.textRenderer, "PUNKTY NAWIGACYJNE • WAYPOINTS", panelX + 124, panelY + 12, COLOR_TEXT_WHITE);
         context.drawTextWithShadow(this.textRenderer, "Zarządzaj punktami i twórz nowe cele nawigacji", panelX + 124, panelY + 24, COLOR_TEXT_MUTED);
 
@@ -495,8 +499,16 @@ public class MooWaypointScreen extends Screen {
         }
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean mouseClicked(net.minecraft.client.gui.Click click, boolean doubled) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
+//?} else {
+    /*@Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+*///?}
         if (button == 0) {
             int panelW = 620;
             int panelH = 340;
@@ -756,11 +768,23 @@ public class MooWaypointScreen extends Screen {
             activeInput = 0;
         }
 
-        return super.mouseClicked(mouseX, mouseY, button);
+//? if >=1.21.11 {
+        return super.mouseClicked(click, doubled);
+//?} else {
+        /*return super.mouseClicked(mouseX, mouseY, button);
+*///?}
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean mouseDragged(net.minecraft.client.gui.Click click, double deltaX, double deltaY) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
+//?} else {
+    /*@Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+*///?}
         if (button == 0 && draggingSlider >= 0) {
             int panelW = 620;
             int panelX = (this.width - panelW) / 2;
@@ -771,18 +795,34 @@ public class MooWaypointScreen extends Screen {
             handleSliderDrag(mouseX, rightX, rightW);
             return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+//? if >=1.21.11 {
+        return super.mouseDragged(click, deltaX, deltaY);
+//?} else {
+        /*return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+*///?}
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean mouseReleased(net.minecraft.client.gui.Click click) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
+//?} else {
+    /*@Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+*///?}
         if (button == 0) {
             if (draggingSlider >= 0) {
                 WaypointsModule.setLastColor(this.customR, this.customG, this.customB, -1);
             }
             draggingSlider = -1;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+//? if >=1.21.11 {
+        return super.mouseReleased(click);
+//?} else {
+        /*return super.mouseReleased(mouseX, mouseY, button);
+*///?}
     }
 
     private void loadWaypointForEditing(Waypoint wp) {
@@ -910,8 +950,15 @@ public class MooWaypointScreen extends Screen {
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean charTyped(net.minecraft.client.input.CharInput input) {
+        char chr = (char) input.codepoint();
+        int modifiers = input.modifiers();
+//?} else {
+    /*@Override
     public boolean charTyped(char chr, int modifiers) {
+*///?}
         if (chr >= 32 && chr != 127) {
             if (activeInput == 1) {
                 searchFilter += chr;
@@ -931,11 +978,23 @@ public class MooWaypointScreen extends Screen {
                 return true;
             }
         }
-        return super.charTyped(chr, modifiers);
+//? if >=1.21.11 {
+        return super.charTyped(input);
+//?} else {
+        /*return super.charTyped(chr, modifiers);
+*///?}
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean keyPressed(net.minecraft.client.input.KeyInput input) {
+        int keyCode = input.key();
+        int scanCode = input.scancode();
+        int modifiers = input.modifiers();
+//?} else {
+    /*@Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+*///?}
         if (activeInput > 0) {
             if (keyCode == GLFW.GLFW_KEY_BACKSPACE) {
                 if (activeInput == 1 && !searchFilter.isEmpty()) {
@@ -1004,11 +1063,19 @@ public class MooWaypointScreen extends Screen {
         }
 
         // Prevent inventory key (e.g. E) from closing the waypoint screen
-        if (this.client != null && this.client.options.inventoryKey.matchesKey(keyCode, scanCode)) {
+//? if >=1.21.11 {
+        if (this.client != null && this.client.options.inventoryKey.matchesKey(input)) {
+            return false;
+        }
+
+        return super.keyPressed(input);
+//?} else {
+        /*if (this.client != null && this.client.options.inventoryKey.matchesKey(keyCode, scanCode)) {
             return false;
         }
 
         return super.keyPressed(keyCode, scanCode, modifiers);
+*///?}
     }
 
     @Override
@@ -1036,11 +1103,19 @@ public class MooWaypointScreen extends Screen {
 
     private void playClickSound() {
         if (this.client != null) {
+//? if >=1.21.11 {
             this.client.getSoundManager().play(
+                    net.minecraft.client.sound.PositionedSoundInstance.ui(
+                            SoundEvents.UI_BUTTON_CLICK, 1.0f
+                    )
+            );
+//?} else {
+            /*this.client.getSoundManager().play(
                     net.minecraft.client.sound.PositionedSoundInstance.master(
                             SoundEvents.UI_BUTTON_CLICK, 1.0f
                     )
             );
+*///?}
         }
     }
 }

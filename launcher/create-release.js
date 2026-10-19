@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '2.1.5';
+const VERSION = '2.1.6';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,15 +63,13 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-⚡ **Olbrzymia optymalizacja FPS i płynności gry**:
-- 🏎️ **Szybki bufor nametagów**: Zoptymalizowano renderowanie etykiet i wytrzymałości pancerza pod nickami (eliminacja ciągłego pobierania encji ze świata, przeszukiwania komponentów NBT i kalkulacji szerokości czcionki).
-- 📊 **Optymalizacja Scoreboardu**: Przetwarzanie i sortowanie linii tablicy wyników jest teraz buforowane (oszczędność tysięcy operacji Java Streams i pomiarów tekstu co sekundę).
-- 📶 **Stabilny Ping i O(1) Moo Tag**: Szybkie buforowanie pingu graczy z interwałem 1s oraz natychmiastowe rozpoznawanie loga Moo Client bez alokacji stringów i regexów co klatkę.
-- 💃 **Wydajność Emotek**: Wyciszenie obliczeń transformacji modeli graczy, gdy nikt w pobliżu nie odtwarza animacji.
+🎮 **Pełne wsparcie dla Minecraft 1.21.11 oraz 1.21.4 (Stonecutter)**:
+- 🏗️ **Architektura Multi-Version**: Zintegrowano preprocesor Stonecutter, umożliwiający jednoczesne budowanie i pełną zgodność modyfikacji dla wersji 1.21.4 oraz 1.21.11.
+- ⚡ **Fabric Loader 0.17.3+**: Zaktualizowano wymagania oraz mechanizm pobierania launchera dla najnowszego Fabric Loadera 0.17.3+ (wymaganego przez Fabric API dla 1.21.11).
 
-🛡️ **Poprawki Durability Pancerza**:
-- 🏰 **Ochrona stref bez obrażeń (Spawn/Safezone)**: Wytrzymałość pancerza przeciwnika nie spada już fałszywie, gdy atakujesz gracza znajdującego się na zabezpieczonym spawnie – wartość aktualizuje się wyłącznie przy realnych obrażeniach potwierdzonych przez serwer.
-- 👤 **Widok trzecioosobowy (F5)**: Usunięto niepożądane wyświetlanie paska wytrzymałości nad własną głową gracza w widoku F5.`;
+🛡️ **Stabilność i Knot ClassLoader**:
+- 📦 **ScoreboardCache**: Klasy buforujące dane scoreboardu zostały przeniesione poza pakiet mixinów do dedykowanej klasy pomocniczej \`com.mooclient.util.ScoreboardCache\`, eliminując błąd \`IllegalClassLoadError\` na nowych wersjach Fabric Loadera.
+- ⌨️ **Kompatybilność Zdarzeń i Wejść 1.21.11**: Zaktualizowano deskryptory zdarzeń w \`HandledScreenMixin\` (\`KeyInput\`, \`Click\`), \`MouseMixin\` (\`MouseInput\`), \`CameraMixin\` oraz \`ChatHudMixin\`.`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);
@@ -113,13 +111,28 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
         }
     }
 
-    // 1. Upload Fabric Mod JAR
-    const jarPath = path.join(__dirname, '..', 'build', 'libs', `moo-client-${VERSION}.jar`);
+    // 1. Upload Fabric Mod JARs
+    let jarPath = path.join(__dirname, '..', 'build', 'libs', `moo-client-${VERSION}.jar`);
+    if (!fs.existsSync(jarPath)) {
+        const v12111Jar = path.join(__dirname, '..', 'versions', '1.21.11', 'build', 'libs', `moo-client-${VERSION}.jar`);
+        const v1214Jar = path.join(__dirname, '..', 'versions', '1.21.4', 'build', 'libs', `moo-client-${VERSION}.jar`);
+        if (fs.existsSync(v12111Jar)) jarPath = v12111Jar;
+        else if (fs.existsSync(v1214Jar)) jarPath = v1214Jar;
+    }
     if (fs.existsSync(jarPath)) {
         await uploadAsset(release.upload_url, token, jarPath, `moo-client-${VERSION}.jar`, 'application/java-archive');
     } else {
         console.error(`ERROR: Jar not found at ${jarPath}`);
         process.exit(1);
+    }
+
+    const v1214 = path.join(__dirname, '..', 'versions', '1.21.4', 'build', 'libs', `moo-client-${VERSION}.jar`);
+    if (fs.existsSync(v1214)) {
+        await uploadAsset(release.upload_url, token, v1214, `moo-client-1.21.4-${VERSION}.jar`, 'application/java-archive');
+    }
+    const v12111 = path.join(__dirname, '..', 'versions', '1.21.11', 'build', 'libs', `moo-client-${VERSION}.jar`);
+    if (fs.existsSync(v12111)) {
+        await uploadAsset(release.upload_url, token, v12111, `moo-client-1.21.11-${VERSION}.jar`, 'application/java-archive');
     }
 
     // 2. Upload ASAR

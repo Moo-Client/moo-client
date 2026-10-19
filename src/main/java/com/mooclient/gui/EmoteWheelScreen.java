@@ -135,7 +135,11 @@ public class EmoteWheelScreen extends Screen {
                 if (emote.getIcon() != null) {
                     int ix = iconCenterX - (iconSize / 2);
                     int iy = iconCenterY - (iconSize / 2);
-                    context.drawTexture(RenderLayer::getGuiTextured, emote.getIcon(), ix, iy, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
+//? if >=1.21.11 {
+                    context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, emote.getIcon(), ix, iy, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
+//?} else {
+                    /*context.drawTexture(RenderLayer::getGuiTextured, emote.getIcon(), ix, iy, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
+*///?}
                 }
 
                 // Render Emote Name (with multiplayer badge 👥)
@@ -154,7 +158,11 @@ public class EmoteWheelScreen extends Screen {
                     int lockSize = 12;
                     int lockX = iconCenterX + (iconSize / 2) - 6;
                     int lockY = iconCenterY - (iconSize / 2) - 2;
-                    context.drawTexture(RenderLayer::getGuiTextured, LOCK_ICON, lockX, lockY, 0.0f, 0.0f, lockSize, lockSize, lockSize, lockSize);
+//? if >=1.21.11 {
+                    context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, LOCK_ICON, lockX, lockY, 0.0f, 0.0f, lockSize, lockSize, lockSize, lockSize);
+//?} else {
+                    /*context.drawTexture(RenderLayer::getGuiTextured, LOCK_ICON, lockX, lockY, 0.0f, 0.0f, lockSize, lockSize, lockSize, lockSize);
+*///?}
                 }
             } else {
                 // Subtle '+' for empty slots matching reference layout
@@ -175,7 +183,11 @@ public class EmoteWheelScreen extends Screen {
         drawCircleOutline(context, cx, cy, centerRadius, themeBlue);
 
         int logoSize = 48;
-        context.drawTexture(RenderLayer::getGuiTextured, MOO_LOGO, cx - logoSize / 2, cy - logoSize / 2, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
+//? if >=1.21.11 {
+        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, MOO_LOGO, cx - logoSize / 2, cy - logoSize / 2, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
+//?} else {
+        /*context.drawTexture(RenderLayer::getGuiTextured, MOO_LOGO, cx - logoSize / 2, cy - logoSize / 2, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
+*///?}
 
         // Top-Right "Edit Wheel" Button
         int editBtnX = this.width - 130;
@@ -392,8 +404,16 @@ public class EmoteWheelScreen extends Screen {
         }
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean mouseClicked(net.minecraft.client.gui.Click click, boolean doubled) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
+//?} else {
+    /*@Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+*///?}
         if (button == 0) {
             int editBtnX = this.width - 130;
             int editBtnY = 16;
@@ -410,11 +430,23 @@ public class EmoteWheelScreen extends Screen {
             this.close();
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+//? if >=1.21.11 {
+        return super.mouseClicked(click, doubled);
+//?} else {
+        /*return super.mouseClicked(mouseX, mouseY, button);
+*///?}
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean mouseReleased(net.minecraft.client.gui.Click click) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
+//?} else {
+    /*@Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+*///?}
         if (this.isMouseTrigger && button == this.triggerKeyCode) {
             if (selectedSlot >= 0) {
                 executeAction();
@@ -422,11 +454,23 @@ public class EmoteWheelScreen extends Screen {
             this.close();
             return true;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+//? if >=1.21.11 {
+        return super.mouseReleased(click);
+//?} else {
+        /*return super.mouseReleased(mouseX, mouseY, button);
+*///?}
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean keyReleased(net.minecraft.client.input.KeyInput input) {
+        int keyCode = input.key();
+        int scanCode = input.scancode();
+        int modifiers = input.modifiers();
+//?} else {
+    /*@Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+*///?}
         if (!this.isMouseTrigger && (keyCode == this.triggerKeyCode || keyCode == EmotesModule.getWheelKeyCode() || keyCode == GLFW.GLFW_KEY_B)) {
             if (selectedSlot >= 0) {
                 executeAction();
@@ -434,15 +478,31 @@ public class EmoteWheelScreen extends Screen {
             this.close();
             return true;
         }
-        return super.keyReleased(keyCode, scanCode, modifiers);
+//? if >=1.21.11 {
+        return super.keyReleased(input);
+//?} else {
+        /*return super.keyReleased(keyCode, scanCode, modifiers);
+*///?}
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean keyPressed(net.minecraft.client.input.KeyInput input) {
+        int keyCode = input.key();
+        int scanCode = input.scancode();
+        int modifiers = input.modifiers();
+//?} else {
+    /*@Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+*///?}
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             this.close();
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+//? if >=1.21.11 {
+        return super.keyPressed(input);
+//?} else {
+        /*return super.keyPressed(keyCode, scanCode, modifiers);
+*///?}
     }
 }

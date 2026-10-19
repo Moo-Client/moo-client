@@ -46,7 +46,31 @@ public abstract class SplashOverlayMixin {
     /**
      * Draws the enlarged 512x256 composite Moo Client logo (Cow icon + White "MOO" + Silver "CLIENT").
      */
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIFFIIIIIII)V", ordinal = 0))
+//? if >=1.21.11 {
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/util/Identifier;IIFFIIIIIII)V", ordinal = 0))
+    private void mooClient$drawCustomLogo(DrawContext context, com.mojang.blaze3d.pipeline.RenderPipeline pipeline, Identifier sprite, int x, int y, float u, float v, int width, int height, int regionWidth, int regionHeight, int textureWidth, int textureHeight, int color) {
+        int screenW = context.getScaledWindowWidth();
+        int screenH = context.getScaledWindowHeight();
+
+        // Enlarged prominent logo display (260x130)
+        int logoW = 260;
+        int logoH = 130;
+        int logoX = (screenW - logoW) / 2;
+        int logoY = (screenH / 2) - 75;
+
+        // Fully sampled 512x256 texture with alpha blending
+        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, SPLASH_LOGO, logoX, logoY, 0.0f, 0.0f, logoW, logoH, 512, 256, 512, 256, color);
+    }
+
+    /**
+     * Cancels the second half of Mojang logo draw so it doesn't draw Mojang text.
+     */
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/util/Identifier;IIFFIIIIIII)V", ordinal = 1))
+    private void mooClient$cancelSecondLogoHalf(DrawContext context, com.mojang.blaze3d.pipeline.RenderPipeline pipeline, Identifier sprite, int x, int y, float u, float v, int width, int height, int regionWidth, int regionHeight, int textureWidth, int textureHeight, int color) {
+        // No-op (suppress second half of Mojang logo)
+    }
+//?} else {
+    /*@Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIFFIIIIIII)V", ordinal = 0))
     private void mooClient$drawCustomLogo(DrawContext context, Function<Identifier, RenderLayer> renderLayers, Identifier sprite, int x, int y, float u, float v, int width, int height, int regionWidth, int regionHeight, int textureWidth, int textureHeight, int color) {
         int screenW = context.getScaledWindowWidth();
         int screenH = context.getScaledWindowHeight();
@@ -61,13 +85,11 @@ public abstract class SplashOverlayMixin {
         context.drawTexture(RenderLayer::getGuiTextured, SPLASH_LOGO, logoX, logoY, 0.0f, 0.0f, logoW, logoH, 512, 256, 512, 256, color);
     }
 
-    /**
-     * Cancels the second half of Mojang logo draw so it doesn't draw Mojang text.
-     */
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIFFIIIIIII)V", ordinal = 1))
     private void mooClient$cancelSecondLogoHalf(DrawContext context, Function<Identifier, RenderLayer> renderLayers, Identifier sprite, int x, int y, float u, float v, int width, int height, int regionWidth, int regionHeight, int textureWidth, int textureHeight, int color) {
         // No-op (suppress second half of Mojang logo)
     }
+*///?}
 
     /**
      * Custom sleek grey / silver progress bar matching the Moo Client monochrome aesthetic.

@@ -1,0 +1,11 @@
+plugins {
+    id 'dev.kikugie.stonecutter'
+}
+
+stonecutter.active '1.21.11'
+
+tasks.register('assemble') {
+    group = 'build'
+    description = "Assembles the active Stonecutter project (${stonecutter.current.version})"
+    dependsOn stonecutter.tasks.named('assemble') { it.metadata.isActive }
+}

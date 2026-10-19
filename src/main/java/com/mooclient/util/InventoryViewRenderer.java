@@ -31,20 +31,38 @@ public class InventoryViewRenderer {
         int startY = InventoryViewModule.position.calculateY(boxH, scaledHeight);
 
         if (customScale) {
-            context.getMatrices().push();
+//? if >=1.21.11 {
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate((float) startX, (float) startY);
+            context.getMatrices().scale(hudScale, hudScale);
+            context.getMatrices().translate((float) -startX, (float) -startY);
+//?} else {
+          /*context.getMatrices().push();
             context.getMatrices().translate(startX, startY, 0);
             context.getMatrices().scale(hudScale, hudScale, 1.0f);
             context.getMatrices().translate(-startX, -startY, 0);
+*///?}
         }
 
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 int slotIndex = 9 + row * 9 + col;
                 ItemStack stack = ItemStack.EMPTY;
+                boolean hasInv = false;
+//? if >=1.21.11 {
                 if (client.player != null && client.player.getInventory() != null
+                        && slotIndex < client.player.getInventory().getMainStacks().size()) {
+                    stack = client.player.getInventory().getMainStacks().get(slotIndex);
+                    hasInv = true;
+                }
+//?} else {
+              /*if (client.player != null && client.player.getInventory() != null
                         && slotIndex < client.player.getInventory().main.size()) {
                     stack = client.player.getInventory().main.get(slotIndex);
-                } else if (isMenu) {
+                    hasInv = true;
+                }
+*///?}
+                if (!hasInv && isMenu) {
                     if (row == 0 && col == 0) stack = new ItemStack(net.minecraft.item.Items.GOLDEN_APPLE, 64);
                     else if (row == 0 && col == 1) stack = new ItemStack(net.minecraft.item.Items.ENDER_PEARL, 16);
                     else if (row == 1 && col == 0) stack = new ItemStack(net.minecraft.item.Items.TOTEM_OF_UNDYING);
@@ -76,7 +94,11 @@ public class InventoryViewRenderer {
         }
 
         if (customScale) {
-            context.getMatrices().pop();
+//? if >=1.21.11 {
+            context.getMatrices().popMatrix();
+//?} else {
+          /*context.getMatrices().pop();
+*///?}
         }
     }
 

@@ -39,7 +39,9 @@ public class FullbrightModule extends Module {
         try {
             MinecraftClient client = MinecraftClient.getInstance();
             if (client != null && client.gameRenderer != null && client.gameRenderer.getLightmapTextureManager() != null) {
-                client.gameRenderer.getLightmapTextureManager().enable();
+//? if <1.21.11 {
+                /*client.gameRenderer.getLightmapTextureManager().enable();
+*///?}
             }
         } catch (Throwable ignored) {}
     }

@@ -36,7 +36,11 @@ public class ClientPlayerEntityMixin {
                 && !player.horizontalCollision
                 && player.getHungerManager().getFoodLevel() > 6
                 && player.input != null
-                && player.input.movementForward > 0.1f) {
+//? if >=1.21.11 {
+                && player.input.getMovementInput().y > 0.1f) {
+//?} else {
+                /*&& player.input.movementForward > 0.1f) {
+*///?}
             player.setSprinting(true);
         }
     }
@@ -47,7 +51,17 @@ public class ClientPlayerEntityMixin {
         if (player.isDead() || player.getHealth() <= 0.0f) {
             if (!this.mooClient$wasDead) {
                 this.mooClient$wasDead = true;
-                if (WaypointsModule.isWaypointsEnabled() && WaypointsModule.isDeathWaypoint() && player.clientWorld != null) {
+//? if >=1.21.11 {
+                if (WaypointsModule.isWaypointsEnabled() && WaypointsModule.isDeathWaypoint() && player.getEntityWorld() != null) {
+                    WaypointManager.getInstance().createDeathWaypoint(
+                            player.getX(),
+                            player.getY(),
+                            player.getZ(),
+                            player.getEntityWorld()
+                    );
+                }
+//?} else {
+                /*if (WaypointsModule.isWaypointsEnabled() && WaypointsModule.isDeathWaypoint() && player.clientWorld != null) {
                     WaypointManager.getInstance().createDeathWaypoint(
                             player.getX(),
                             player.getY(),
@@ -55,6 +69,7 @@ public class ClientPlayerEntityMixin {
                             player.clientWorld
                     );
                 }
+*///?}
             }
         } else {
             this.mooClient$wasDead = false;

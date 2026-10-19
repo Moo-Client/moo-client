@@ -31,15 +31,25 @@ contextBridge.exposeInMainWorld('mooAPI', {
     // Mod info & Modrinth Integration
     getModInfo: () => ipcRenderer.invoke('get-mod-info'),
     searchModrinth: (params) => ipcRenderer.invoke('search-modrinth', params),
-    installMod: (projectId) => ipcRenderer.invoke('install-mod', projectId),
-    getInstalledMods: () => ipcRenderer.invoke('get-installed-mods'),
-    uninstallMod: (filename) => ipcRenderer.invoke('uninstall-mod', filename),
-    toggleMod: (filename, enabled) => ipcRenderer.invoke('toggle-mod', { filename, enabled }),
-    installLocalMods: (filePaths) => ipcRenderer.invoke('install-local-mods', filePaths),
-    saveModFile: (filename, buffer) => ipcRenderer.invoke('save-mod-file', { filename, buffer }),
-    getModVersions: (projectId, allVersions = false) => ipcRenderer.invoke('get-mod-versions', { projectId, allVersions }),
-    installModVersion: (versionId, oldFilename) => ipcRenderer.invoke('install-mod-version', { versionId, oldFilename }),
-    checkModUpdates: () => ipcRenderer.invoke('check-mod-updates'),
+    installMod: (projectId, gameVersion) => {
+        if (typeof projectId === 'object') {
+            return ipcRenderer.invoke('install-mod', projectId);
+        }
+        return ipcRenderer.invoke('install-mod', { projectId, gameVersion });
+    },
+    getInstalledMods: (gameVersion = '1.21.4') => ipcRenderer.invoke('get-installed-mods', gameVersion),
+    uninstallMod: (filename, gameVersion = '1.21.4') => ipcRenderer.invoke('uninstall-mod', { filename, gameVersion }),
+    toggleMod: (filename, enabled, gameVersion = '1.21.4') => ipcRenderer.invoke('toggle-mod', { filename, enabled, gameVersion }),
+    installLocalMods: (filePaths, gameVersion = '1.21.4') => ipcRenderer.invoke('install-local-mods', { filePaths, gameVersion }),
+    saveModFile: (filename, buffer, gameVersion = '1.21.4') => ipcRenderer.invoke('save-mod-file', { filename, buffer, gameVersion }),
+    getModVersions: (projectId, allVersions = false, gameVersion = '1.21.4') => {
+        if (typeof projectId === 'object') {
+            return ipcRenderer.invoke('get-mod-versions', projectId);
+        }
+        return ipcRenderer.invoke('get-mod-versions', { projectId, allVersions, gameVersion });
+    },
+    installModVersion: (versionId, oldFilename, gameVersion = '1.21.4') => ipcRenderer.invoke('install-mod-version', { versionId, oldFilename, gameVersion }),
+    checkModUpdates: (gameVersion = '1.21.4') => ipcRenderer.invoke('check-mod-updates', gameVersion),
     getFilePath: (file) => {
         try {
             if (webUtils && typeof webUtils.getPathForFile === 'function') {
@@ -48,7 +58,7 @@ contextBridge.exposeInMainWorld('mooAPI', {
         } catch (e) {}
         return file && file.path ? file.path : '';
     },
-    openModsFolder: () => ipcRenderer.invoke('open-mods-folder'),
+    openModsFolder: (gameVersion = '1.21.4') => ipcRenderer.invoke('open-mods-folder', gameVersion),
 
     // Moo Client Core Update
     checkClientUpdate: () => ipcRenderer.invoke('check-client-update'),

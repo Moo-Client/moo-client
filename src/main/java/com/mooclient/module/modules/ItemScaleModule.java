@@ -461,14 +461,32 @@ public class ItemScaleModule extends Module {
         return enchantId;
     }
 
-    public static final List<ItemSearchResult> SET_PRESET_RESULTS = Arrays.asList(
-            new ItemSearchResult("set:all_armor", "Wszystkie Sety (Każda Zbroja)", Items.NETHERITE_CHESTPLATE),
-            new ItemSearchResult("set:netherite", "Set Netherytowy (Cała Zbroja)", Items.NETHERITE_CHESTPLATE),
-            new ItemSearchResult("set:diamond", "Set Diamentowy (Cała Zbroja)", Items.DIAMOND_CHESTPLATE),
-            new ItemSearchResult("set:iron", "Set Żelazny (Cała Zbroja)", Items.IRON_CHESTPLATE),
-            new ItemSearchResult("set:gold", "Set Złoty (Cała Zbroja)", Items.GOLDEN_CHESTPLATE),
-            new ItemSearchResult("set:chainmail", "Set Kolczy (Cała Zbroja)", Items.CHAINMAIL_CHESTPLATE)
-    );
+    private static List<ItemSearchResult> SET_PRESET_RESULTS = null;
+
+    public static List<ItemSearchResult> getSetPresetResults() {
+        if (SET_PRESET_RESULTS == null) {
+            try {
+                SET_PRESET_RESULTS = Arrays.asList(
+                        new ItemSearchResult("set:all_armor", "Wszystkie Sety (Każda Zbroja)", Items.NETHERITE_CHESTPLATE),
+                        new ItemSearchResult("set:netherite", "Set Netherytowy (Cała Zbroja)", Items.NETHERITE_CHESTPLATE),
+                        new ItemSearchResult("set:diamond", "Set Diamentowy (Cała Zbroja)", Items.DIAMOND_CHESTPLATE),
+                        new ItemSearchResult("set:iron", "Set Żelazny (Cała Zbroja)", Items.IRON_CHESTPLATE),
+                        new ItemSearchResult("set:gold", "Set Złoty (Cała Zbroja)", Items.GOLDEN_CHESTPLATE),
+                        new ItemSearchResult("set:chainmail", "Set Kolczy (Cała Zbroja)", Items.CHAINMAIL_CHESTPLATE)
+                );
+            } catch (Throwable t) {
+                SET_PRESET_RESULTS = Arrays.asList(
+                        new ItemSearchResult("set:all_armor", "Wszystkie Sety (Każda Zbroja)", null),
+                        new ItemSearchResult("set:netherite", "Set Netherytowy (Cała Zbroja)", null),
+                        new ItemSearchResult("set:diamond", "Set Diamentowy (Cała Zbroja)", null),
+                        new ItemSearchResult("set:iron", "Set Żelazny (Cała Zbroja)", null),
+                        new ItemSearchResult("set:gold", "Set Złoty (Cała Zbroja)", null),
+                        new ItemSearchResult("set:chainmail", "Set Kolczy (Cała Zbroja)", null)
+                );
+            }
+        }
+        return SET_PRESET_RESULTS;
+    }
 
     public static class ItemSearchResult {
         private final String itemId;
@@ -496,7 +514,7 @@ public class ItemScaleModule extends Module {
         if (ALL_MC_ITEMS == null) {
             ALL_MC_ITEMS = new ArrayList<>();
             // Include set presets first
-            ALL_MC_ITEMS.addAll(SET_PRESET_RESULTS);
+            ALL_MC_ITEMS.addAll(getSetPresetResults());
 
             List<ItemSearchResult> mcItems = new ArrayList<>();
             for (Item item : Registries.ITEM) {
@@ -520,7 +538,7 @@ public class ItemScaleModule extends Module {
             Set<String> added = new HashSet<>();
 
             // 1. Armor Set Presets
-            for (ItemSearchResult setRes : SET_PRESET_RESULTS) {
+            for (ItemSearchResult setRes : getSetPresetResults()) {
                 prioritized.add(setRes);
                 added.add(setRes.getItemId().toLowerCase());
             }

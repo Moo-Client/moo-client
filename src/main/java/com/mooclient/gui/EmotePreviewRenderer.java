@@ -55,12 +55,23 @@ public class EmotePreviewRenderer {
         Vector3f translation = new Vector3f(0.0f, transY, transZ);
         float scale = size * 0.50f;
 
-        // Feet positioned at cy + (scale * 0.85f), placing waist centered at (cx, cy)
+//? if >=1.21.11 {
+        try {
+            int x1 = (int) (cx - size / 2.0f);
+            int y1 = (int) (cy - size / 2.0f);
+            int x2 = (int) (cx + size / 2.0f);
+            int y2 = (int) (cy + size / 2.0f);
+            InventoryScreen.drawEntity(context, x1, y1, x2, y2, (int) scale, 0.0f, 0.0f, 0.0f, player);
+        } catch (Throwable ignored) {
+        }
+//?} else {
+        /*// Feet positioned at cy + (scale * 0.85f), placing waist centered at (cx, cy)
         float renderY = cy + (scale * 0.85f);
 
         try {
             InventoryScreen.drawEntity(context, (float) cx, renderY, scale, translation, bodyRotation, null, player);
         } catch (Throwable ignored) {
         }
+*///?}
     }
 }

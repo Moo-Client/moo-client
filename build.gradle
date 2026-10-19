@@ -1,5 +1,6 @@
 plugins {
-    id 'fabric-loom' version '1.9-SNAPSHOT'
+    id 'dev.kikugie.stonecutter'
+    id 'fabric-loom'
     id 'maven-publish'
 }
 
@@ -53,8 +54,8 @@ java {
 }
 
 jar {
-    from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}" }
+    from(rootProject.file("LICENSE")) {
+        rename { "${it}_${base.archivesName.get()}" }
     }
 }
 
@@ -74,9 +75,19 @@ tasks.register('deployDevMod') {
                 into targetDir
                 rename { 'moo-client.jar' }
             }
-            println "[DEV AUTO-DEPLOY] Skopiowano ${remapJar.archiveFileName.get()} do ${targetDir}/moo-client-dev.jar oraz moo-client.jar"
+            copy {
+                from remapJar.archiveFile
+                into targetDir
+                rename { "moo-client-${project.name}-dev.jar" }
+            }
+            copy {
+                from remapJar.archiveFile
+                into targetDir
+                rename { "moo-client-${project.name}.jar" }
+            }
+            println "[DEV AUTO-DEPLOY] Skopiowano ${remapJar.archiveFileName.get()} do ${targetDir} jako dev/release oraz warianty z wersją (${project.name})"
         }
-        def launcherAssets = file("${projectDir}/launcher/assets")
+        def launcherAssets = rootProject.file("launcher/assets")
         if (launcherAssets.exists()) {
             copy {
                 from remapJar.archiveFile

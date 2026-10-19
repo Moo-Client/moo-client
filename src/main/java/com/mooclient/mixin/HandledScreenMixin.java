@@ -39,7 +39,7 @@ public abstract class HandledScreenMixin extends Screen {
         }
 
         // If Shift is not held down, immediately unlock
-        if (!Screen.hasShiftDown() && ShulkerLockManager.isLocked()) {
+        if (!ShulkerLockManager.isShiftDown() && ShulkerLockManager.isLocked()) {
             ShulkerLockManager.unlock();
         }
 
@@ -48,7 +48,7 @@ public abstract class HandledScreenMixin extends Screen {
             ItemStack stack = this.focusedSlot.getStack();
             if (ShulkerTooltipUtil.isShulkerBox(stack) && ShulkerTooltipUtil.hasItems(stack)) {
                 ShulkerLockManager.updateActiveHover(stack, x, y);
-                if (ShulkerTooltipModule.isInspectEnabled() && Screen.hasShiftDown() && !ShulkerLockManager.isLocked()) {
+                if (ShulkerTooltipModule.isInspectEnabled() && ShulkerLockManager.isShiftDown() && !ShulkerLockManager.isLocked()) {
                     ShulkerLockManager.lock(stack, x, y);
                 }
             } else {
@@ -60,7 +60,7 @@ public abstract class HandledScreenMixin extends Screen {
 
         // If locked in inspection mode
         if (ShulkerLockManager.isLocked()) {
-            if (!Screen.hasShiftDown()) {
+            if (!ShulkerLockManager.isShiftDown()) {
                 ShulkerLockManager.unlock();
                 return;
             }
@@ -82,7 +82,7 @@ public abstract class HandledScreenMixin extends Screen {
             return;
         }
 
-        if (!Screen.hasShiftDown() && ShulkerLockManager.isLocked()) {
+        if (!ShulkerLockManager.isShiftDown() && ShulkerLockManager.isLocked()) {
             ShulkerLockManager.unlock();
             return;
         }
@@ -98,7 +98,28 @@ public abstract class HandledScreenMixin extends Screen {
         ShulkerLockManager.resetFrameFlag();
     }
 
+//? if >=1.21.11 {
     @Inject(method = "keyPressed", at = @At("HEAD"))
+    private void mooClient$onKeyPressed(net.minecraft.client.input.KeyInput input, CallbackInfoReturnable<Boolean> cir) {
+        if (!ShulkerTooltipModule.isShulkerEnabled() || !ShulkerTooltipModule.isInspectEnabled()) {
+            return;
+        }
+
+        if (input != null && (input.key() == GLFW.GLFW_KEY_LEFT_SHIFT || input.key() == GLFW.GLFW_KEY_RIGHT_SHIFT)) {
+            if (ShulkerLockManager.hasActiveHover() && !ShulkerLockManager.isLocked()) {
+                ShulkerLockManager.lockCurrent();
+            }
+        }
+    }
+
+    @Inject(method = "mouseClicked", at = @At("HEAD"))
+    private void mooClient$onMouseClicked(net.minecraft.client.gui.Click click, boolean bl, CallbackInfoReturnable<Boolean> cir) {
+        if (ShulkerLockManager.isLocked()) {
+            ShulkerLockManager.unlock();
+        }
+    }
+//?} else {
+    /*@Inject(method = "keyPressed", at = @At("HEAD"))
     private void mooClient$onKeyPressed(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
         if (!ShulkerTooltipModule.isShulkerEnabled() || !ShulkerTooltipModule.isInspectEnabled()) {
             return;
@@ -117,6 +138,7 @@ public abstract class HandledScreenMixin extends Screen {
             ShulkerLockManager.unlock();
         }
     }
+*///?}
 
     @Inject(method = "close", at = @At("HEAD"))
     private void mooClient$onClose(CallbackInfo ci) {

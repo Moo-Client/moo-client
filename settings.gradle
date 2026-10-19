@@ -1,10 +1,31 @@
 pluginManagement {
     repositories {
+        gradlePluginPortal()
         maven {
             name = 'Fabric'
             url = 'https://maven.fabricmc.net/'
         }
-        gradlePluginPortal()
+        maven {
+            name = 'KikuGie Releases'
+            url = 'https://maven.kikugie.dev/releases'
+        }
+    }
+    plugins {
+        id 'fabric-loom' version '1.14.10'
+        id 'dev.kikugie.stonecutter' version '0.9.8'
+    }
+}
+
+plugins {
+    id 'dev.kikugie.stonecutter' version '0.9.8'
+}
+
+stonecutter {
+    kotlinController = false
+    centralScript = "build.gradle"
+    create(rootProject) {
+        versions '1.21.4', '1.21.11'
+        vcsVersion = '1.21.4'
     }
 }
 

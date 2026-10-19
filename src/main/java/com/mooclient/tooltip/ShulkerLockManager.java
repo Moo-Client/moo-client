@@ -105,12 +105,23 @@ public class ShulkerLockManager {
                 && mouseY >= lastGridY - pad && mouseY <= lastGridY + lastGridH + pad;
     }
 
+    public static boolean isShiftDown() {
+//? if >=1.21.11 {
+        net.minecraft.client.MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
+        if (client == null || client.getWindow() == null) return false;
+        return net.minecraft.client.util.InputUtil.isKeyPressed(client.getWindow(), net.minecraft.client.util.InputUtil.GLFW_KEY_LEFT_SHIFT)
+                || net.minecraft.client.util.InputUtil.isKeyPressed(client.getWindow(), net.minecraft.client.util.InputUtil.GLFW_KEY_RIGHT_SHIFT);
+//?} else {
+      /*return Screen.hasShiftDown();
+*///?}
+    }
+
     public static boolean shouldStayLocked() {
         if (!locked) {
             return false;
         }
         try {
-            return Screen.hasShiftDown();
+            return isShiftDown();
         } catch (Throwable ignored) {
             return false;
         }
@@ -184,11 +195,15 @@ public class ShulkerLockManager {
             int mY = getGuiMouseY();
             renderingInnerTooltip = true;
             try {
-                context.getMatrices().push();
+//? if >=1.21.11 {
+                context.drawItemTooltip(textRenderer, hoveredInnerItem, mX, mY);
+//?} else {
+              /*context.getMatrices().push();
                 // Elevate Z translation by +500 so the nested tooltip renders on top of all shulker item sprites
                 context.getMatrices().translate(0.0f, 0.0f, 500.0f);
                 context.drawItemTooltip(textRenderer, hoveredInnerItem, mX, mY);
                 context.getMatrices().pop();
+*///?}
             } finally {
                 renderingInnerTooltip = false;
             }

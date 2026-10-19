@@ -91,6 +91,22 @@ public class MooUserManager {
         return isMooUser(name, -1);
     }
 
+//? if >=1.21.11 {
+    public static String getProfileName(com.mojang.authlib.GameProfile profile) {
+        return profile != null ? profile.name() : "";
+    }
+    public static java.util.UUID getProfileId(com.mojang.authlib.GameProfile profile) {
+        return profile != null ? profile.id() : null;
+    }
+//?} else {
+    /*public static String getProfileName(com.mojang.authlib.GameProfile profile) {
+        return profile != null ? profile.getName() : "";
+    }
+    public static java.util.UUID getProfileId(com.mojang.authlib.GameProfile profile) {
+        return profile != null ? profile.getId() : null;
+    }
+*///?}
+
     /**
      * Checks if the player represented by the Tab list entry is a confirmed Moo Client user.
      */
@@ -103,20 +119,20 @@ public class MooUserManager {
         MinecraftClient client = MinecraftClient.getInstance();
 
         // 1. Always check local player (O(1))
-        if (client.getSession() != null && client.getSession().getUsername() != null && client.getSession().getUsername().equalsIgnoreCase(entry.getProfile().getName())) {
+        if (client.getSession() != null && client.getSession().getUsername() != null && client.getSession().getUsername().equalsIgnoreCase(getProfileName(entry.getProfile()))) {
             return true;
         }
-        if (client.player != null && client.player.getUuid() != null && client.player.getUuid().equals(entry.getProfile().getId())) {
+        if (client.player != null && client.player.getUuid() != null && client.player.getUuid().equals(getProfileId(entry.getProfile()))) {
             return true;
         }
 
         // 2. UUID Match (O(1))
-        if (entry.getProfile().getId() != null && MOO_USERS_UUIDS.contains(entry.getProfile().getId())) {
+        if (getProfileId(entry.getProfile()) != null && MOO_USERS_UUIDS.contains(getProfileId(entry.getProfile()))) {
             return true;
         }
 
         // 3. Exact profile name match
-        String nameClean = cleanName(entry.getProfile().getName());
+        String nameClean = cleanName(getProfileName(entry.getProfile()));
         if (!nameClean.isEmpty() && MOO_USERS_NAMES.contains(nameClean)) {
             return true;
         }
@@ -225,13 +241,13 @@ public class MooUserManager {
         if (client.getNetworkHandler() != null) {
             for (PlayerListEntry entry : client.getNetworkHandler().getPlayerList()) {
                 if (entry.getProfile() != null) {
-                    if (MOO_USERS_UUIDS.contains(entry.getProfile().getId())) {
-                        String profileClean = cleanName(entry.getProfile().getName());
+                    if (MOO_USERS_UUIDS.contains(getProfileId(entry.getProfile()))) {
+                        String profileClean = cleanName(getProfileName(entry.getProfile()));
                         if (targetClean.contains(profileClean) || profileClean.contains(targetClean)) {
                             return true;
                         }
                     }
-                    String profileClean = cleanName(entry.getProfile().getName());
+                    String profileClean = cleanName(getProfileName(entry.getProfile()));
                     if (MOO_USERS_NAMES.contains(profileClean)) {
                         if (targetClean.contains(profileClean) || profileClean.contains(targetClean)) {
                             return true;

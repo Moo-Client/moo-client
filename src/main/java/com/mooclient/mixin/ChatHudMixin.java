@@ -74,7 +74,26 @@ public abstract class ChatHudMixin {
 
     // ── Text Shadow Toggle ──────────────────────────────────────────────────
 
+//? if >=1.21.11 {
     @Redirect(
+        method = "render",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTextWithShadow(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/OrderedText;III)V"),
+        require = 0
+    )
+    private void mooClient$redirectChatTextShadowOrdered(DrawContext context, net.minecraft.client.font.TextRenderer textRenderer, net.minecraft.text.OrderedText text, int x, int y, int color) {
+        context.drawText(textRenderer, text, x, y, color, ChatModule.isTextShadow());
+    }
+
+    @Redirect(
+        method = "render",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTextWithShadow(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;III)V"),
+        require = 0
+    )
+    private void mooClient$redirectChatTextShadow(DrawContext context, net.minecraft.client.font.TextRenderer textRenderer, net.minecraft.text.Text text, int x, int y, int color) {
+        context.drawText(textRenderer, text, x, y, color, ChatModule.isTextShadow());
+    }
+//?} else {
+    /*@Redirect(
         method = "render",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTextWithShadow(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/OrderedText;III)I"),
         require = 0
@@ -91,10 +110,32 @@ public abstract class ChatHudMixin {
     private int mooClient$redirectChatTextShadow(DrawContext context, net.minecraft.client.font.TextRenderer textRenderer, net.minecraft.text.Text text, int x, int y, int color) {
         return context.drawText(textRenderer, text, x, y, color, ChatModule.isTextShadow());
     }
+*///?}
 
     // ── Smooth Chat Animation ───────────────────────────────────────────────
 
+//? if >=1.21.11 {
     @Inject(method = "render", at = @At("HEAD"))
+    private void mooClient$smoothChatPre(DrawContext context, net.minecraft.client.font.TextRenderer textRenderer, int currentTick, int mouseX, int mouseY, boolean focused, boolean isChatFocused, CallbackInfo ci) {
+        ChatModule.updateAnimation(1.0f);
+        if (ChatModule.isSmoothChat() && ChatModule.getAnimOffset() > 0.001f) {
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate(0.0f, (float) ChatModule.getAnimOffset());
+            this.mooClient$pushedSmoothMatrix = true;
+        } else {
+            this.mooClient$pushedSmoothMatrix = false;
+        }
+    }
+
+    @Inject(method = "render", at = @At("RETURN"))
+    private void mooClient$smoothChatPost(DrawContext context, net.minecraft.client.font.TextRenderer textRenderer, int currentTick, int mouseX, int mouseY, boolean focused, boolean isChatFocused, CallbackInfo ci) {
+        if (this.mooClient$pushedSmoothMatrix) {
+            context.getMatrices().popMatrix();
+            this.mooClient$pushedSmoothMatrix = false;
+        }
+    }
+//?} else {
+    /*@Inject(method = "render", at = @At("HEAD"))
     private void mooClient$smoothChatPre(DrawContext context, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci) {
         ChatModule.updateAnimation(1.0f);
         if (ChatModule.isSmoothChat() && ChatModule.getAnimOffset() > 0.001f) {
@@ -113,6 +154,7 @@ public abstract class ChatHudMixin {
             this.mooClient$pushedSmoothMatrix = false;
         }
     }
+*///?}
 
     @Inject(method = "addVisibleMessage", at = @At("HEAD"))
     private void mooClient$onAddVisibleMessage(ChatHudLine message, CallbackInfo ci) {

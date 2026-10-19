@@ -37,7 +37,21 @@ public class GameRendererMixin {
         }
     }
 
+//? if >=1.21.11 {
     @ModifyArg(
+        method = "renderWorld",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/render/RawProjectionMatrix;set(Lorg/joml/Matrix4f;)Lcom/mojang/blaze3d/buffers/GpuBufferSlice;"
+        ),
+        index = 0
+    )
+    private Matrix4f mooClient$captureWorldProjection(Matrix4f projMatrix) {
+        WaypointRenderer.worldProjectionMatrix.set(projMatrix);
+        return projMatrix;
+    }
+//?} else {
+    /*@ModifyArg(
         method = "renderWorld",
         at = @At(
             value = "INVOKE",
@@ -49,6 +63,7 @@ public class GameRendererMixin {
         WaypointRenderer.worldProjectionMatrix.set(projMatrix);
         return projMatrix;
     }
+*///?}
 
     @Inject(method = "getFov", at = @At("RETURN"), cancellable = true)
     private void mooClient$applyZoomFov(Camera camera, float tickDelta, boolean changingFov, CallbackInfoReturnable<Float> cir) {

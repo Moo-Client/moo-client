@@ -63,7 +63,11 @@ public abstract class PlayerEntityModelMixin extends BipedEntityModel<PlayerEnti
         EmotePlayerState emoteState = EmoteEngine.getInstance().getPlayerStateIfExists(player);
         if (emoteState == null || !emoteState.isRendering()) return;
 
-        float tickDelta = client.getRenderTickCounter().getTickDelta(true);
+//? if >=1.21.11 {
+        float tickDelta = client.getRenderTickCounter().getTickProgress(true);
+//?} else {
+        /*float tickDelta = client.getRenderTickCounter().getTickDelta(true);
+*///?}
         emoteState.updateRenderTransforms(tickDelta);
 
         // 1. Głowa (Head)

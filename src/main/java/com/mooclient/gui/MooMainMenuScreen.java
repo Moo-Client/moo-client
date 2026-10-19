@@ -9,7 +9,11 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
 import net.minecraft.client.gui.screen.option.OptionsScreen;
 import net.minecraft.client.gui.screen.world.SelectWorldScreen;
-import net.minecraft.client.util.SkinTextures;
+//? if >=1.21.11 {
+import net.minecraft.entity.player.SkinTextures;
+//?} else {
+/*import net.minecraft.client.util.SkinTextures;
+*///?}
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
@@ -115,7 +119,11 @@ public class MooMainMenuScreen extends Screen {
         // Render Logo (Cow Icon)
         int logoSize = 52;
         int logoY = this.height / 2 - 88;
-        context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured, COW_LOGO, centerX - logoSize / 2, logoY, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
+//? if >=1.21.11 {
+        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, COW_LOGO, centerX - logoSize / 2, logoY, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
+//?} else {
+        /*context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured, COW_LOGO, centerX - logoSize / 2, logoY, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
+*///?}
 
         // Title: MOO CLIENT
         String title = "MOO CLIENT";
@@ -181,7 +189,11 @@ public class MooMainMenuScreen extends Screen {
 
         // Player Avatar (Skin head)
         try {
-            SkinTextures skin = this.client.getSkinProvider().getSkinTextures(this.client.getGameProfile());
+//? if >=1.21.11 {
+            SkinTextures skin = this.client.getSkinProvider().supplySkinTextures(this.client.getGameProfile(), false).get();
+//?} else {
+            /*SkinTextures skin = this.client.getSkinProvider().getSkinTextures(this.client.getGameProfile());
+*///?}
             PlayerSkinDrawer.draw(context, skin, cardX + 5, cardY + 5, 24);
         } catch (Throwable ignored) {}
 
@@ -305,7 +317,17 @@ public class MooMainMenuScreen extends Screen {
 
     private SkinTextures getSkinForAccount(MooAccountManager.Account acc) {
         if (this.client == null || acc == null) return null;
+//? if >=1.21.11 {
         if (acc.getName().equalsIgnoreCase(this.client.getSession().getUsername()) || MooAccountManager.getInstance().isActive(acc)) {
+            return this.client.getSkinProvider().supplySkinTextures(this.client.getGameProfile(), false).get();
+        }
+        try {
+            com.mojang.authlib.GameProfile profile = new com.mojang.authlib.GameProfile(acc.getParsedUuid(), acc.getName());
+            return this.client.getSkinProvider().supplySkinTextures(profile, false).get();
+        } catch (Throwable ignored) {}
+        return this.client.getSkinProvider().supplySkinTextures(this.client.getGameProfile(), false).get();
+//?} else {
+        /*if (acc.getName().equalsIgnoreCase(this.client.getSession().getUsername()) || MooAccountManager.getInstance().isActive(acc)) {
             return this.client.getSkinProvider().getSkinTextures(this.client.getGameProfile());
         }
         try {
@@ -313,10 +335,19 @@ public class MooMainMenuScreen extends Screen {
             return this.client.getSkinProvider().getSkinTextures(profile);
         } catch (Throwable ignored) {}
         return this.client.getSkinProvider().getSkinTextures(this.client.getGameProfile());
+*///?}
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean mouseClicked(net.minecraft.client.gui.Click click, boolean doubled) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
+//?} else {
+    /*@Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+*///?}
         if (button == 0) { // Left click
             // 1. Check Player Card Click
             if (this.client != null && this.client.getSession() != null) {
@@ -406,11 +437,23 @@ public class MooMainMenuScreen extends Screen {
                 }
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+//? if >=1.21.11 {
+        return super.mouseClicked(click, doubled);
+//?} else {
+        /*return super.mouseClicked(mouseX, mouseY, button);
+*///?}
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean keyPressed(net.minecraft.client.input.KeyInput input) {
+        int keyCode = input.key();
+        int scanCode = input.scancode();
+        int modifiers = input.modifiers();
+//?} else {
+    /*@Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+*///?}
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             if (accountsPopupOpen) {
                 accountsPopupOpen = false;
@@ -418,7 +461,11 @@ public class MooMainMenuScreen extends Screen {
             }
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+//? if >=1.21.11 {
+        return super.keyPressed(input);
+//?} else {
+        /*return super.keyPressed(keyCode, scanCode, modifiers);
+*///?}
     }
 
     @Override
@@ -428,11 +475,19 @@ public class MooMainMenuScreen extends Screen {
 
     private void playClickSound() {
         if (this.client != null) {
+//? if >=1.21.11 {
             this.client.getSoundManager().play(
+                net.minecraft.client.sound.PositionedSoundInstance.ui(
+                    net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK, 1.0f
+                )
+            );
+//?} else {
+            /*this.client.getSoundManager().play(
                 net.minecraft.client.sound.PositionedSoundInstance.master(
                     net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK, 1.0f
                 )
             );
+*///?}
         }
     }
 

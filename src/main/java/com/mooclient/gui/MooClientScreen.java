@@ -487,10 +487,17 @@ public class MooClientScreen extends Screen {
         boolean customScale = (hudScale != 1.0f);
 
         if (customScale) {
-            context.getMatrices().push();
+//? if >=1.21.11 {
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate((float) x, (float) y);
+            context.getMatrices().scale(hudScale, hudScale);
+            context.getMatrices().translate((float) -x, (float) -y);
+//?} else {
+            /*context.getMatrices().push();
             context.getMatrices().translate(x, y, 0);
             context.getMatrices().scale(hudScale, hudScale, 1.0f);
             context.getMatrices().translate(-x, -y, 0);
+*///?}
         }
 
         boolean showBg = com.mooclient.module.modules.ScoreboardModule.isShowBackground();
@@ -531,7 +538,11 @@ public class MooClientScreen extends Screen {
         }
 
         if (customScale) {
-            context.getMatrices().pop();
+//? if >=1.21.11 {
+            context.getMatrices().popMatrix();
+//?} else {
+            /*context.getMatrices().pop();
+*///?}
         }
     }
 
@@ -591,8 +602,13 @@ public class MooClientScreen extends Screen {
 
         int logoSize = 64;
         int logoY = titleY - logoSize - 8;
-        context.drawTexture(RenderLayer::getGuiTextured, COW_LOGO, centerX - logoSize / 2, logoY, 0.0f, 0.0f, logoSize,
+//? if >=1.21.11 {
+        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, COW_LOGO, centerX - logoSize / 2, logoY, 0.0f, 0.0f, logoSize,
                 logoSize, logoSize, logoSize);
+//?} else {
+        /*context.drawTexture(RenderLayer::getGuiTextured, COW_LOGO, centerX - logoSize / 2, logoY, 0.0f, 0.0f, logoSize,
+                logoSize, logoSize, logoSize);
+*///?}
         context.drawTextWithShadow(this.textRenderer, title, centerX - titleWidth / 2, titleY, COLOR_TEXT_WHITE);
 
         // 1. MODS Button
@@ -613,7 +629,11 @@ public class MooClientScreen extends Screen {
         int iconSize = 20;
         int iconX = emoteBtnX + (emoteBtnW - iconSize) / 2;
         int iconY = emoteBtnY + (btnH - iconSize) / 2;
-        context.drawTexture(RenderLayer::getGuiTextured, EMOTE_HUB_ICON, iconX, iconY, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
+//? if >=1.21.11 {
+        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, EMOTE_HUB_ICON, iconX, iconY, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
+//?} else {
+        /*context.drawTexture(RenderLayer::getGuiTextured, EMOTE_HUB_ICON, iconX, iconY, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
+*///?}
 
         if (emoteHover) {
             context.drawTooltip(this.textRenderer, Text.of(MooLanguage.get("emotes_name")), (int) mouseX, (int) mouseY);
@@ -943,7 +963,17 @@ public class MooClientScreen extends Screen {
         } else if (modName.equalsIgnoreCase("Shulker Tooltip") || modName.equalsIgnoreCase("Shulker Box Tooltip")) {
             return 280;
         } else if (modName.equalsIgnoreCase("Hitbox") || modName.equalsIgnoreCase("Hitboxes")) {
-            return 280;
+            int h = 326;
+            if (HitboxModule.getColor() == HitboxModule.HitboxColor.CUSTOM) {
+                h += 74;
+            }
+            if (HitboxModule.isVillagerColorEnabled()) {
+                h += 40;
+                if (HitboxModule.getVillagerColor() == HitboxModule.HitboxColor.CUSTOM) {
+                    h += 74;
+                }
+            }
+            return h;
         } else if (modName.equalsIgnoreCase("Macro")) {
             int count = com.mooclient.module.modules.MacroModule.getMacros().size();
             return 112 + count * 29 + 32;
@@ -1634,22 +1664,60 @@ public class MooClientScreen extends Screen {
             // Row 2: Hitbox Color
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("hitboxes_color_label"));
+            int generalPreview = (HitboxModule.getColor() == HitboxModule.HitboxColor.CUSTOM)
+                    ? (((HitboxModule.getCustomRed() & 0xFF) << 16) | ((HitboxModule.getCustomGreen() & 0xFF) << 8) | (HitboxModule.getCustomBlue() & 0xFF))
+                    : HitboxModule.getColor().getPreviewColor();
             renderHitboxColorSelector(context, rowX + rowW - 185, rowY + 6, mouseX, mouseY,
-                    HitboxModule.getColor());
+                    HitboxModule.getColor(), generalPreview);
 
-            // Row 3: Red Eye-Height Line
+            // Custom RGB Box for General Hitbox
+            if (HitboxModule.getColor() == HitboxModule.HitboxColor.CUSTOM) {
+                rowY += rowH + 4;
+                renderHitboxCustomColorBox(context, rowX, rowY, rowW,
+                        HitboxModule.getCustomRed(), HitboxModule.getCustomGreen(), HitboxModule.getCustomBlue(),
+                        mouseX, mouseY);
+                rowY += 68 - rowH + 2;
+            }
+
+            // Row 3: Villager Separate Color Toggle
+            rowY += rowH + 6;
+            drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("hitboxes_villager_enabled_label"));
+            drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
+                    HitboxModule.isVillagerColorEnabled());
+
+            // Row 4: Villager Hitbox Color (if enabled)
+            if (HitboxModule.isVillagerColorEnabled()) {
+                rowY += rowH + 6;
+                drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("hitboxes_villager_color_label"));
+                int villagerPreview = (HitboxModule.getVillagerColor() == HitboxModule.HitboxColor.CUSTOM)
+                        ? (((HitboxModule.getVillagerCustomRed() & 0xFF) << 16) | ((HitboxModule.getVillagerCustomGreen() & 0xFF) << 8) | (HitboxModule.getVillagerCustomBlue() & 0xFF))
+                        : (HitboxModule.getVillagerColor() == HitboxModule.HitboxColor.ACCENT ? com.mooclient.util.MooClientSettings.getAccentColor() : HitboxModule.getVillagerColor().getPreviewColor());
+                renderHitboxColorSelector(context, rowX + rowW - 185, rowY + 6, mouseX, mouseY,
+                        HitboxModule.getVillagerColor(), villagerPreview);
+
+                // Custom RGB Box for Villager Hitbox
+                if (HitboxModule.getVillagerColor() == HitboxModule.HitboxColor.CUSTOM) {
+                    rowY += rowH + 4;
+                    renderHitboxCustomColorBox(context, rowX, rowY, rowW,
+                            HitboxModule.getVillagerCustomRed(), HitboxModule.getVillagerCustomGreen(), HitboxModule.getVillagerCustomBlue(),
+                            mouseX, mouseY);
+                    rowY += 68 - rowH + 2;
+                }
+            }
+
+            // Row 5: Red Eye-Height Line
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("hitboxes_eye_height_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     HitboxModule.isShowEyeHeight());
 
-            // Row 4: Blue Look Vector Arrow
+            // Row 6: Blue Look Vector Arrow
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("hitboxes_look_vec_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
                     HitboxModule.isShowLookVector());
 
-            // Row 5: Only Elytra / Swimming
+            // Row 7: Only Elytra / Swimming
             rowY += rowH + 6;
             drawOptionRow(context, rowX, rowY, rowW, rowH, MooLanguage.get("hitboxes_elytra_swim_label"));
             drawOptionToggle(context, rowX + rowW - 44, rowY + 8, mouseX, mouseY,
@@ -2669,8 +2737,19 @@ public class MooClientScreen extends Screen {
         return -1;
     }
 
+    private static final int[] HITBOX_WAYPOINT_COLOR_PRESETS = new int[]{
+            0xFF5555, // Red
+            0x55FF55, // Lime Green
+            0x55FFFF, // Cyan
+            0xFFFF55, // Yellow
+            0xFF55FF, // Purple / Magenta
+            0xFFAA00, // Orange
+            0x5555FF, // Blue
+            0xFFFFFF  // White
+    };
+
     private void renderHitboxColorSelector(DrawContext context, int x, int y, int mouseX, int mouseY,
-            HitboxModule.HitboxColor color) {
+            HitboxModule.HitboxColor color, int previewColor) {
         int w = 175;
         int h = 22;
         boolean hover = mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h;
@@ -2683,12 +2762,117 @@ public class MooClientScreen extends Screen {
         int swatchSize = 10;
         int swatchX = x + 8;
         int swatchY = y + (h - swatchSize) / 2;
-        context.fill(swatchX, swatchY, swatchX + swatchSize, swatchY + swatchSize, color.getPreviewColor() | 0xFF000000);
+        context.fill(swatchX, swatchY, swatchX + swatchSize, swatchY + swatchSize, previewColor | 0xFF000000);
         drawBorder(context, swatchX - 1, swatchY - 1, swatchSize + 2, swatchSize + 2, 0x88FFFFFF);
 
         String text = color.getDisplayName();
         int textColor = hover ? COLOR_TEXT_WHITE : 0xFFA0A0AB;
         context.drawTextWithShadow(this.textRenderer, text, swatchX + swatchSize + 8, y + 7, textColor);
+    }
+
+    private void renderHitboxCustomColorBox(DrawContext context, int x, int y, int w, int r, int g, int b,
+            int mouseX, int mouseY) {
+        int boxH = 68;
+        context.fill(x, y, x + w, y + boxH, 0x44141420);
+        drawBorder(context, x, y, w, boxH, 0x22FFFFFF);
+
+        // Top Row: Presets and Hex preview
+        int topY = y + 5;
+        int swatchW = 20;
+        int swatchH = 10;
+        int startSwatchX = x + 8;
+
+        for (int i = 0; i < HITBOX_WAYPOINT_COLOR_PRESETS.length; i++) {
+            int sx = startSwatchX + i * (swatchW + 4);
+            int color = HITBOX_WAYPOINT_COLOR_PRESETS[i];
+            boolean isMatch = (r == ((color >> 16) & 0xFF) && g == ((color >> 8) & 0xFF) && b == (color & 0xFF));
+            boolean sHover = mouseX >= sx && mouseX <= sx + swatchW && mouseY >= topY && mouseY <= topY + swatchH;
+
+            context.fill(sx, topY, sx + swatchW, topY + swatchH, color | 0xFF000000);
+            if (isMatch) {
+                drawBorder(context, sx - 1, topY - 1, swatchW + 2, swatchH + 2, 0xFFFFFFFF);
+            } else if (sHover) {
+                drawBorder(context, sx, topY, swatchW, swatchH, 0x88FFFFFF);
+            }
+        }
+
+        int activeCol = ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
+        String hexStr = String.format("#%06X", (0xFFFFFF & activeCol));
+        int prevSize = 10;
+        int prevX = x + w - 74;
+        context.fill(prevX, topY, prevX + prevSize, topY + prevSize, activeCol | 0xFF000000);
+        drawBorder(context, prevX, topY, prevSize, prevSize, 0x88FFFFFF);
+        context.drawTextWithShadow(this.textRenderer, hexStr, prevX + prevSize + 4, topY + 1, COLOR_TEXT_MUTED);
+
+        // RGB Sliders
+        int sliderY = y + 20;
+        int labelX = x + 8;
+        int trackX = x + 40;
+        int trackW = w - 50;
+        int sliderH = 8;
+
+        renderRgbSlider(context, labelX, trackX, sliderY, trackW, sliderH, "R:", r, 0xFFFF4444, mouseX, mouseY);
+        renderRgbSlider(context, labelX, trackX, sliderY + 15, trackW, sliderH, "G:", g, 0xFF44FF44, mouseX, mouseY);
+        renderRgbSlider(context, labelX, trackX, sliderY + 30, trackW, sliderH, "B:", b, 0xFF4488FF, mouseX, mouseY);
+    }
+
+    private boolean handleHitboxCustomColorBoxClick(double mouseX, double mouseY, int x, int y, int w, boolean isVillager) {
+        int topY = y + 5;
+        int swatchW = 20;
+        int swatchH = 10;
+        int startSwatchX = x + 8;
+
+        for (int i = 0; i < HITBOX_WAYPOINT_COLOR_PRESETS.length; i++) {
+            int sx = startSwatchX + i * (swatchW + 4);
+            if (mouseX >= sx && mouseX <= sx + swatchW && mouseY >= topY && mouseY <= topY + swatchH) {
+                playClickSound();
+                int c = HITBOX_WAYPOINT_COLOR_PRESETS[i];
+                int r = (c >> 16) & 0xFF;
+                int g = (c >> 8) & 0xFF;
+                int b = c & 0xFF;
+                if (isVillager) {
+                    HitboxModule.setVillagerCustomRed(r);
+                    HitboxModule.setVillagerCustomGreen(g);
+                    HitboxModule.setVillagerCustomBlue(b);
+                } else {
+                    HitboxModule.setCustomRed(r);
+                    HitboxModule.setCustomGreen(g);
+                    HitboxModule.setCustomBlue(b);
+                }
+                com.mooclient.util.MooConfig.save();
+                return true;
+            }
+        }
+
+        int sliderY = y + 20;
+        int trackX = x + 40;
+        int trackW = w - 50;
+        int sliderH = 8;
+
+        if (mouseX >= trackX - 4 && mouseX <= trackX + trackW + 4 && mouseY >= sliderY - 2 && mouseY <= sliderY + sliderH + 2) {
+            this.draggingSlider = isVillager ? 10 : 7;
+            handleSliderDrag(mouseX);
+            playClickSound();
+            return true;
+        }
+
+        sliderY += 15;
+        if (mouseX >= trackX - 4 && mouseX <= trackX + trackW + 4 && mouseY >= sliderY - 2 && mouseY <= sliderY + sliderH + 2) {
+            this.draggingSlider = isVillager ? 11 : 8;
+            handleSliderDrag(mouseX);
+            playClickSound();
+            return true;
+        }
+
+        sliderY += 15;
+        if (mouseX >= trackX - 4 && mouseX <= trackX + trackW + 4 && mouseY >= sliderY - 2 && mouseY <= sliderY + sliderH + 2) {
+            this.draggingSlider = isVillager ? 12 : 9;
+            handleSliderDrag(mouseX);
+            playClickSound();
+            return true;
+        }
+
+        return false;
     }
 
     private void renderModeSelector(DrawContext context, int startX, int y, int mouseX, int mouseY,
@@ -3184,9 +3368,15 @@ public class MooClientScreen extends Screen {
 
     private void playClickSound() {
         if (this.client != null) {
+//? if >=1.21.11 {
             this.client.getSoundManager().play(
+                    net.minecraft.client.sound.PositionedSoundInstance.ui(
+                            net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK, 1.0f));
+//?} else {
+            /*this.client.getSoundManager().play(
                     net.minecraft.client.sound.PositionedSoundInstance.master(
                             net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK, 1.0f));
+*///?}
         }
     }
 
@@ -3218,8 +3408,16 @@ public class MooClientScreen extends Screen {
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean mouseClicked(net.minecraft.client.gui.Click click, boolean doubled) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
+//?} else {
+    /*@Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+*///?}
         // If listening for new keybind/mouse bind in options OR settings
         if ((currentView == View.OPTIONS || (currentView == View.SETTINGS && settingsTab == 3)) && listeningForKeybind) {
             String mouseName;
@@ -4860,14 +5058,26 @@ public class MooClientScreen extends Screen {
                         ArmorModule.toggleLowDurabilityWarning();
                         if (ArmorModule.isLowDurabilityWarning() && this.client != null) {
                             try {
+//? if >=1.21.11 {
                                 this.client.getSoundManager().play(
+                                        net.minecraft.client.sound.PositionedSoundInstance.ui(
+                                                com.mooclient.sound.MooSounds.COW_MOO, 1.0f, 1.5f));
+//?} else {
+                              /*this.client.getSoundManager().play(
                                         net.minecraft.client.sound.PositionedSoundInstance.master(
                                                 com.mooclient.sound.MooSounds.COW_MOO, 1.0f, 1.5f));
+*///?}
                             } catch (Exception ignored) {
                                 try {
+//? if >=1.21.11 {
                                     this.client.getSoundManager().play(
+                                            net.minecraft.client.sound.PositionedSoundInstance.ui(
+                                                    net.minecraft.sound.SoundEvents.ENTITY_COW_AMBIENT, 1.0f, 1.5f));
+//?} else {
+                                  /*this.client.getSoundManager().play(
                                             net.minecraft.client.sound.PositionedSoundInstance.master(
                                                     net.minecraft.sound.SoundEvents.ENTITY_COW_AMBIENT, 1.0f, 1.5f));
+*///?}
                                 } catch (Exception ignored2) {
                                     playClickSound();
                                 }
@@ -4996,7 +5206,48 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 3: Red Eye-Height Line
+                    // Custom Color Box for General Hitbox
+                    if (HitboxModule.getColor() == HitboxModule.HitboxColor.CUSTOM) {
+                        rowY += rowH + 4;
+                        if (handleHitboxCustomColorBoxClick(mouseX, mouseY, rowX, rowY, rowW, false)) {
+                            return true;
+                        }
+                        rowY += 68 - rowH + 2;
+                    }
+
+                    // Row 3: Villager Separate Color Toggle
+                    rowY += rowH + 6;
+                    if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
+                            && mouseY <= rowY + 26) {
+                        playClickSound();
+                        HitboxModule.toggleVillagerColorEnabled();
+                        com.mooclient.util.MooConfig.save();
+                        return true;
+                    }
+
+                    // Row 4: Villager Hitbox Color (if enabled)
+                    if (HitboxModule.isVillagerColorEnabled()) {
+                        rowY += rowH + 6;
+                        int vColorBtnX = rowX + rowW - colorBtnW - 10;
+                        int vColorBtnY = rowY + 6;
+                        if (mouseX >= vColorBtnX && mouseX <= vColorBtnX + colorBtnW && mouseY >= vColorBtnY && mouseY <= vColorBtnY + colorBtnH) {
+                            playClickSound();
+                            HitboxModule.cycleVillagerColor();
+                            com.mooclient.util.MooConfig.save();
+                            return true;
+                        }
+
+                        // Custom Color Box for Villager Hitbox
+                        if (HitboxModule.getVillagerColor() == HitboxModule.HitboxColor.CUSTOM) {
+                            rowY += rowH + 4;
+                            if (handleHitboxCustomColorBoxClick(mouseX, mouseY, rowX, rowY, rowW, true)) {
+                                return true;
+                            }
+                            rowY += 68 - rowH + 2;
+                        }
+                    }
+
+                    // Row 5: Red Eye-Height Line
                     rowY += rowH + 6;
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {
@@ -5006,7 +5257,7 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 4: Blue Look Vector Arrow
+                    // Row 6: Blue Look Vector Arrow
                     rowY += rowH + 6;
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {
@@ -5016,7 +5267,7 @@ public class MooClientScreen extends Screen {
                         return true;
                     }
 
-                    // Row 5: Only Elytra / Swimming
+                    // Row 7: Only Elytra / Swimming
                     rowY += rowH + 6;
                     if (mouseX >= rowX + rowW - 44 && mouseX <= rowX + rowW - 10 && mouseY >= rowY + 8
                             && mouseY <= rowY + 26) {
@@ -5350,7 +5601,11 @@ public class MooClientScreen extends Screen {
                 }
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+//? if >=1.21.11 {
+        return super.mouseClicked(click, doubled);
+//?} else {
+        /*return super.mouseClicked(mouseX, mouseY, button);
+*///?}
     }
 
     private int getSelector3Click(int startX, int y, int mouseX, int mouseY) {
@@ -5442,11 +5697,43 @@ public class MooClientScreen extends Screen {
                     com.mooclient.util.MooConfig.save();
                 }
             }
+        } else if (currentView == View.OPTIONS && (draggingSlider >= 7 && draggingSlider <= 12)) {
+            int panelW = 480;
+            int panelX = (this.width - panelW) / 2;
+            int rowX = panelX + 16;
+            int rowW = panelW - 32;
+            int trackX = rowX + 40;
+            int trackW = rowW - 50;
+
+            float clamped = (float) Math.max(0, Math.min(trackW, mouseX - trackX));
+            int val = Math.round((clamped / (float) trackW) * 255.0f);
+
+            if (draggingSlider == 7) {
+                HitboxModule.setCustomRed(val);
+            } else if (draggingSlider == 8) {
+                HitboxModule.setCustomGreen(val);
+            } else if (draggingSlider == 9) {
+                HitboxModule.setCustomBlue(val);
+            } else if (draggingSlider == 10) {
+                HitboxModule.setVillagerCustomRed(val);
+            } else if (draggingSlider == 11) {
+                HitboxModule.setVillagerCustomGreen(val);
+            } else if (draggingSlider == 12) {
+                HitboxModule.setVillagerCustomBlue(val);
+            }
+            com.mooclient.util.MooConfig.save();
         }
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean charTyped(net.minecraft.client.input.CharInput input) {
+        char chr = (char) input.codepoint();
+        int modifiers = input.modifiers();
+//?} else {
+    /*@Override
     public boolean charTyped(char chr, int modifiers) {
+*///?}
         if (currentView == View.MODS && searching) {
             if (chr >= 32 && chr != 127) {
                 searchFilter += chr;
@@ -5473,11 +5760,23 @@ public class MooClientScreen extends Screen {
                 }
             }
         }
-        return super.charTyped(chr, modifiers);
+//? if >=1.21.11 {
+        return super.charTyped(input);
+//?} else {
+        /*return super.charTyped(chr, modifiers);
+*///?}
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean mouseDragged(net.minecraft.client.gui.Click click, double deltaX, double deltaY) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
+//?} else {
+    /*@Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+*///?}
         if (currentView == View.HUB && draggingWidget != null) {
             int rawX = (int) mouseX - dragOffsetX;
             int rawY = (int) mouseY - dragOffsetY;
@@ -5600,11 +5899,23 @@ public class MooClientScreen extends Screen {
             handleSliderDrag(mouseX);
             return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+//? if >=1.21.11 {
+        return super.mouseDragged(click, deltaX, deltaY);
+//?} else {
+        /*return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+*///?}
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean mouseReleased(net.minecraft.client.gui.Click click) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
+//?} else {
+    /*@Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+*///?}
         if (draggingWidget != null) {
             MooConfig.save();
         }
@@ -5614,11 +5925,23 @@ public class MooClientScreen extends Screen {
         if (activeGuideLines != null) {
             activeGuideLines.clear();
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+//? if >=1.21.11 {
+        return super.mouseReleased(click);
+//?} else {
+        /*return super.mouseReleased(mouseX, mouseY, button);
+*///?}
     }
 
+//? if >=1.21.11 {
     @Override
+    public boolean keyPressed(net.minecraft.client.input.KeyInput input) {
+        int keyCode = input.key();
+        int scanCode = input.scancode();
+        int modifiers = input.modifiers();
+//?} else {
+    /*@Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+*///?}
         // If searching in Mods view
         if (currentView == View.MODS && searching) {
             if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE) {
@@ -5730,12 +6053,21 @@ public class MooClientScreen extends Screen {
             if (listeningMacroIndex < macroList.size()) {
                 com.mooclient.module.modules.MacroModule.MacroEntry m = macroList.get(listeningMacroIndex);
                 String kName;
+//? if >=1.21.11 {
                 try {
+                    kName = net.minecraft.client.util.InputUtil.fromKeyCode(input).getLocalizedText()
+                            .getString().toUpperCase();
+                } catch (Exception e) {
+                    kName = "KEY " + keyCode;
+                }
+//?} else {
+                /*try {
                     kName = net.minecraft.client.util.InputUtil.fromKeyCode(keyCode, scanCode).getLocalizedText()
                             .getString().toUpperCase();
                 } catch (Exception e) {
                     kName = "KEY " + keyCode;
                 }
+*///?}
                 if (kName == null || kName.isEmpty() || kName.startsWith("KEY.")) {
                     kName = "KEY " + keyCode;
                 }
@@ -5758,11 +6090,19 @@ public class MooClientScreen extends Screen {
             }
 
             String keyName;
+//? if >=1.21.11 {
             try {
+                keyName = InputUtil.fromKeyCode(input).getLocalizedText().getString().toUpperCase();
+            } catch (Exception e) {
+                keyName = "KEY " + keyCode;
+            }
+//?} else {
+            /*try {
                 keyName = InputUtil.fromKeyCode(keyCode, scanCode).getLocalizedText().getString().toUpperCase();
             } catch (Exception e) {
                 keyName = "KEY " + keyCode;
             }
+*///?}
 
             if (keyName == null || keyName.isEmpty() || keyName.startsWith("KEY.")) {
                 keyName = "KEY " + keyCode;
@@ -5836,11 +6176,19 @@ public class MooClientScreen extends Screen {
         }
 
         // Prevent inventory key (e.g. E) from closing MooClientScreen
-        if (this.client != null && this.client.options.inventoryKey.matchesKey(keyCode, scanCode)) {
+//? if >=1.21.11 {
+        if (this.client != null && this.client.options.inventoryKey.matchesKey(input)) {
+            return false;
+        }
+
+        return super.keyPressed(input);
+//?} else {
+        /*if (this.client != null && this.client.options.inventoryKey.matchesKey(keyCode, scanCode)) {
             return false;
         }
 
         return super.keyPressed(keyCode, scanCode, modifiers);
+*///?}
     }
 
     @Override

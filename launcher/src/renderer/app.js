@@ -44,7 +44,7 @@ const translations = {
         not_logged_in: 'Brak konta',
         nav_mods: 'Modyfikacje',
         mods_title: 'Modyfikacje',
-        mods_subtitle: 'Przeglądaj i instaluj mody z Modrinth dla Fabric 1.21.4',
+        mods_subtitle: 'Przeglądaj i instaluj mody z Modrinth dla Fabric {ver}',
         btn_open_folder: 'Otwórz folder modów',
         search_mods_placeholder: 'Szukaj modów na Modrinth...',
         search_installed_placeholder: 'Filtruj zainstalowane mody...',
@@ -67,7 +67,7 @@ const translations = {
         btn_updating: 'Aktualizowanie...',
         btn_versions: 'Wersje',
         version_modal_title: 'Wybierz wersję modyfikacji',
-        version_modal_subtitle: 'Wybierz wersję z Modrinth dla Fabric 1.21.4',
+        version_modal_subtitle: 'Wybierz wersję z Modrinth dla Fabric {ver}',
         no_updates_found: 'Wszystkie mody są aktualne! ✓',
         btn_pick_install: 'Zainstaluj tę wersję',
         update_up_to_date: 'Najnowsza',
@@ -127,7 +127,7 @@ const translations = {
         require_login_status: 'Click to log in',
         require_login_alert: 'To play Moo Client, you must first log in with a Microsoft Premium account!',
         mods_title: 'Modifications',
-        mods_subtitle: 'Browse and install mods from Modrinth for Fabric 1.21.4',
+        mods_subtitle: 'Browse and install mods from Modrinth for Fabric {ver}',
         btn_open_folder: 'Open Mods Folder',
         search_mods_placeholder: 'Search mods on Modrinth...',
         search_installed_placeholder: 'Filter installed mods...',
@@ -150,7 +150,7 @@ const translations = {
         btn_updating: 'Updating...',
         btn_versions: 'Versions',
         version_modal_title: 'Select Mod Version',
-        version_modal_subtitle: 'Choose a version from Modrinth for Fabric 1.21.4',
+        version_modal_subtitle: 'Choose a version from Modrinth for Fabric {ver}',
         no_updates_found: 'All mods are up to date! ✓',
         btn_pick_install: 'Install this version',
         update_up_to_date: 'Latest',
@@ -162,14 +162,6 @@ const translations = {
         btn_update_later: 'Later',
         update_downloading: 'Downloading update...',
         update_success_msg: 'Moo Client updated successfully!',
-        btn_check_updates: 'Check for Updates',
-        btn_update: 'Update',
-        btn_updating: 'Updating...',
-        btn_versions: 'Versions',
-        version_modal_title: 'Select Mod Version',
-        version_modal_subtitle: 'Select a version from Modrinth for Fabric 1.21.4',
-        no_updates_found: 'All mods are up to date! ✓',
-        btn_pick_install: 'Install this version',
         bg_theme_label: 'BG:',
         accounts_title: 'Premium Accounts',
         btn_add_account: 'Add Account',
@@ -178,23 +170,24 @@ const translations = {
 };
 
 let currentLang = 'pl';
-let lastKnownClientVersion = '2.1.5';
+let lastKnownClientVersion = '2.1.6';
 
 function setLanguage(lang) {
     currentLang = lang;
     const dict = translations[lang];
+    const currentVer = versionSelect?.value || '1.21.4';
 
     document.querySelectorAll('[data-i18n]').forEach((el) => {
         const key = el.getAttribute('data-i18n');
         if (dict[key]) {
-            el.textContent = dict[key];
+            el.textContent = dict[key].replace('{ver}', currentVer);
         }
     });
 
     document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
         const key = el.getAttribute('data-i18n-placeholder');
         if (dict[key]) {
-            el.placeholder = dict[key];
+            el.placeholder = dict[key].replace('{ver}', currentVer);
         }
     });
 
@@ -608,54 +601,150 @@ const progressPercent = document.getElementById('progress-percent');
 const playerStatus = document.getElementById('player-status');
 
 let isLaunching = false;
+let currentModsTab = 'browse';
+let installedModsCache = [];
+let modUpdatesMap = {};
+let searchTimeout = null;
+
 const versionSelect = document.getElementById('version-select');
 const versionDropdown = document.getElementById('version-dropdown');
 const dropdownTrigger = document.getElementById('version-dropdown-trigger');
 const selectedVersionText = document.getElementById('selected-version-text');
-const dropdownItems = document.querySelectorAll('.dropdown-item');
 
 const modsVersionDropdown = document.getElementById('mods-version-dropdown');
 const modsDropdownTrigger = document.getElementById('mods-version-dropdown-trigger');
 const modsSelectedVersionText = document.getElementById('mods-selected-version-text');
-const modsDropdownItems = document.querySelectorAll('#mods-version-dropdown .dropdown-item');
 
+function updateInstalledTabBadge(count, updatesCount = 0) {
+    const countEl = document.getElementById('installed-count');
+    if (countEl) {
+        countEl.textContent = count;
+    }
+    const updateBadge = document.getElementById('installed-updates-badge');
+    if (updateBadge) {
+        if (updatesCount > 0) {
+            updateBadge.innerHTML = `<span style="background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); padding: 1px 6px; border-radius: 10px; font-size: 11px; margin-left: 4px;">+${updatesCount} 🚀</span>`;
+        } else {
+            updateBadge.innerHTML = '';
+        }
+    }
+}
+
+function updateDynamicSubtitles(ver) {
+    const v = ver || versionSelect?.value || '1.21.4';
+    const subtitleEl = document.querySelector('#page-mods .settings-subtitle');
+    if (subtitleEl) {
+        subtitleEl.textContent = t('mods_subtitle').replace('{ver}', v);
+    }
+    const versionModalSubtitle = document.querySelector('.version-picker-header .settings-subtitle') || document.getElementById('version-dialog-subtitle');
+    if (versionModalSubtitle) {
+        versionModalSubtitle.textContent = t('version_modal_subtitle').replace('{ver}', v);
+    }
+}
+
+async function updateDropdownActiveState(val, text) {
+    if (versionSelect) versionSelect.value = val;
+    if (selectedVersionText) selectedVersionText.textContent = text;
+    if (modsSelectedVersionText) modsSelectedVersionText.textContent = text;
+
+    document.querySelectorAll('#version-dropdown .dropdown-item').forEach((i) => {
+        i.classList.toggle('active', i.dataset.value === val);
+    });
+    document.querySelectorAll('#mods-version-dropdown .dropdown-item').forEach((i) => {
+        i.classList.toggle('active', i.dataset.value === val);
+    });
+
+    updateDynamicSubtitles(val);
+
+    try {
+        localStorage.setItem('moo_selected_version', val);
+    } catch (e) {}
+
+    // Reset update maps for the new version
+    modUpdatesMap = {};
+    updateInstalledTabBadge(0, 0);
+
+    // If currently on installed tab, clear previous view and show loading immediately
+    if (currentModsTab === 'installed') {
+        const mg = document.getElementById('mods-grid');
+        const me = document.getElementById('mods-empty');
+        const ml = document.getElementById('mods-loading');
+        if (mg) mg.innerHTML = '';
+        me?.classList.add('hidden');
+        ml?.classList.remove('hidden');
+    }
+
+    try {
+        if (typeof refreshInstalledMods === 'function') {
+            await refreshInstalledMods();
+            const query = document.getElementById('mods-search-input')?.value || '';
+            if (currentModsTab === 'browse' && typeof searchAndRenderMods === 'function') {
+                await searchAndRenderMods(query, true);
+            }
+        }
+    } catch (err) {
+        console.error('Error switching version:', err);
+    } finally {
+        const ml = document.getElementById('mods-loading');
+        ml?.classList.add('hidden');
+    }
+}
+
+// Open / toggle main version dropdown
+dropdownTrigger?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    modsVersionDropdown?.classList.remove('open');
+    versionDropdown?.classList.toggle('open');
+});
+
+// Open / toggle mods page version dropdown
 modsDropdownTrigger?.addEventListener('click', (e) => {
     e.stopPropagation();
+    versionDropdown?.classList.remove('open');
     modsVersionDropdown?.classList.toggle('open');
 });
 
-modsDropdownItems.forEach((item) => {
+// Main version dropdown items
+document.querySelectorAll('#version-dropdown .dropdown-item').forEach((item) => {
     item.addEventListener('click', (e) => {
         e.stopPropagation();
-        const val = item.dataset.value;
-        const text = item.querySelector('span')?.textContent || val;
-        if (versionSelect) versionSelect.value = val;
-        if (selectedVersionText) selectedVersionText.textContent = text;
-        if (modsSelectedVersionText) modsSelectedVersionText.textContent = text;
-        dropdownItems.forEach((i) => i.classList.toggle('active', i.dataset.value === val));
-        modsDropdownItems.forEach((i) => i.classList.toggle('active', i.dataset.value === val));
-        modsVersionDropdown?.classList.remove('open');
-    });
-});
-
-dropdownItems.forEach((item) => {
-    item.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const val = item.dataset.value;
-        const text = item.querySelector('span')?.textContent || val;
-        if (versionSelect) versionSelect.value = val;
-        if (selectedVersionText) selectedVersionText.textContent = text;
-        if (modsSelectedVersionText) modsSelectedVersionText.textContent = text;
-        dropdownItems.forEach((i) => i.classList.toggle('active', i.dataset.value === val));
-        modsDropdownItems.forEach((i) => i.classList.toggle('active', i.dataset.value === val));
         versionDropdown?.classList.remove('open');
+        const val = item.dataset.value;
+        const text = item.querySelector('span')?.textContent || `${val} (Fabric)`;
+        updateDropdownActiveState(val, text);
     });
 });
 
+// Mods version dropdown items
+document.querySelectorAll('#mods-version-dropdown .dropdown-item').forEach((item) => {
+    item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        modsVersionDropdown?.classList.remove('open');
+        const val = item.dataset.value;
+        const text = item.querySelector('span')?.textContent || `${val} (Fabric)`;
+        updateDropdownActiveState(val, text);
+    });
+});
+
+// Close all dropdowns when clicking outside
 document.addEventListener('click', () => {
     versionDropdown?.classList.remove('open');
     modsVersionDropdown?.classList.remove('open');
 });
+
+// Restore previously chosen version on startup
+try {
+    const savedVer = localStorage.getItem('moo_selected_version');
+    if (savedVer) {
+        const item = document.querySelector(`#version-dropdown .dropdown-item[data-value="${savedVer}"]`);
+        if (item) {
+            const text = item.querySelector('span')?.textContent || `${savedVer} (Fabric)`;
+            updateDropdownActiveState(savedVer, text);
+        }
+    } else {
+        updateDynamicSubtitles('1.21.4');
+    }
+} catch (e) {}
 
 playBtn?.addEventListener('click', async () => {
     if (!currentAccount || !currentAccount.name) {
@@ -819,36 +908,33 @@ const tabInstalledMods = document.getElementById('tab-installed-mods');
 const modsGrid = document.getElementById('mods-grid');
 const modsLoading = document.getElementById('mods-loading');
 const modsEmpty = document.getElementById('mods-empty');
-const installedCountEl = document.getElementById('installed-count');
 const btnOpenModsFolder = document.getElementById('btn-open-mods-folder');
-
-let currentModsTab = 'browse';
-let installedModsCache = [];
-let searchTimeout = null;
 
 async function refreshInstalledMods() {
     try {
-        installedModsCache = (await window.mooAPI?.getInstalledMods()) || [];
-        if (installedCountEl) {
-            installedCountEl.textContent = installedModsCache.length;
-        }
+        const ver = versionSelect?.value || '1.21.4';
+        installedModsCache = (await window.mooAPI?.getInstalledMods(ver)) || [];
+        updateInstalledTabBadge(installedModsCache.length, Object.keys(modUpdatesMap || {}).length);
         if (currentModsTab === 'installed') {
-            renderInstalledModsView();
+            renderInstalledModsView(modsSearchInput?.value || '');
         }
     } catch (e) {
         console.error('Failed to get installed mods:', e);
     }
 }
 
-async function searchAndRenderMods(query = '') {
+async function searchAndRenderMods(query = '', skipRefresh = false) {
     if (!modsGrid) return;
     modsLoading?.classList.remove('hidden');
     modsEmpty?.classList.add('hidden');
     modsGrid.innerHTML = '';
 
     try {
-        await refreshInstalledMods();
-        const res = await window.mooAPI?.searchModrinth({ query, limit: 30 });
+        if (!skipRefresh) {
+            await refreshInstalledMods();
+        }
+        const currentVer = versionSelect?.value || '1.21.4';
+        const res = await window.mooAPI?.searchModrinth({ query, limit: 30, gameVersion: currentVer });
         modsLoading?.classList.add('hidden');
 
         if (res?.success && res.data?.hits?.length > 0) {
@@ -900,7 +986,7 @@ async function searchAndRenderMods(query = '') {
                         btnInstall.textContent = t('btn_installing');
                         btnInstall.disabled = true;
                         try {
-                            const installRes = await window.mooAPI?.installMod(mod.project_id);
+                            const installRes = await window.mooAPI?.installMod({ projectId: mod.project_id, gameVersion: currentVer });
                             if (installRes?.success) {
                                 btnInstall.textContent = t('btn_installed');
                                 btnInstall.classList.add('installed');
@@ -947,7 +1033,6 @@ async function searchAndRenderMods(query = '') {
     }
 }
 
-let modUpdatesMap = {}; // filename -> updateInfo
 
 function renderInstalledModsView(filterQuery = '') {
     if (!modsGrid) return;
@@ -1023,7 +1108,8 @@ function renderInstalledModsView(filterQuery = '') {
             btnUpdate.textContent = t('btn_updating');
             btnUpdate.disabled = true;
             try {
-                const res = await window.mooAPI?.installModVersion(updateInfo.versionId, mod.filename);
+                const ver = versionSelect?.value || '1.21.4';
+                const res = await window.mooAPI?.installModVersion(updateInfo.versionId, mod.filename, ver);
                 if (res?.success) {
                     delete modUpdatesMap[mod.filename];
                     showToast(`Zaktualizowano ${displayName} do wersji ${updateInfo.latestVersion}!`, 'success');
@@ -1052,7 +1138,8 @@ function renderInstalledModsView(filterQuery = '') {
         toggleInput?.addEventListener('change', async () => {
             const isChecked = toggleInput.checked;
             try {
-                const res = await window.mooAPI?.toggleMod(mod.filename, isChecked);
+                const ver = versionSelect?.value || '1.21.4';
+                const res = await window.mooAPI?.toggleMod(mod.filename, isChecked, ver);
                 if (res?.success) {
                     mod.filename = res.newFilename;
                     mod.enabled = isChecked;
@@ -1079,7 +1166,8 @@ function renderInstalledModsView(filterQuery = '') {
             );
             if (confirmed) {
                 try {
-                    const res = await window.mooAPI?.uninstallMod(mod.filename);
+                    const ver = versionSelect?.value || '1.21.4';
+                    const res = await window.mooAPI?.uninstallMod(mod.filename, ver);
                     if (res?.success) {
                         row.remove();
                         showToast(`Usunięto ${displayName}`, 'info');
@@ -1220,7 +1308,8 @@ async function fetchAndPopulateVersions(showAll = false) {
     selectedVersionObj = null;
 
     try {
-        const res = await window.mooAPI?.getModVersions(currentVersionModalContext.projectId, showAll);
+        const currentVer = versionSelect?.value || '1.21.4';
+        const res = await window.mooAPI?.getModVersions(currentVersionModalContext.projectId, showAll, currentVer);
         versionModalLoading?.classList.add('hidden');
         if (res?.success && res.versions && res.versions.length > 0) {
             currentModalVersions = res.versions;
@@ -1326,7 +1415,8 @@ let hasAutoCheckedUpdates = false;
 
 async function checkAndApplyUpdatesSilently(notifyUser = false) {
     try {
-        const res = await window.mooAPI?.checkModUpdates();
+        const ver = versionSelect?.value || '1.21.4';
+        const res = await window.mooAPI?.checkModUpdates(ver);
         if (res?.success && res.updates) {
             modUpdatesMap = {};
             res.updates.forEach((u) => {
@@ -1334,14 +1424,7 @@ async function checkAndApplyUpdatesSilently(notifyUser = false) {
             });
 
             // Update installed tab indicator
-            if (tabInstalledMods) {
-                const count = installedModsCache.length;
-                if (res.updates.length > 0) {
-                    tabInstalledMods.innerHTML = `${t('tab_installed')} (<span id="installed-count">${count}</span>) <span style="background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); padding: 1px 6px; border-radius: 10px; font-size: 11px; margin-left: 4px;">+${res.updates.length} 🚀</span>`;
-                } else {
-                    tabInstalledMods.innerHTML = `${t('tab_installed')} (<span id="installed-count">${count}</span>)`;
-                }
-            }
+            updateInstalledTabBadge(installedModsCache.length, res.updates.length);
 
             if (currentModsTab === 'installed') {
                 renderInstalledModsView(modsSearchInput?.value || '');
@@ -1361,7 +1444,8 @@ const btnCheckUpdates = document.getElementById('btn-check-mod-updates');
 btnCheckUpdates?.addEventListener('click', async () => {
     btnCheckUpdates.classList.add('checking');
     try {
-        const res = await window.mooAPI?.checkModUpdates();
+        const ver = versionSelect?.value || '1.21.4';
+        const res = await window.mooAPI?.checkModUpdates(ver);
         btnCheckUpdates.classList.remove('checking');
         if (res?.success && res.updates && res.updates.length > 0) {
             modUpdatesMap = {};
@@ -1553,7 +1637,8 @@ modsSearchInput?.addEventListener('input', () => {
 });
 
 btnOpenModsFolder?.addEventListener('click', () => {
-    window.mooAPI?.openModsFolder();
+    const ver = versionSelect?.value || '1.21.4';
+    window.mooAPI?.openModsFolder(ver);
 });
 
 navMods?.addEventListener('click', () => {
@@ -1649,6 +1734,7 @@ window.addEventListener('drop', async (e) => {
 
     let installedCount = 0;
     const pathList = [];
+    const ver = versionSelect?.value || '1.21.4';
 
     for (const file of fileList) {
         let fullPath = '';
@@ -1667,7 +1753,7 @@ window.addEventListener('drop', async (e) => {
             try {
                 const arrayBuffer = await file.arrayBuffer();
                 const uint8 = new Uint8Array(arrayBuffer);
-                const res = await window.mooAPI?.saveModFile(safeName, uint8);
+                const res = await window.mooAPI?.saveModFile(safeName, uint8, ver);
                 if (res?.success) {
                     installedCount++;
                 }
@@ -1679,7 +1765,7 @@ window.addEventListener('drop', async (e) => {
 
     // Always call installLocalMods with pathList or empty list so it can scan recent temp folders!
     try {
-        const res = await window.mooAPI?.installLocalMods(pathList);
+        const res = await window.mooAPI?.installLocalMods(pathList, ver);
         if (res?.success && res.count > 0) {
             installedCount += res.count;
         }
@@ -1760,7 +1846,7 @@ async function checkClientCoreUpdate(showToastIfUpToDate = false) {
         } else {
             currentClientUpdateInfo = null;
             pill.classList.remove('has-update');
-            const ver = String(res?.currentVersion || '2.1.5').replace(/-/g, '_');
+            const ver = String(res?.currentVersion || '2.1.6').replace(/-/g, '_');
             lastKnownClientVersion = ver;
             label.textContent = `v${ver} (${t('update_up_to_date')})`;
             pill.title = `Moo Client v${ver} — ${t('update_up_to_date')}`;

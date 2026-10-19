@@ -1,6 +1,14 @@
 package com.mooclient.mixin;
 
-import com.mooclient.module.modules.HitboxModule;
+//? if >=1.21.11 {
+import net.minecraft.client.render.entity.EntityRenderManager;
+import org.spongepowered.asm.mixin.Mixin;
+
+@Mixin(EntityRenderManager.class)
+public abstract class EntityRenderDispatcherMixin {
+}
+//?} else {
+/*import com.mooclient.module.modules.HitboxModule;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexRendering;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
@@ -19,9 +27,21 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(EntityRenderDispatcher.class)
 public abstract class EntityRenderDispatcherMixin {
 
+    private static Entity mooClient$currentRenderingEntity = null;
+
     @Shadow
     private static void renderHitbox(MatrixStack matrices, VertexConsumer vertices, Entity entity, float tickDelta, float red, float green, float blue) {
         throw new AssertionError();
+    }
+
+    @org.spongepowered.asm.mixin.injection.Inject(method = "renderHitbox", at = @At("HEAD"))
+    private static void mooClient$onRenderHitboxHead(MatrixStack matrices, VertexConsumer vertices, Entity entity, float tickDelta, float red, float green, float blue, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
+        mooClient$currentRenderingEntity = entity;
+    }
+
+    @org.spongepowered.asm.mixin.injection.Inject(method = "renderHitbox", at = @At("RETURN"))
+    private static void mooClient$onRenderHitboxReturn(MatrixStack matrices, VertexConsumer vertices, Entity entity, float tickDelta, float red, float green, float blue, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
+        mooClient$currentRenderingEntity = null;
     }
 
     @Redirect(
@@ -42,8 +62,14 @@ public abstract class EntityRenderDispatcherMixin {
     private void mooClient$redirectRenderHitboxCall(MatrixStack matrices, VertexConsumer vertices, Entity entity, float tickDelta, float red, float green, float blue) {
         if (HitboxModule.isHitboxEnabled()) {
             if (HitboxModule.isOnlyGlidingOrSwimming()) {
-                if (!(entity instanceof LivingEntity living) || (!living.isGliding() && !living.isSwimming())) {
-                    return; // Skip rendering hitbox for non-gliding / non-swimming entities
+                if (HitboxModule.isVillager(entity)) {
+                    // Villager hitbox is always visible regardless of elytra/swimming filter
+                } else if (entity instanceof net.minecraft.entity.player.PlayerEntity player) {
+                    if (!player.isGliding() && !player.isSwimming()) {
+                        return; // Only render player hitbox if gliding or swimming
+                    }
+                } else {
+                    return; // Skip other entities when elytra/swim filter is active
                 }
             }
         }
@@ -57,9 +83,9 @@ public abstract class EntityRenderDispatcherMixin {
     private static void mooClient$modifyHitboxColor(MatrixStack matrices, VertexConsumer vertices, Box box, float red, float green, float blue, float alpha) {
         if (HitboxModule.isHitboxEnabled()) {
             VertexRendering.drawBox(matrices, vertices, box,
-                    HitboxModule.getColorRed(),
-                    HitboxModule.getColorGreen(),
-                    HitboxModule.getColorBlue(),
+                    HitboxModule.getColorRed(mooClient$currentRenderingEntity),
+                    HitboxModule.getColorGreen(mooClient$currentRenderingEntity),
+                    HitboxModule.getColorBlue(mooClient$currentRenderingEntity),
                     HitboxModule.getColorAlpha());
         } else {
             VertexRendering.drawBox(matrices, vertices, box, red, green, blue, alpha);
@@ -91,3 +117,4 @@ public abstract class EntityRenderDispatcherMixin {
         VertexRendering.drawVector(matrices, vertices, origin, vector, color);
     }
 }
+*///?}

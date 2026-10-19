@@ -119,11 +119,12 @@ function setupIPC() {
     // --- Launch game ---
     ipcMain.handle('launch-game', async (event, options) => {
         try {
+            const version = options?.version || '1.21.4';
             sendToRenderer('launch-status', 'Sprawdzanie bibliotek i modów...');
             sendToRenderer('launch-progress', 5);
 
             // Step 1: Ensure Fabric API Core dependency is downloaded
-            await modManager.ensureFabricApi((status, progress) => {
+            await modManager.ensureFabricApi(version, (status, progress) => {
                 sendToRenderer('launch-status', status);
                 sendToRenderer('launch-progress', progress);
             });
@@ -135,20 +136,20 @@ function setupIPC() {
                     sendToRenderer('launch-progress', progress);
                 });
             } else {
-                modManager.ensureBundledMod();
+                modManager.ensureBundledMod(version);
             }
 
             // Step 3: Launch Minecraft with Fabric + mod
             sendToRenderer('launch-status', 'Uruchamianie Minecrafta...');
             sendToRenderer('launch-progress', 80);
-            discordRPC.updateActivity('Uruchamia grę...', 'Minecraft 1.21.4 (Fabric)');
+            discordRPC.updateActivity('Uruchamia grę...', `Minecraft ${version} (Fabric)`);
 
-            await gameManager.launch({ ...options, isDev: modManager.isDevMode() }, (status, progress) => {
+            await gameManager.launch({ ...options, version, isDev: modManager.isDevMode() }, (status, progress) => {
                 sendToRenderer('launch-status', status);
                 sendToRenderer('launch-progress', progress);
             });
 
-            discordRPC.updateActivity('W grze', 'Moo Client 1.21.4');
+            discordRPC.updateActivity('W grze', `Moo Client ${version}`);
             sendToRenderer('launch-status', 'Game is running!');
             sendToRenderer('launch-progress', 100);
             return { success: true };
@@ -243,63 +244,79 @@ function setupIPC() {
     // --- Modrinth & Mod Management ---
     ipcMain.handle('search-modrinth', async (event, params) => {
         try {
-            const data = await modManager.searchModrinth(params?.query || '', params?.limit || 24, params?.offset || 0, params?.index || 'downloads');
+            const data = await modManager.searchModrinth(
+                params?.query || '',
+                params?.limit || 24,
+                params?.offset || 0,
+                params?.index || 'downloads',
+                params?.gameVersion || '1.21.4'
+            );
             return { success: true, data };
         } catch (e) {
             return { success: false, error: e.message };
         }
     });
 
-    ipcMain.handle('install-mod', async (event, projectId) => {
+    ipcMain.handle('install-mod', async (event, data) => {
         try {
-            const result = await modManager.installModrinthMod(projectId);
+            const projectId = typeof data === 'string' ? data : data?.projectId;
+            const gameVersion = typeof data === 'object' ? (data?.gameVersion || '1.21.4') : '1.21.4';
+            const result = await modManager.installModrinthMod(projectId, gameVersion);
             return result;
         } catch (e) {
             return { success: false, error: e.message };
         }
     });
 
-    ipcMain.handle('get-installed-mods', async () => {
-        return modManager.getInstalledMods();
+    ipcMain.handle('get-installed-mods', async (event, data) => {
+        const gameVersion = typeof data === 'string' ? data : (data?.gameVersion || '1.21.4');
+        return modManager.getInstalledMods(gameVersion);
     });
 
-    ipcMain.handle('uninstall-mod', async (event, filename) => {
-        return modManager.uninstallMod(filename);
+    ipcMain.handle('uninstall-mod', async (event, data) => {
+        const filename = typeof data === 'string' ? data : data?.filename;
+        const gameVersion = typeof data === 'object' ? (data?.gameVersion || '1.21.4') : '1.21.4';
+        return modManager.uninstallMod(filename, gameVersion);
     });
 
-    ipcMain.handle('toggle-mod', async (event, { filename, enabled }) => {
-        return modManager.toggleMod(filename, enabled);
+    ipcMain.handle('toggle-mod', async (event, { filename, enabled, gameVersion = '1.21.4' }) => {
+        return modManager.toggleMod(filename, enabled, gameVersion);
     });
 
-    ipcMain.handle('install-local-mods', async (event, filePaths) => {
-        return await modManager.installLocalMods(filePaths);
+    ipcMain.handle('install-local-mods', async (event, data) => {
+        const filePaths = Array.isArray(data) ? data : (data?.filePaths || []);
+        const gameVersion = (typeof data === 'object' && !Array.isArray(data)) ? (data?.gameVersion || '1.21.4') : '1.21.4';
+        return await modManager.installLocalMods(filePaths, gameVersion);
     });
 
-    ipcMain.handle('save-mod-file', async (event, { filename, buffer }) => {
-        return modManager.saveModBuffer(filename, buffer);
+    ipcMain.handle('save-mod-file', async (event, { filename, buffer, gameVersion = '1.21.4' }) => {
+        return modManager.saveModBuffer(filename, buffer, gameVersion);
     });
 
     ipcMain.handle('get-mod-versions', async (event, data) => {
         const projectId = typeof data === 'string' ? data : data?.projectId;
+        const gameVersion = typeof data === 'object' ? (data?.gameVersion || '1.21.4') : '1.21.4';
         const allVersions = typeof data === 'object' ? !!data?.allVersions : false;
-        return modManager.getModVersions(projectId, '1.21.4', allVersions);
+        return modManager.getModVersions(projectId, gameVersion, allVersions);
     });
 
-    ipcMain.handle('install-mod-version', async (event, { versionId, oldFilename }) => {
-        return modManager.installModVersion(versionId, oldFilename);
+    ipcMain.handle('install-mod-version', async (event, { versionId, oldFilename, gameVersion = '1.21.4' }) => {
+        return modManager.installModVersion(versionId, oldFilename, gameVersion);
     });
 
-    ipcMain.handle('check-mod-updates', async () => {
-        return modManager.checkModUpdates();
+    ipcMain.handle('check-mod-updates', async (event, data) => {
+        const gameVersion = typeof data === 'string' ? data : (data?.gameVersion || '1.21.4');
+        return modManager.checkModUpdates(gameVersion);
     });
 
-    ipcMain.handle('open-mods-folder', async () => {
-        shell.openPath(modManager.modsDir);
+    ipcMain.handle('open-mods-folder', async (event, data) => {
+        const gameVersion = typeof data === 'string' ? data : (data?.gameVersion || '1.21.4');
+        shell.openPath(modManager.getModsDir(gameVersion));
         return { success: true };
     });
 
 function getActualLauncherVersion() {
-    let ver = '2.1.5';
+    let ver = '2.1.6';
     try {
         const pkg = require('../package.json');
         if (pkg && pkg.version) ver = pkg.version;

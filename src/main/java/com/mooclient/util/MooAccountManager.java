@@ -149,7 +149,17 @@ public class MooAccountManager {
             if (client == null) return;
 
             UUID parsedUuid = account.getParsedUuid();
-            Session.AccountType accType = Session.AccountType.MSA;
+//? if >=1.21.11 {
+            Optional<String> xuidOpt = (account.getXuid() != null && !account.getXuid().isEmpty()) ? Optional.of(account.getXuid()) : Optional.empty();
+            Session newSession = new Session(
+                    account.getName(),
+                    parsedUuid,
+                    account.getAccessToken() != null ? account.getAccessToken() : "",
+                    xuidOpt,
+                    Optional.empty()
+            );
+//?} else {
+            /*Session.AccountType accType = Session.AccountType.MSA;
             Optional<String> xuidOpt = (account.getXuid() != null && !account.getXuid().isEmpty()) ? Optional.of(account.getXuid()) : Optional.empty();
 
             Session newSession = new Session(
@@ -160,6 +170,7 @@ public class MooAccountManager {
                     Optional.empty(),
                     accType
             );
+*///?}
 
             ((MinecraftClientAccessor) client).moo$setSession(newSession);
         } catch (Throwable e) {

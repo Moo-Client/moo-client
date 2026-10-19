@@ -36,7 +36,11 @@ public class MouseMixin {
             if (dx != 0.0 || dy != 0.0) {
                 double sensitivity = this.client.options.getMouseSensitivity().getValue() * 0.6D + 0.2D;
                 double multiplier = sensitivity * sensitivity * sensitivity * 8.0D;
-                int invertY = this.client.options.getInvertYMouse().getValue() ? -1 : 1;
+//? if >=1.21.11 {
+                int invertY = this.client.options.getInvertMouseY().getValue() ? -1 : 1;
+//?} else {
+                /*int invertY = this.client.options.getInvertYMouse().getValue() ? -1 : 1;
+*///?}
 
                 FreelookModule.onMouseLook(dx * multiplier, dy * (double) invertY * multiplier);
             }
@@ -51,7 +55,22 @@ public class MouseMixin {
         }
     }
 
+//? if >=1.21.11 {
     @Inject(method = "onMouseButton", at = @At("HEAD"))
+    private void mooClient$onMouseButton(long window, net.minecraft.client.input.MouseInput input, int action, CallbackInfo ci) {
+        if (action == GLFW.GLFW_PRESS && this.client.currentScreen == null && this.client.player != null) {
+            InteractionInputBlocker.onPlayerAction();
+
+            int button = (input != null) ? input.button() : -1;
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                com.mooclient.module.modules.CpsModule.registerLeftClick();
+            } else if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                com.mooclient.module.modules.CpsModule.registerRightClick();
+            }
+        }
+    }
+//?} else {
+    /*@Inject(method = "onMouseButton", at = @At("HEAD"))
     private void mooClient$onMouseButton(long window, int button, int action, int mods, CallbackInfo ci) {
         if (action == GLFW.GLFW_PRESS && this.client.currentScreen == null && this.client.player != null) {
             InteractionInputBlocker.onPlayerAction();
@@ -63,4 +82,5 @@ public class MouseMixin {
             }
         }
     }
+*///?}
 }

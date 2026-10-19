@@ -16,6 +16,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,7 @@ public class MooClient implements ClientModInitializer {
 
     public static final String MOD_ID = "mooclient";
     public static final String MOD_NAME = "Moo Client";
-    public static final String VERSION = "2.1.5";
+    public static final String VERSION = "2.1.6";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
 
     private static MooClient instance;
@@ -93,12 +94,21 @@ public class MooClient implements ClientModInitializer {
         });
 
         // 8. Register Keybindings
+//? if >=1.21.11 {
         menuKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.mooclient.menu",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_RIGHT_SHIFT,
+                KeyBinding.Category.create(Identifier.of("mooclient", "general"))
+        ));
+//?} else {
+        /*menuKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.mooclient.menu",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_RIGHT_SHIFT,
                 "category.mooclient.general"
         ));
+*///?}
 
         // 9. Listen for ticks and input
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

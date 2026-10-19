@@ -183,8 +183,13 @@ public class InvitationUIManager {
         int iconX = x + 12;
         int iconY = y + 14;
         if (emote != null && emote.getIcon() != null) {
-            context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured,
+//? if >=1.21.11 {
+            context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED,
                     emote.getIcon(), iconX, iconY, 0, 0, 32, 32, 32, 32);
+//?} else {
+            /*context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured,
+                    emote.getIcon(), iconX, iconY, 0, 0, 32, 32, 32, 32);
+*///?}
         } else {
             context.fill(iconX, iconY, iconX + 32, iconY + 32, 0x44FFFFFF);
         }
@@ -319,7 +324,11 @@ public class InvitationUIManager {
 
         matrices.push();
         matrices.translate(0.0, entity.getHeight() + 0.65, 0.0);
-        matrices.multiply(client.getEntityRenderDispatcher().getRotation());
+//? if >=1.21.11 {
+        matrices.multiply(client.gameRenderer.getCamera().getRotation());
+//?} else {
+        /*matrices.multiply(client.getEntityRenderDispatcher().getRotation());
+*///?}
         matrices.scale(-0.025f, -0.025f, 0.025f);
 
         String text1 = "§6★ §e" + emoteName + " §6★";

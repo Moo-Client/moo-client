@@ -325,12 +325,12 @@ class GameManager {
                     try {
                         const list = JSON.parse(data);
                         const stable = list.find(v => v.stable) || list[0];
-                        resolve(stable?.version || '0.19.3');
+                        resolve(stable?.version || '0.17.3');
                     } catch (e) {
-                        resolve('0.19.3');
+                        resolve('0.17.3');
                     }
                 });
-            }).on('error', () => resolve('0.19.3'));
+            }).on('error', () => resolve('0.17.3'));
         });
     }
 
@@ -609,8 +609,10 @@ class GameManager {
         if (!fs.existsSync(offlineDir)) {
             fs.mkdirSync(offlineDir, { recursive: true });
         }
-        const devModPath = path.join(offlineDir, 'moo-client-dev.jar');
-        const prodModPath = path.join(offlineDir, 'moo-client.jar');
+        const devModVersioned = path.join(offlineDir, `moo-client-${versionNumber}-dev.jar`);
+        const prodModVersioned = path.join(offlineDir, `moo-client-${versionNumber}.jar`);
+        const devModPath = fs.existsSync(devModVersioned) ? devModVersioned : path.join(offlineDir, 'moo-client-dev.jar');
+        const prodModPath = fs.existsSync(prodModVersioned) ? prodModVersioned : path.join(offlineDir, 'moo-client.jar');
         let offlineModPath = prodModPath;
         if (fs.existsSync(devModPath)) {
             if (!fs.existsSync(prodModPath)) {
@@ -621,23 +623,37 @@ class GameManager {
                 offlineModPath = (devMtime >= prodMtime) ? devModPath : prodModPath;
             }
         }
-        const fabricApiPath = path.join(offlineDir, 'fabric-api.jar');
-        console.log(`[Launch] Core mod selected (${options.isDev ? 'DEV MODE' : 'PRODUCTION'}): ${offlineModPath}`);
+        const fabricApiVersioned = path.join(offlineDir, `fabric-api-${versionNumber}.jar`);
+        const fabricApiPath = fs.existsSync(fabricApiVersioned) ? fabricApiVersioned : path.join(offlineDir, 'fabric-api.jar');
+        console.log(`[Launch] Core mod selected (${options.isDev ? 'DEV MODE' : 'PRODUCTION'} for MC ${versionNumber}): ${offlineModPath}`);
+        console.log(`[Launch] Fabric API selected: ${fabricApiPath}`);
 
-        // Clean any stray core jars (moo-client and fabric-api) from the public user mods/ folder
-        const modsDir = path.join(this.gameDir, 'mods');
-        if (fs.existsSync(modsDir)) {
-            try {
-                fs.readdirSync(modsDir).filter(f => {
-                    const lower = f.toLowerCase();
-                    return (lower.startsWith('moo-client') || lower.startsWith('fabric-api')) && (lower.endsWith('.jar') || lower.endsWith('.disabled'));
-                }).forEach(f => {
-                    try { fs.unlinkSync(path.join(modsDir, f)); } catch(e){}
-                });
-            } catch (e) {}
+        // Setup version-specific user mods directory
+        const versionModsDir = path.join(this.gameDir, 'mods', versionNumber);
+        if (!fs.existsSync(versionModsDir)) {
+            fs.mkdirSync(versionModsDir, { recursive: true });
+        }
+
+        // Clean any stray core jars (moo-client and fabric-api) from public user mods folders
+        const dirsToClean = [
+            path.join(this.gameDir, 'mods'),
+            versionModsDir
+        ];
+        for (const dir of dirsToClean) {
+            if (fs.existsSync(dir)) {
+                try {
+                    fs.readdirSync(dir).filter(f => {
+                        const lower = f.toLowerCase();
+                        return (lower.startsWith('moo-client') || lower.startsWith('fabric-api')) && (lower.endsWith('.jar') || lower.endsWith('.disabled'));
+                    }).forEach(f => {
+                        try { fs.unlinkSync(path.join(dir, f)); } catch(e){}
+                    });
+                } catch (e) {}
+            }
         }
 
         const customArgs = [
+            `-Dfabric.modsFolder=${versionModsDir}`,
             '-XX:+UseG1GC',
             '-XX:+ParallelRefProcEnabled',
             '-XX:MaxGCPauseMillis=50',

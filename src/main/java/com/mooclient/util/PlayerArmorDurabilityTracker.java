@@ -8,8 +8,10 @@ import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.SwordItem;
+//? if <1.21.11 {
+/*import net.minecraft.item.SwordItem;
 import net.minecraft.item.AxeItem;
+*///?}
 
 import java.util.Map;
 import java.util.UUID;
@@ -232,16 +234,23 @@ public class PlayerArmorDurabilityTracker {
         }
 
         float calculatedRawDamage = rawAmount;
-        // If this damage was confirmed by the server and matches our recent local attack attempt:
         if (calculatedRawDamage <= 0 && (now - lastAttackAttemptTimeMs < 600) && lastAttackedTargetId == player.getId()) {
             calculatedRawDamage = 7.0f; // Base unarmed hit
             if (lastAttackedWeapon != null && !lastAttackedWeapon.isEmpty()) {
-                Item item = lastAttackedWeapon.getItem();
+//? if >=1.21.11 {
+                if (lastAttackedWeapon.isIn(net.minecraft.registry.tag.ItemTags.SWORDS)) {
+                    calculatedRawDamage = 11.0f; // Typical sword in PvP
+                } else if (lastAttackedWeapon.isIn(net.minecraft.registry.tag.ItemTags.AXES)) {
+                    calculatedRawDamage = 14.0f; // Typical axe in PvP
+                }
+//?} else {
+                /*Item item = lastAttackedWeapon.getItem();
                 if (item instanceof SwordItem) {
                     calculatedRawDamage = 11.0f; // Typical sword in PvP
                 } else if (item instanceof AxeItem) {
                     calculatedRawDamage = 14.0f; // Typical axe in PvP
                 }
+*///?}
             }
             if (lastAttackWasCrit) {
                 calculatedRawDamage *= 1.5f;
@@ -256,7 +265,7 @@ public class PlayerArmorDurabilityTracker {
         } else if (source != null) {
             if (source.isOf(DamageTypes.FALL)) {
                 // Fall damage only damages boots
-                damageSlot(tracked, EquipmentSlot.FEET, player, Math.max(1.0f, player.fallDistance / 4.0f));
+                damageSlot(tracked, EquipmentSlot.FEET, player, (float) Math.max(1.0f, player.fallDistance / 4.0f));
                 return;
             } else if (source.isOf(DamageTypes.EXPLOSION) || source.isOf(DamageTypes.PLAYER_EXPLOSION)) {
                 damageToArmor = 15.0f;

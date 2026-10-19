@@ -26,10 +26,17 @@ public class KeystrokesRenderer {
         int startY = KeystrokesModule.position.calculateY(boxH, scaledHeight);
 
         if (customScale) {
-            context.getMatrices().push();
+//? if >=1.21.11 {
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate((float) startX, (float) startY);
+            context.getMatrices().scale(hudScale, hudScale);
+            context.getMatrices().translate((float) -startX, (float) -startY);
+//?} else {
+          /*context.getMatrices().push();
             context.getMatrices().translate(startX, startY, 0);
             context.getMatrices().scale(hudScale, hudScale, 1.0f);
             context.getMatrices().translate(-startX, -startY, 0);
+*///?}
         }
 
         boolean wPressed = !isEditor && KeystrokesModule.isForwardPressed();
@@ -61,7 +68,11 @@ public class KeystrokesRenderer {
         }
 
         if (customScale) {
-            context.getMatrices().pop();
+//? if >=1.21.11 {
+            context.getMatrices().popMatrix();
+//?} else {
+          /*context.getMatrices().pop();
+*///?}
         }
     }
 

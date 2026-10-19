@@ -29,9 +29,11 @@ public class InteractionInputBlocker {
                 input.playerInput = PlayerInput.DEFAULT;
             }
 
-            // Blokada chodzenia i sprintu
+//? if <1.21.11 {
+            /*// Blokada chodzenia i sprintu
             input.movementForward = 0.0f;
             input.movementSideways = 0.0f;
+*///?}
         }
     }
 

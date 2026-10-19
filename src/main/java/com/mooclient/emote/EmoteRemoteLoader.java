@@ -442,7 +442,11 @@ public class EmoteRemoteLoader {
         client.execute(() -> {
             try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes)) {
                 NativeImage image = NativeImage.read(bais);
-                NativeImageBackedTexture texture = new NativeImageBackedTexture(image);
+//? if >=1.21.11 {
+                NativeImageBackedTexture texture = new NativeImageBackedTexture(() -> "emote_texture", image);
+//?} else {
+                /*NativeImageBackedTexture texture = new NativeImageBackedTexture(image);
+*///?}
                 Identifier dynamicIdentifier = Identifier.of("mooclient_dynamic", "emotes/" + id);
 
                 client.getTextureManager().registerTexture(dynamicIdentifier, texture);

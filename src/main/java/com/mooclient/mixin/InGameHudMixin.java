@@ -9,12 +9,16 @@ import com.mooclient.module.modules.PotionEffectsModule;
 import com.mooclient.module.modules.ScoreboardModule;
 import com.mooclient.module.modules.ToggleSprintModule;
 import com.mooclient.util.MooClientSettings;
+import com.mooclient.util.ScoreboardCache;
+import com.mooclient.util.ScoreboardCache.CachedScoreboardData;
+import com.mooclient.util.ScoreboardCache.CachedScoreboardRow;
 import com.mooclient.waypoint.WaypointRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Identifier;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.texture.Sprite;
@@ -68,30 +72,7 @@ public class InGameHudMixin {
     private static String cachedCpsText = "";
     private static int cachedCpsTextWidth = 0;
 
-    private static class CachedScoreboardRow {
-        final Text nameText;
-        final Text scoreText;
-        final int scoreWidth;
-
-        CachedScoreboardRow(Text nameText, Text scoreText, int scoreWidth) {
-            this.nameText = nameText;
-            this.scoreText = scoreText;
-            this.scoreWidth = scoreWidth;
-        }
-    }
-
-    private static class CachedScoreboardData {
-        ScoreboardObjective objective;
-        int rawSize;
-        long lastUpdateTick = -1;
-        Text titleText;
-        int titleWidth;
-        int totalWidth;
-        int totalHeight;
-        List<CachedScoreboardRow> rows;
-    }
-
-    private static final CachedScoreboardData SCOREBOARD_CACHE = new CachedScoreboardData();
+    private static final CachedScoreboardData SCOREBOARD_CACHE = ScoreboardCache.SCOREBOARD_CACHE;
 
     @Inject(method = "renderStatusEffectOverlay", at = @At("HEAD"), cancellable = true)
     private void mooClient$cancelVanillaStatusEffectOverlay(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
@@ -141,10 +122,17 @@ public class InGameHudMixin {
             int y = FpsModule.position.calculateY(boxH, scaledHeight);
 
             if (customScale) {
-                context.getMatrices().push();
+//? if >=1.21.11 {
+                context.getMatrices().pushMatrix();
+                context.getMatrices().translate((float) x, (float) y);
+                context.getMatrices().scale(hudScale, hudScale);
+                context.getMatrices().translate((float) -x, (float) -y);
+//?} else {
+              /*context.getMatrices().push();
                 context.getMatrices().translate(x, y, 0);
                 context.getMatrices().scale(hudScale, hudScale, 1.0f);
                 context.getMatrices().translate(-x, -y, 0);
+*///?}
             }
 
             if (style == FpsModule.FpsStyle.MOO_CLIENT) {
@@ -162,7 +150,11 @@ public class InGameHudMixin {
             }
 
             if (customScale) {
-                context.getMatrices().pop();
+//? if >=1.21.11 {
+                context.getMatrices().popMatrix();
+//?} else {
+              /*context.getMatrices().pop();
+*///?}
             }
         }
 
@@ -196,10 +188,17 @@ public class InGameHudMixin {
             int y = ToggleSprintModule.position.calculateY(boxH, scaledHeight);
 
             if (customScale) {
-                context.getMatrices().push();
+//? if >=1.21.11 {
+                context.getMatrices().pushMatrix();
+                context.getMatrices().translate((float) x, (float) y);
+                context.getMatrices().scale(hudScale, hudScale);
+                context.getMatrices().translate((float) -x, (float) -y);
+//?} else {
+              /*context.getMatrices().push();
                 context.getMatrices().translate(x, y, 0);
                 context.getMatrices().scale(hudScale, hudScale, 1.0f);
                 context.getMatrices().translate(-x, -y, 0);
+*///?}
             }
 
             if (style == ToggleSprintModule.SprintStyle.MOO_CLIENT) {
@@ -214,7 +213,11 @@ public class InGameHudMixin {
             }
 
             if (customScale) {
-                context.getMatrices().pop();
+//? if >=1.21.11 {
+                context.getMatrices().popMatrix();
+//?} else {
+              /*context.getMatrices().pop();
+*///?}
             }
         }
 
@@ -268,10 +271,17 @@ public class InGameHudMixin {
                 int curY = startY;
 
                 if (customScale) {
-                    context.getMatrices().push();
+//? if >=1.21.11 {
+                    context.getMatrices().pushMatrix();
+                    context.getMatrices().translate((float) startX, (float) startY);
+                    context.getMatrices().scale(hudScale, hudScale);
+                    context.getMatrices().translate((float) -startX, (float) -startY);
+//?} else {
+                  /*context.getMatrices().push();
                     context.getMatrices().translate(startX, startY, 0);
                     context.getMatrices().scale(hudScale, hudScale, 1.0f);
                     context.getMatrices().translate(-startX, -startY, 0);
+*///?}
                 }
 
                 if (effects.isEmpty() && isMenu) {
@@ -311,7 +321,17 @@ public class InGameHudMixin {
                         int textX = startX + (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT ? 4 : 0);
                         if (showIcon) {
                             try {
-                                Sprite sprite = client.getStatusEffectSpriteManager().getSprite(effectEntry);
+//? if >=1.21.11 {
+                                Identifier effectTexture = net.minecraft.client.gui.hud.InGameHud.getEffectTexture(effectEntry);
+                                if (effectTexture != null) {
+                                    if (pStyle == PotionEffectsModule.PotionStyle.COMPACT) {
+                                        context.drawGuiTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, effectTexture, textX, curY + 1, 12, 12);
+                                    } else {
+                                        context.drawGuiTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, effectTexture, textX, curY + 1, 18, 18);
+                                    }
+                                }
+//?} else {
+                              /*Sprite sprite = client.getStatusEffectSpriteManager().getSprite(effectEntry);
                                 if (sprite != null) {
                                     if (pStyle == PotionEffectsModule.PotionStyle.COMPACT) {
                                         context.drawSpriteStretched(RenderLayer::getGuiTextured, sprite, textX,
@@ -321,6 +341,7 @@ public class InGameHudMixin {
                                                 curY + 1, 18, 18);
                                     }
                                 }
+*///?}
                             } catch (Exception ignored) {
                             }
                             textX += (pStyle == PotionEffectsModule.PotionStyle.COMPACT) ? 16 : 22;
@@ -369,7 +390,17 @@ public class InGameHudMixin {
                         int textX = startX + (pStyle == PotionEffectsModule.PotionStyle.MOO_CLIENT ? 4 : 0);
                         if (showIcon) {
                             try {
-                                Sprite sprite = client.getStatusEffectSpriteManager().getSprite(effectEntry);
+//? if >=1.21.11 {
+                                Identifier effectTexture = net.minecraft.client.gui.hud.InGameHud.getEffectTexture(effectEntry);
+                                if (effectTexture != null) {
+                                    if (pStyle == PotionEffectsModule.PotionStyle.COMPACT) {
+                                        context.drawGuiTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, effectTexture, textX, curY + 1, 12, 12);
+                                    } else {
+                                        context.drawGuiTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, effectTexture, textX, curY + 1, 18, 18);
+                                    }
+                                }
+//?} else {
+                              /*Sprite sprite = client.getStatusEffectSpriteManager().getSprite(effectEntry);
                                 if (sprite != null) {
                                     if (pStyle == PotionEffectsModule.PotionStyle.COMPACT) {
                                         context.drawSpriteStretched(RenderLayer::getGuiTextured, sprite, textX,
@@ -379,6 +410,7 @@ public class InGameHudMixin {
                                                 curY + 1, 18, 18);
                                     }
                                 }
+*///?}
                             } catch (Exception ignored) {
                             }
                             textX += (pStyle == PotionEffectsModule.PotionStyle.COMPACT) ? 16 : 22;
@@ -401,7 +433,11 @@ public class InGameHudMixin {
                 }
 
                 if (customScale) {
-                    context.getMatrices().pop();
+//? if >=1.21.11 {
+                    context.getMatrices().popMatrix();
+//?} else {
+                  /*context.getMatrices().pop();
+*///?}
                 }
             }
         }
@@ -437,10 +473,17 @@ public class InGameHudMixin {
             int y = PingModule.position.calculateY(boxH, scaledHeight);
 
             if (customScale) {
-                context.getMatrices().push();
+//? if >=1.21.11 {
+                context.getMatrices().pushMatrix();
+                context.getMatrices().translate((float) x, (float) y);
+                context.getMatrices().scale(hudScale, hudScale);
+                context.getMatrices().translate((float) -x, (float) -y);
+//?} else {
+              /*context.getMatrices().push();
                 context.getMatrices().translate(x, y, 0);
                 context.getMatrices().scale(hudScale, hudScale, 1.0f);
                 context.getMatrices().translate(-x, -y, 0);
+*///?}
             }
 
             if (style == PingModule.PingStyle.MOO_CLIENT) {
@@ -460,7 +503,11 @@ public class InGameHudMixin {
             }
 
             if (customScale) {
-                context.getMatrices().pop();
+//? if >=1.21.11 {
+                context.getMatrices().popMatrix();
+//?} else {
+              /*context.getMatrices().pop();
+*///?}
             }
         }
 
@@ -489,10 +536,17 @@ public class InGameHudMixin {
             int y = CpsModule.position.calculateY(boxH, scaledHeight);
 
             if (customScale) {
-                context.getMatrices().push();
+//? if >=1.21.11 {
+                context.getMatrices().pushMatrix();
+                context.getMatrices().translate((float) x, (float) y);
+                context.getMatrices().scale(hudScale, hudScale);
+                context.getMatrices().translate((float) -x, (float) -y);
+//?} else {
+              /*context.getMatrices().push();
                 context.getMatrices().translate(x, y, 0);
                 context.getMatrices().scale(hudScale, hudScale, 1.0f);
                 context.getMatrices().translate(-x, -y, 0);
+*///?}
             }
 
             if (style == CpsModule.CpsStyle.MOO_CLIENT) {
@@ -512,7 +566,11 @@ public class InGameHudMixin {
             }
 
             if (customScale) {
-                context.getMatrices().pop();
+//? if >=1.21.11 {
+                context.getMatrices().popMatrix();
+//?} else {
+              /*context.getMatrices().pop();
+*///?}
             }
         }
 
@@ -532,7 +590,11 @@ public class InGameHudMixin {
         }
 
         // 9. Multiplayer Invitation UI (4 switchable HUD variants)
-        InvitationUIManager.getInstance().renderHud(context, scaledWidth, scaledHeight, tickCounter.getTickDelta(true));
+//? if >=1.21.11 {
+        InvitationUIManager.getInstance().renderHud(context, scaledWidth, scaledHeight, tickCounter.getTickProgress(true));
+//?} else {
+      /*InvitationUIManager.getInstance().renderHud(context, scaledWidth, scaledHeight, tickCounter.getTickDelta(true));
+*///?}
     }
 
     @Inject(method = "renderMiscOverlays", at = @At("TAIL"))
@@ -541,7 +603,11 @@ public class InGameHudMixin {
         if (client == null || client.options.hudHidden || client.getDebugHud().shouldShowDebugHud()) {
             return;
         }
-        WaypointRenderer.renderHudWaypoints(context, client, tickCounter.getTickDelta(true));
+//? if >=1.21.11 {
+        WaypointRenderer.renderHudWaypoints(context, client, tickCounter.getTickProgress(true));
+//?} else {
+      /*WaypointRenderer.renderHudWaypoints(context, client, tickCounter.getTickDelta(true));
+*///?}
     }
 
     @Inject(method = "renderScoreboardSidebar(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/scoreboard/ScoreboardObjective;)V", at = @At("HEAD"), cancellable = true)
@@ -630,10 +696,17 @@ public class InGameHudMixin {
         int startY = ScoreboardModule.position.calculateY(boxH, scaledHeight);
 
         if (customScale) {
-            context.getMatrices().push();
+//? if >=1.21.11 {
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate((float) startX, (float) startY);
+            context.getMatrices().scale(hudScale, hudScale);
+            context.getMatrices().translate((float) -startX, (float) -startY);
+//?} else {
+          /*context.getMatrices().push();
             context.getMatrices().translate(startX, startY, 0);
             context.getMatrices().scale(hudScale, hudScale, 1.0f);
             context.getMatrices().translate(-startX, -startY, 0);
+*///?}
         }
 
         boolean showBg = ScoreboardModule.isShowBackground();
@@ -666,7 +739,11 @@ public class InGameHudMixin {
         }
 
         if (customScale) {
-            context.getMatrices().pop();
+//? if >=1.21.11 {
+            context.getMatrices().popMatrix();
+//?} else {
+          /*context.getMatrices().pop();
+*///?}
         }
     }
 
@@ -679,11 +756,18 @@ public class InGameHudMixin {
 
         List<ItemStack> stacks = new java.util.ArrayList<>();
         if (client.player != null) {
-            net.minecraft.entity.player.PlayerInventory inv = client.player.getInventory();
+//? if >=1.21.11 {
+            stacks.add(client.player.getEquippedStack(EquipmentSlot.HEAD));
+            stacks.add(client.player.getEquippedStack(EquipmentSlot.CHEST));
+            stacks.add(client.player.getEquippedStack(EquipmentSlot.LEGS));
+            stacks.add(client.player.getEquippedStack(EquipmentSlot.FEET));
+//?} else {
+          /*net.minecraft.entity.player.PlayerInventory inv = client.player.getInventory();
             stacks.add(inv.getArmorStack(3)); // Helmet
             stacks.add(inv.getArmorStack(2)); // Chestplate
             stacks.add(inv.getArmorStack(1)); // Leggings
             stacks.add(inv.getArmorStack(0)); // Boots
+*///?}
             if (ArmorModule.isShowOffhand()) {
                 stacks.add(client.player.getOffHandStack());
             }
@@ -742,24 +826,43 @@ public class InGameHudMixin {
         if (client.player != null && !isMenu) {
             if (ArmorModule.checkAndTriggerWarning(stacks)) {
                 try {
+//? if >=1.21.11 {
                     client.getSoundManager().play(
+                            net.minecraft.client.sound.PositionedSoundInstance.ui(
+                                    com.mooclient.sound.MooSounds.COW_MOO, 1.0f, 1.0f));
+//?} else {
+                  /*client.getSoundManager().play(
                             net.minecraft.client.sound.PositionedSoundInstance.master(
                                     com.mooclient.sound.MooSounds.COW_MOO, 1.0f, 1.0f));
+*///?}
                 } catch (Exception ignored) {
                     try {
+//? if >=1.21.11 {
                         client.getSoundManager().play(
+                                net.minecraft.client.sound.PositionedSoundInstance.ui(
+                                        net.minecraft.sound.SoundEvents.ENTITY_COW_AMBIENT, 1.0f, 1.0f));
+//?} else {
+                      /*client.getSoundManager().play(
                                 net.minecraft.client.sound.PositionedSoundInstance.master(
                                         net.minecraft.sound.SoundEvents.ENTITY_COW_AMBIENT, 1.0f, 1.0f));
+*///?}
                     } catch (Exception ignored2) {}
                 }
             }
         }
 
         if (customScale) {
-            context.getMatrices().push();
+//? if >=1.21.11 {
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate((float) startX, (float) startY);
+            context.getMatrices().scale(hudScale, hudScale);
+            context.getMatrices().translate((float) -startX, (float) -startY);
+//?} else {
+          /*context.getMatrices().push();
             context.getMatrices().translate(startX, startY, 0);
             context.getMatrices().scale(hudScale, hudScale, 1.0f);
             context.getMatrices().translate(-startX, -startY, 0);
+*///?}
         }
 
         int extraTop = 0;
@@ -868,7 +971,11 @@ public class InGameHudMixin {
         }
 
         if (customScale) {
-            context.getMatrices().pop();
+//? if >=1.21.11 {
+            context.getMatrices().popMatrix();
+//?} else {
+          /*context.getMatrices().pop();
+*///?}
         }
     }
 

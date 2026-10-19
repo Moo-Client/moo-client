@@ -30,7 +30,36 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(PlayerEntityRenderer.class)
 public class PlayerEntityRendererMixin {
 
-    @ModifyVariable(
+//? if >=1.21.11 {
+    @Inject(
+        method = "renderLabelIfPresent(Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;Lnet/minecraft/client/render/state/CameraRenderState;)V",
+        at = @At("HEAD")
+    )
+    private void mooClient$modifyNametagText(PlayerEntityRenderState state, MatrixStack matrices, net.minecraft.client.render.command.OrderedRenderCommandQueue queue, net.minecraft.client.render.state.CameraRenderState cameraRenderState, CallbackInfo ci) {
+        if (NametagsModule.isNametagsEnabled() && state != null && state.playerName != null) {
+            if (NametagsModule.isShowPing() && NametagsModule.getPingPosition() == NametagsModule.PingPosition.BESIDE) {
+                state.playerName = NametagsModule.formatNametag(state.playerName, state.id, state.playerName.getString());
+            }
+        }
+    }
+
+    @Inject(
+        method = "renderLabelIfPresent(Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;Lnet/minecraft/client/render/state/CameraRenderState;)V",
+        at = @At("TAIL")
+    )
+    private void mooClient$renderInWorldBillboard(PlayerEntityRenderState state, MatrixStack matrices, net.minecraft.client.render.command.OrderedRenderCommandQueue queue, net.minecraft.client.render.state.CameraRenderState cameraRenderState, CallbackInfo ci) {
+        if (state == null) return;
+        if (!InvitationUIManager.getInstance().hasActiveBillboard()) return;
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.world == null) return;
+
+        Entity entity = client.world.getEntityById(state.id);
+        if (entity instanceof PlayerEntity player) {
+            InvitationUIManager.getInstance().renderInWorldBillboard(player, matrices, client.getBufferBuilders().getEntityVertexConsumers(), state.light);
+        }
+    }
+//?} else {
+    /*@ModifyVariable(
         method = "renderLabelIfPresent(Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;Lnet/minecraft/text/Text;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V",
         at = @At("HEAD"),
         argsOnly = true
@@ -63,6 +92,7 @@ public class PlayerEntityRendererMixin {
             InvitationUIManager.getInstance().renderInWorldBillboard(player, matrices, vertexConsumers, light);
         }
     }
+*///?}
 
     @Inject(
         method = "setupTransforms(Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;FF)V",
@@ -81,7 +111,11 @@ public class PlayerEntityRendererMixin {
         EmotePlayerState emoteState = EmoteEngine.getInstance().getPlayerStateIfExists(player);
         if (emoteState == null || !emoteState.isRendering()) return;
 
-        float tickDelta = client.getRenderTickCounter().getTickDelta(true);
+//? if >=1.21.11 {
+        float tickDelta = client.getRenderTickCounter().getTickProgress(true);
+//?} else {
+        /*float tickDelta = client.getRenderTickCounter().getTickDelta(true);
+*///?}
 
         // 1. Uniesienie w górę (skok/wysokość salta aplikowana w pionie w świecie gry)
         float visualY = emoteState.getVisualYOffset(tickDelta);

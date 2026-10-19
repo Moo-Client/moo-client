@@ -503,10 +503,17 @@ public class ArmorModule extends Module {
         try {
             MinecraftClient client = MinecraftClient.getInstance();
             if (client != null && client.player != null) {
+//? if >=1.21.11 {
                 if (playerState.id == client.player.getId()
+                        || (playerState.playerName != null && playerState.playerName.getString().equalsIgnoreCase(com.mooclient.util.MooUserManager.getProfileName(client.player.getGameProfile())))) {
+                    return null;
+                }
+//?} else {
+                /*if (playerState.id == client.player.getId()
                         || (playerState.name != null && playerState.name.equalsIgnoreCase(client.player.getGameProfile().getName()))) {
                     return null;
                 }
+*///?}
             }
         } catch (Throwable ignored) {}
 

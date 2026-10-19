@@ -16,7 +16,7 @@ const http = require('http');
 class ModManager {
     constructor() {
         this.gameDir = path.join(os.homedir(), '.mooclient');
-        this.modsDir = path.join(this.gameDir, 'mods');
+        this.modsRootDir = path.join(this.gameDir, 'mods');
         this.offlineDir = path.join(this.gameDir, 'offline', 'multiver');
         this.coreModPath = path.join(this.offlineDir, 'moo-client.jar');
         this.localVersionPath = path.join(this.gameDir, 'installed-mod-version.json');
@@ -24,10 +24,48 @@ class ModManager {
         // GitHub raw URL for version check
         this.versionUrl = 'https://raw.githubusercontent.com/Moo-Client/moo-client/main/mod-version.json';
 
-        this.ensureDir(this.modsDir);
+        this.ensureDir(this.modsRootDir);
         this.ensureDir(this.offlineDir);
+        this._modMetadataCache = new Map();
+        this.migrateRootMods();
         this.cleanOldMods();
         this.ensureBundledMod();
+    }
+
+    getModsDir(gameVersion = '1.21.4') {
+        const dir = path.join(this.modsRootDir, gameVersion);
+        this.ensureDir(dir);
+        return dir;
+    }
+
+    get modsDir() {
+        return this.getModsDir('1.21.4');
+    }
+
+    migrateRootMods() {
+        try {
+            if (!fs.existsSync(this.modsRootDir)) return;
+            const entries = fs.readdirSync(this.modsRootDir, { withFileTypes: true });
+            const legacyDir1214 = path.join(this.modsRootDir, '1.21.4');
+            this.ensureDir(legacyDir1214);
+            this.ensureDir(path.join(this.modsRootDir, '1.21.11'));
+
+            for (const entry of entries) {
+                if (entry.isFile() && (entry.name.endsWith('.jar') || entry.name.endsWith('.jar.disabled'))) {
+                    // Move legacy root mod jar to 1.21.4/
+                    const src = path.join(this.modsRootDir, entry.name);
+                    const dest = path.join(legacyDir1214, entry.name);
+                    if (!fs.existsSync(dest)) {
+                        fs.renameSync(src, dest);
+                        console.log(`[ModManager] Migrated ${entry.name} to mods/1.21.4/`);
+                    } else {
+                        try { fs.unlinkSync(src); } catch (e) {}
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('[ModManager] Error migrating root mods:', e);
+        }
     }
 
     static parseVersion(ver) {
@@ -73,14 +111,22 @@ class ModManager {
         return false;
     }
 
-    findDevBuildJar() {
+    findDevBuildJar(gameVersion = '1.21.4') {
         try {
-            const libsDir = path.join(__dirname, '..', '..', 'build', 'libs');
-            if (!fs.existsSync(libsDir)) return null;
-            const files = fs.readdirSync(libsDir).filter(f => f.startsWith('moo-client-') && f.endsWith('.jar') && !f.includes('-sources') && !f.includes('-dev'));
-            if (files.length === 0) return null;
-            files.sort((a, b) => fs.statSync(path.join(libsDir, b)).mtimeMs - fs.statSync(path.join(libsDir, a)).mtimeMs);
-            return path.join(libsDir, files[0]);
+            const possibleDirs = [
+                path.join(__dirname, '..', '..', 'versions', gameVersion, 'build', 'libs'),
+                path.join(__dirname, '..', '..', 'build', 'libs'),
+            ];
+            for (const libsDir of possibleDirs) {
+                if (fs.existsSync(libsDir)) {
+                    const files = fs.readdirSync(libsDir).filter(f => f.startsWith('moo-client-') && f.endsWith('.jar') && !f.includes('-sources') && !f.includes('-dev'));
+                    if (files.length > 0) {
+                        files.sort((a, b) => fs.statSync(path.join(libsDir, b)).mtimeMs - fs.statSync(path.join(libsDir, a)).mtimeMs);
+                        return path.join(libsDir, files[0]);
+                    }
+                }
+            }
+            return null;
         } catch (e) {
             return null;
         }
@@ -89,12 +135,12 @@ class ModManager {
     /**
      * Deploys the bundled mod jar into offline/multiver/ if not already installed.
      */
-    ensureBundledMod() {
+    ensureBundledMod(gameVersion = '1.21.4') {
         try {
             const pkg = require('../package.json');
             const defaultVer = pkg.version || '1.6.2';
             const bundledPath = path.join(__dirname, '..', 'assets', 'moo-client.jar');
-            const devBuildPath = this.findDevBuildJar() || path.join(__dirname, '..', '..', 'build', 'libs', `moo-client-${defaultVer}.jar`);
+            const devBuildPath = this.findDevBuildJar(gameVersion) || path.join(__dirname, '..', '..', 'build', 'libs', `moo-client-${defaultVer}.jar`);
 
             this.ensureDir(this.offlineDir);
 
@@ -107,10 +153,12 @@ class ModManager {
 
             if (sourceJar) {
                 const srcStats = fs.statSync(sourceJar);
-                const devModPath = path.join(this.offlineDir, 'moo-client-dev.jar');
-                const prodModPath = this.coreModPath;
+                const devModName = (gameVersion === '1.21.4') ? 'moo-client-dev.jar' : `moo-client-${gameVersion}-dev.jar`;
+                const prodModName = (gameVersion === '1.21.4') ? 'moo-client.jar' : `moo-client-${gameVersion}.jar`;
+                const devModPath = path.join(this.offlineDir, devModName);
+                const prodModPath = path.join(this.offlineDir, prodModName);
 
-                // Always synchronize both moo-client-dev.jar and moo-client.jar with the freshest local build
+                // Always synchronize both dev and prod jars with the freshest local build
                 const targets = [devModPath, prodModPath];
                 for (const target of targets) {
                     const needsCopy = this.isDevMode() || !fs.existsSync(target) || 
@@ -133,7 +181,7 @@ class ModManager {
                 try {
                     fs.writeFileSync(this.localVersionPath, JSON.stringify({
                         version: defaultVer,
-                        minecraft: '1.21.4',
+                        minecraft: gameVersion,
                         installedAt: new Date().toISOString(),
                     }, null, 2));
                 } catch (e) {}
@@ -345,15 +393,22 @@ class ModManager {
      */
     cleanOldMods() {
         try {
-            if (!fs.existsSync(this.modsDir)) return;
-            const files = fs.readdirSync(this.modsDir);
-            for (const file of files) {
-                const lower = file.toLowerCase();
-                if ((lower.startsWith('moo-client') || lower.startsWith('fabric-api')) && (lower.endsWith('.jar') || lower.endsWith('.disabled'))) {
-                    try {
-                        fs.unlinkSync(path.join(this.modsDir, file));
-                        console.log(`Cleaned core library from user mods folder: ${file}`);
-                    } catch (e) { }
+            const dirsToClean = [
+                this.modsRootDir,
+                path.join(this.modsRootDir, '1.21.4'),
+                path.join(this.modsRootDir, '1.21.11')
+            ];
+            for (const dir of dirsToClean) {
+                if (!fs.existsSync(dir)) continue;
+                const files = fs.readdirSync(dir);
+                for (const file of files) {
+                    const lower = file.toLowerCase();
+                    if ((lower.startsWith('moo-client') || lower.startsWith('fabric-api')) && (lower.endsWith('.jar') || lower.endsWith('.disabled'))) {
+                        try {
+                            fs.unlinkSync(path.join(dir, file));
+                            console.log(`Cleaned core library: ${file}`);
+                        } catch (e) { }
+                    }
                 }
             }
         } catch (e) {
@@ -364,19 +419,23 @@ class ModManager {
     /**
      * Ensures Fabric API (Core Runtime) is safely present in the protected offline/multiver folder.
      */
-    async ensureFabricApi(onProgress = () => { }) {
+    async ensureFabricApi(gameVersion = '1.21.4', onProgress = () => { }) {
         try {
             this.ensureDir(this.offlineDir);
             this.cleanOldMods();
 
-            const targetPath = path.join(this.offlineDir, 'fabric-api.jar');
+            const targetName = (gameVersion === '1.21.4') ? 'fabric-api.jar' : `fabric-api-${gameVersion}.jar`;
+            const targetPath = path.join(this.offlineDir, targetName);
             if (fs.existsSync(targetPath) && fs.statSync(targetPath).size > 100000) {
                 return true;
             }
 
-            onProgress('Pobieranie biblioteki Fabric API (Core Runtime)...', 15);
-            const fabricApiUrl = 'https://cdn.modrinth.com/data/P7dR8mSH/versions/p96k10UR/fabric-api-0.119.4%2B1.21.4.jar';
-            const tempPath = path.join(this.offlineDir, 'fabric-api.jar.download');
+            onProgress(`Pobieranie biblioteki Fabric API (${gameVersion})...`, 15);
+            let fabricApiUrl = 'https://cdn.modrinth.com/data/P7dR8mSH/versions/p96k10UR/fabric-api-0.119.4%2B1.21.4.jar';
+            if (gameVersion === '1.21.11') {
+                fabricApiUrl = 'https://cdn.modrinth.com/data/P7dR8mSH/versions/6qAuTtLR/fabric-api-0.141.6%2B1.21.11.jar';
+            }
+            const tempPath = path.join(this.offlineDir, `${targetName}.download`);
 
             await this.downloadFile(fabricApiUrl, tempPath, (percent) => {
                 onProgress(`Pobieranie Fabric API: ${percent}%`, 15 + Math.round(percent * 0.15));
@@ -387,7 +446,7 @@ class ModManager {
                     try { fs.unlinkSync(targetPath); } catch (e) { }
                 }
                 fs.renameSync(tempPath, targetPath);
-                console.log('Fabric API saved to protected offline folder:', targetPath);
+                console.log(`Fabric API (${gameVersion}) saved to protected offline folder:`, targetPath);
                 return true;
             } else {
                 if (fs.existsSync(tempPath)) {
@@ -480,13 +539,13 @@ class ModManager {
     }
 
     /**
-     * Search Modrinth for Fabric mods compatible with Minecraft 1.21.4
+     * Search Modrinth for Fabric mods compatible with the specified Minecraft version
      */
-    async searchModrinth(query = '', limit = 24, offset = 0, index = 'downloads') {
+    async searchModrinth(query = '', limit = 24, offset = 0, index = 'downloads', gameVersion = '1.21.4') {
         return new Promise((resolve, reject) => {
             const facets = encodeURIComponent(JSON.stringify([
                 ["categories:fabric"],
-                ["versions:1.21.4"],
+                [`versions:${gameVersion}`],
                 ["project_type:mod"]
             ]));
             const q = encodeURIComponent(query.trim());
@@ -548,12 +607,14 @@ class ModManager {
         }
         visited.add(projectId);
 
+        const targetModsDir = this.getModsDir(gameVersion);
+
         try {
             const versionsUrl = `https://api.modrinth.com/v2/project/${encodeURIComponent(projectId)}/version?game_versions=%5B%22${gameVersion}%22%5D&loaders=%5B%22fabric%22%5D`;
             const versions = await this.fetchJson(versionsUrl);
 
             if (!versions || versions.length === 0) {
-                // If this was a dependency and no 1.21.4 specific version exists, try general fabric versions
+                // If this was a dependency and no version specific exists, try general fabric versions
                 const fallbackUrl = `https://api.modrinth.com/v2/project/${encodeURIComponent(projectId)}/version?loaders=%5B%22fabric%22%5D`;
                 try {
                     const fallbackVersions = await this.fetchJson(fallbackUrl);
@@ -561,7 +622,7 @@ class ModManager {
                         const v = fallbackVersions[0];
                         const file = v.files.find(f => f.primary) || v.files[0];
                         if (file && file.url) {
-                            const targetPath = path.join(this.modsDir, file.filename);
+                            const targetPath = path.join(targetModsDir, file.filename);
                             if (!fs.existsSync(targetPath)) {
                                 await this.downloadFile(file.url, targetPath, () => { });
                                 installedList.push({ filename: file.filename, name: v.name || projectId });
@@ -582,7 +643,7 @@ class ModManager {
                 throw new Error('Brak pliku pobierania w wersji moda');
             }
 
-            const targetPath = path.join(this.modsDir, file.filename);
+            const targetPath = path.join(targetModsDir, file.filename);
             if (!fs.existsSync(targetPath)) {
                 await this.downloadFile(file.url, targetPath, () => { });
                 installedList.push({ filename: file.filename, name: version.name || projectId, projectId });
@@ -597,7 +658,7 @@ class ModManager {
                                 const depVersion = await this.fetchJson(`https://api.modrinth.com/v2/version/${dep.version_id}`);
                                 if (depVersion && depVersion.files && depVersion.files.length > 0) {
                                     const depFile = depVersion.files.find(f => f.primary) || depVersion.files[0];
-                                    const depPath = path.join(this.modsDir, depFile.filename);
+                                    const depPath = path.join(targetModsDir, depFile.filename);
                                     if (!fs.existsSync(depPath)) {
                                         await this.downloadFile(depFile.url, depPath, () => { });
                                         installedList.push({ filename: depFile.filename, name: depVersion.name });
@@ -631,22 +692,41 @@ class ModManager {
     }
 
     /**
-     * Get list of currently installed mods in .mooclient/mods/ with icons and metadata
+     * Get list of currently installed mods in .mooclient/mods/<gameVersion>/ with icons and metadata
      */
-    getInstalledMods() {
+    getInstalledMods(gameVersion = '1.21.4') {
         try {
-            if (!fs.existsSync(this.modsDir)) return [];
-            const files = fs.readdirSync(this.modsDir);
+            const targetModsDir = this.getModsDir(gameVersion);
+            if (!fs.existsSync(targetModsDir)) return [];
+            const files = fs.readdirSync(targetModsDir);
             const AdmZip = require('adm-zip');
 
-            const mods = files
-                .filter(file => (file.endsWith('.jar') || file.endsWith('.jar.disabled')) && !file.toLowerCase().startsWith('moo-client') && !file.toLowerCase().startsWith('fabric-api'))
-                .map(file => {
-                    const isEnabled = !file.endsWith('.disabled');
-                    const cleanName = isEnabled ? file : file.replace(/\.disabled$/, '');
-                    const filePath = path.join(this.modsDir, file);
-                    const stats = fs.statSync(filePath);
+            if (!this._modMetadataCache) {
+                this._modMetadataCache = new Map();
+            }
 
+            const mods = [];
+            for (const file of files) {
+                if ((!file.endsWith('.jar') && !file.endsWith('.jar.disabled')) ||
+                    file.toLowerCase().startsWith('moo-client') ||
+                    file.toLowerCase().startsWith('fabric-api')) {
+                    continue;
+                }
+
+                const filePath = path.join(targetModsDir, file);
+                let stats;
+                try {
+                    stats = fs.statSync(filePath);
+                } catch (e) {
+                    continue;
+                }
+
+                const isEnabled = !file.endsWith('.disabled');
+                const cleanName = isEnabled ? file : file.replace(/\.disabled$/, '');
+                const cacheKey = `${filePath}:${stats.mtimeMs}:${stats.size}`;
+
+                let modMeta = this._modMetadataCache.get(cacheKey);
+                if (!modMeta) {
                     let displayName = cleanName;
                     let modVersion = '';
                     let modId = '';
@@ -674,19 +754,28 @@ class ModManager {
                         }
                     } catch (e) { }
 
-                    return {
-                        filename: file,
-                        cleanName: cleanName,
+                    modMeta = {
                         name: displayName,
                         version: modVersion,
                         modId: modId || cleanName.replace(/\.jar$/, ''),
-                        icon: iconData,
-                        size: stats.size,
-                        enabled: isEnabled,
-                        modifiedAt: stats.mtime,
-                        isCore: false,
+                        icon: iconData
                     };
+                    this._modMetadataCache.set(cacheKey, modMeta);
+                }
+
+                mods.push({
+                    filename: file,
+                    cleanName: cleanName,
+                    name: modMeta.name,
+                    version: modMeta.version,
+                    modId: modMeta.modId,
+                    icon: modMeta.icon,
+                    size: stats.size,
+                    enabled: isEnabled,
+                    modifiedAt: stats.mtime,
+                    isCore: false,
                 });
+            }
 
             mods.sort((a, b) => a.name.localeCompare(b.name));
 
@@ -700,9 +789,10 @@ class ModManager {
     /**
      * Enable / disable a mod by renaming it to .jar or .jar.disabled
      */
-    toggleMod(filename, targetEnabled) {
+    toggleMod(filename, targetEnabled, gameVersion = '1.21.4') {
         try {
-            const currentPath = path.join(this.modsDir, filename);
+            const targetModsDir = this.getModsDir(gameVersion);
+            const currentPath = path.join(targetModsDir, filename);
             if (!fs.existsSync(currentPath)) return { success: false, error: 'Plik nie istnieje' };
 
             let newFilename = filename;
@@ -713,7 +803,7 @@ class ModManager {
             }
 
             if (newFilename !== filename) {
-                const newPath = path.join(this.modsDir, newFilename);
+                const newPath = path.join(targetModsDir, newFilename);
                 fs.renameSync(currentPath, newPath);
             }
             return { success: true, newFilename, enabled: targetEnabled };
@@ -729,9 +819,9 @@ class ModManager {
      * Copy local .jar files into .mooclient/mods/
      * Includes intelligent multi-file archive extraction detection for WinRAR, 7-Zip, etc.
      */
-    async installLocalMods(filePaths) {
+    async installLocalMods(filePaths, gameVersion = '1.21.4') {
         try {
-            this.ensureDir(this.modsDir);
+            const targetModsDir = this.getModsDir(gameVersion);
             const installed = [];
             const processedNames = new Set();
             const tmpDir = os.tmpdir();
@@ -773,7 +863,7 @@ class ModManager {
                                 const filename = path.basename(sFile);
                                 if (!processedNames.has(filename.toLowerCase())) {
                                     processedNames.add(filename.toLowerCase());
-                                    const destPath = path.join(this.modsDir, filename);
+                                    const destPath = path.join(targetModsDir, filename);
                                     fs.copyFileSync(fullSiblingPath, destPath);
                                     installed.push(filename);
                                 }
@@ -786,7 +876,7 @@ class ModManager {
                     const filename = path.basename(srcPath);
                     if (!processedNames.has(filename.toLowerCase())) {
                         processedNames.add(filename.toLowerCase());
-                        const destPath = path.join(this.modsDir, filename);
+                        const destPath = path.join(targetModsDir, filename);
                         fs.copyFileSync(srcPath, destPath);
                         installed.push(filename);
                     }
@@ -810,7 +900,7 @@ class ModManager {
                                     const filename = path.basename(sFile);
                                     if (!processedNames.has(filename.toLowerCase())) {
                                         processedNames.add(filename.toLowerCase());
-                                        const destPath = path.join(this.modsDir, filename);
+                                        const destPath = path.join(targetModsDir, filename);
                                         fs.copyFileSync(fullPath, destPath);
                                         installed.push(filename);
                                     }
@@ -874,8 +964,9 @@ class ModManager {
      * Install a specific version of a mod by its Modrinth version ID
      * If oldFilename is provided, it deletes the older jar file to prevent conflicts.
      */
-    async installModVersion(versionId, oldFilename = null) {
+    async installModVersion(versionId, oldFilename = null, gameVersion = '1.21.4') {
         try {
+            const targetModsDir = this.getModsDir(gameVersion);
             const versionUrl = `https://api.modrinth.com/v2/version/${encodeURIComponent(versionId)}`;
             const version = await this.fetchJson(versionUrl);
             if (!version || !version.files || version.files.length === 0) {
@@ -883,14 +974,14 @@ class ModManager {
             }
 
             const file = version.files.find(f => f.primary) || version.files[0];
-            const destPath = path.join(this.modsDir, file.filename);
+            const destPath = path.join(targetModsDir, file.filename);
 
             // Download new file
             await this.downloadFile(file.url, destPath);
 
             // If replacing an older version file with different name, delete old file
             if (oldFilename && oldFilename !== file.filename) {
-                const oldPath = path.join(this.modsDir, oldFilename);
+                const oldPath = path.join(targetModsDir, oldFilename);
                 if (fs.existsSync(oldPath)) {
                     fs.unlinkSync(oldPath);
                 }
@@ -948,8 +1039,9 @@ class ModManager {
      */
     async checkModUpdates(gameVersion = '1.21.4') {
         try {
-            if (!fs.existsSync(this.modsDir)) return { success: true, updates: [] };
-            const files = fs.readdirSync(this.modsDir).filter(f => (f.endsWith('.jar') || f.endsWith('.jar.disabled')) && !f.toLowerCase().startsWith('moo-client'));
+            const targetModsDir = this.getModsDir(gameVersion);
+            if (!fs.existsSync(targetModsDir)) return { success: true, updates: [] };
+            const files = fs.readdirSync(targetModsDir).filter(f => (f.endsWith('.jar') || f.endsWith('.jar.disabled')) && !f.toLowerCase().startsWith('moo-client'));
 
             if (files.length === 0) return { success: true, updates: [] };
 
@@ -958,7 +1050,7 @@ class ModManager {
 
             for (const file of files) {
                 try {
-                    const filePath = path.join(this.modsDir, file);
+                    const filePath = path.join(targetModsDir, file);
                     const fileBuf = fs.readFileSync(filePath);
                     const sha1 = crypto.createHash('sha1').update(fileBuf).digest('hex');
                     const sha512 = crypto.createHash('sha512').update(fileBuf).digest('hex');
@@ -978,7 +1070,7 @@ class ModManager {
             });
 
             const updates = [];
-            const installedMods = this.getInstalledMods();
+            const installedMods = this.getInstalledMods(gameVersion);
 
             for (const [hash, newVer] of Object.entries(updateRes || {})) {
                 const local = fileMap[hash];
@@ -1017,14 +1109,15 @@ class ModManager {
     }
 
     /**
-     * Delete a mod from .mooclient/mods/
+     * Delete a mod from .mooclient/mods/<gameVersion>/
      */
-    uninstallMod(filename) {
+    uninstallMod(filename, gameVersion = '1.21.4') {
         try {
             if (filename.toLowerCase().startsWith('moo-client')) {
                 throw new Error('Nie można usunąć głównego modułu Moo Client!');
             }
-            const filePath = path.join(this.modsDir, filename);
+            const targetModsDir = this.getModsDir(gameVersion);
+            const filePath = path.join(targetModsDir, filename);
             if (fs.existsSync(filePath)) {
                 fs.unlinkSync(filePath);
                 return { success: true };
@@ -1036,17 +1129,17 @@ class ModManager {
     }
 
     /**
-     * Save a raw binary buffer directly as a .jar mod into .mooclient/mods/
+     * Save a raw binary buffer directly as a .jar mod into .mooclient/mods/<gameVersion>/
      * Perfect for Drag & Drop from WinRAR, 7-Zip, browsers, etc.
      */
-    saveModBuffer(filename, buffer) {
+    saveModBuffer(filename, buffer, gameVersion = '1.21.4') {
         try {
             if (!filename || !filename.toLowerCase().endsWith('.jar')) {
                 return { success: false, error: 'Plik musi mieć rozszerzenie .jar' };
             }
-            this.ensureDir(this.modsDir);
+            const targetModsDir = this.getModsDir(gameVersion);
             const safeName = path.basename(filename);
-            const targetPath = path.join(this.modsDir, safeName);
+            const targetPath = path.join(targetModsDir, safeName);
 
             const buf = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
             fs.writeFileSync(targetPath, buf);

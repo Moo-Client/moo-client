@@ -5,6 +5,8 @@ out/
 bin/
 .loom/
 run/
+**/run/
+**/config/
 
 # IDE files
 .idea/

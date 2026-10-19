@@ -21,7 +21,19 @@ public class ItemEntityRendererMixin {
         ((ItemEntityRenderStateAccess) state).moo$setScale(scale);
     }
 
-    @Inject(method = "render(Lnet/minecraft/client/render/entity/state/ItemEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V",
+//? if >=1.21.11 {
+    @Inject(
+        method = "render(Lnet/minecraft/client/render/entity/state/ItemEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;Lnet/minecraft/client/render/state/CameraRenderState;)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/ItemEntityRenderer;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;ILnet/minecraft/client/render/entity/state/ItemStackEntityRenderState;Lnet/minecraft/util/math/random/Random;Lnet/minecraft/util/math/Box;)V")
+    )
+    private void onBeforeRenderStack(ItemEntityRenderState state, MatrixStack matrices, net.minecraft.client.render.command.OrderedRenderCommandQueue queue, net.minecraft.client.render.state.CameraRenderState cameraRenderState, CallbackInfo ci) {
+        float scale = ((ItemEntityRenderStateAccess) state).moo$getScale();
+        if (scale != 1.0f) {
+            matrices.scale(scale, scale, scale);
+        }
+    }
+//?} else {
+    /*@Inject(method = "render(Lnet/minecraft/client/render/entity/state/ItemEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/ItemEntityRenderer;renderStack(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/client/render/entity/state/ItemStackEntityRenderState;Lnet/minecraft/util/math/random/Random;)V"))
     private void onBeforeRenderStack(ItemEntityRenderState state, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         float scale = ((ItemEntityRenderStateAccess) state).moo$getScale();
@@ -29,4 +41,5 @@ public class ItemEntityRendererMixin {
             matrices.scale(scale, scale, scale);
         }
     }
+*///?}
 }

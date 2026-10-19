@@ -33,8 +33,13 @@ public abstract class CameraMixin {
     @Shadow
     protected abstract float clipToSpace(float f);
 
+//? if >=1.21.11 {
     @Inject(method = "update", at = @At("TAIL"))
+    private void mooClient$onCameraUpdateTail(net.minecraft.world.World area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
+//?} else {
+    /*@Inject(method = "update", at = @At("TAIL"))
     private void mooClient$onCameraUpdateTail(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
+*///?}
         if (FreelookModule.isActive()) {
             float yaw = FreelookModule.getCameraYaw();
             float pitch = FreelookModule.getCameraPitch();
@@ -43,10 +48,17 @@ public abstract class CameraMixin {
             this.setRotation(yaw, pitch);
 
             // Reset camera position to player's eye height
-            double posX = MathHelper.lerp((double) tickDelta, focusedEntity.prevX, focusedEntity.getX());
+//? if >=1.21.11 {
+            double posX = MathHelper.lerp((double) tickDelta, focusedEntity.lastRenderX, focusedEntity.getX());
+            double posY = MathHelper.lerp((double) tickDelta, focusedEntity.lastRenderY, focusedEntity.getY())
+                    + (double) MathHelper.lerp(tickDelta, this.lastCameraY, this.cameraY);
+            double posZ = MathHelper.lerp((double) tickDelta, focusedEntity.lastRenderZ, focusedEntity.getZ());
+//?} else {
+            /*double posX = MathHelper.lerp((double) tickDelta, focusedEntity.prevX, focusedEntity.getX());
             double posY = MathHelper.lerp((double) tickDelta, focusedEntity.prevY, focusedEntity.getY())
                     + (double) MathHelper.lerp(tickDelta, this.lastCameraY, this.cameraY);
             double posZ = MathHelper.lerp((double) tickDelta, focusedEntity.prevZ, focusedEntity.getZ());
+*///?}
             this.setPos(posX, posY, posZ);
 
             // Move camera back 4 blocks along the freelook line of sight (respecting block collision)

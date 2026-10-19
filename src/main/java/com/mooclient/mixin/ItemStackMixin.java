@@ -35,7 +35,7 @@ public class ItemStackMixin {
             return;
         }
 
-        if (ShulkerTooltipModule.isRequireShift() && !Screen.hasShiftDown()) {
+        if (ShulkerTooltipModule.isRequireShift() && !ShulkerLockManager.isShiftDown()) {
             return;
         }
 
@@ -55,7 +55,7 @@ public class ItemStackMixin {
             return;
         }
 
-        if (ShulkerTooltipModule.isRequireShift() && !Screen.hasShiftDown()) {
+        if (ShulkerTooltipModule.isRequireShift() && !ShulkerLockManager.isShiftDown()) {
             return;
         }
 
