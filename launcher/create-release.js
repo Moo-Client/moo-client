@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const VERSION = '2.1.6';
+const VERSION = '2.1.7';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 const REPO_OWNER = 'Moo-Client';
 const REPO_NAME = 'moo-client';
@@ -63,13 +63,14 @@ function uploadAsset(uploadUrl, token, filePath, fileName, contentType) {
 
     const CHANGELOG_BODY = `🚀 **Moo Client v${VERSION}**
 
-🎮 **Pełne wsparcie dla Minecraft 1.21.11 oraz 1.21.4 (Stonecutter)**:
-- 🏗️ **Architektura Multi-Version**: Zintegrowano preprocesor Stonecutter, umożliwiający jednoczesne budowanie i pełną zgodność modyfikacji dla wersji 1.21.4 oraz 1.21.11.
-- ⚡ **Fabric Loader 0.17.3+**: Zaktualizowano wymagania oraz mechanizm pobierania launchera dla najnowszego Fabric Loadera 0.17.3+ (wymaganego przez Fabric API dla 1.21.11).
+🖥️ **Dynamiczny tytuł okna gry i statusy:**
+- 🏷️ **Poprawka tytułu okna**: Usunięto sztywne oznaczenie 1.21.4 z lewego górnego rogu okna gry. Okno dynamicznie wyświetla teraz dokładną wersję Minecrafta, na której uruchomiono klienta (np. \`Minecraft 1.21.11 - Moo Client\` lub \`Minecraft 1.21.4 - Moo Client\`).
+- 🎮 **Discord RPC i GUI**: Statusy Discord Rich Presence oraz nagłówki wewnątrz klienta pobierają teraz rzeczywistą wersję gry przez Fabric Loader API.
 
-🛡️ **Stabilność i Knot ClassLoader**:
-- 📦 **ScoreboardCache**: Klasy buforujące dane scoreboardu zostały przeniesione poza pakiet mixinów do dedykowanej klasy pomocniczej \`com.mooclient.util.ScoreboardCache\`, eliminując błąd \`IllegalClassLoadError\` na nowych wersjach Fabric Loadera.
-- ⌨️ **Kompatybilność Zdarzeń i Wejść 1.21.11**: Zaktualizowano deskryptory zdarzeń w \`HandledScreenMixin\` (\`KeyInput\`, \`Click\`), \`MouseMixin\` (\`MouseInput\`), \`CameraMixin\` oraz \`ChatHudMixin\`.`;
+🔄 **Inteligentny silnik auto-aktualizacji i migracji modów:**
+- ⚡ **Auto-konwersja Drag & Drop**: Przy upuszczeniu modów z wersji 1.21.4 do wersji 1.21.11 launcher automatycznie odpytuje Modrinth, pobiera najnowszą kompatybilną wersję .jar dla 1.21.11 i zastępuje niekompatybilny plik.
+- 🛡️ **Weryfikacja przed startem gry (Pre-Launch check)**: Przed uruchomieniem Minecrafta 1.21.11 launcher automatycznie sprawdza wszystkie zainstalowane mody i aktualizuje niekompatybilne pliki z 1.21.4 do 1.21.11, zapobiegając błędom Fabric Loadera.
+- 📥 **Przycisk migracji i aktualizacji w GUI**: W zakładce Modyfikacje dodano dedykowany przycisk *„Aktualizuj do wersji gry”* oraz banner umożliwiający natychmiastowe przeniesienie i uaktualnienie całej kolekcji modów z 1.21.4 do 1.21.11 jednym kliknięciem.`;
 
     let release;
     let res = await apiRequest('GET', `/repos/Moo-Client/moo-client/releases/tags/v${VERSION}`, token);

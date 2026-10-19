@@ -2045,7 +2045,7 @@ public class MooClientScreen extends Screen {
 
             // --- ALL MINECRAFT 1.21.4 ITEMS SEARCH ENGINE ---
             curY += 2;
-            context.drawTextWithShadow(this.textRenderer, "Wyszukiwarka przedmiotów MC 1.21.4:", rowX + 2, curY, 0xFF38BDF8);
+            context.drawTextWithShadow(this.textRenderer, "Wyszukiwarka przedmiotów MC " + com.mooclient.MooClient.getMinecraftVersion() + ":", rowX + 2, curY, 0xFF38BDF8);
             curY += 12;
 
             // Search Bar Input Field

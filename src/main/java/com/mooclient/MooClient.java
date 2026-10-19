@@ -28,13 +28,24 @@ public class MooClient implements ClientModInitializer {
 
     public static final String MOD_ID = "mooclient";
     public static final String MOD_NAME = "Moo Client";
-    public static final String VERSION = "2.1.6";
+    public static final String VERSION = "2.1.7";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
 
     private static MooClient instance;
 
     public static MooClient getInstance() {
         return instance;
+    }
+
+    public static String getMinecraftVersion() {
+        try {
+            return net.fabricmc.loader.api.FabricLoader.getInstance()
+                    .getModContainer("minecraft")
+                    .map(c -> c.getMetadata().getVersion().getFriendlyString())
+                    .orElse("1.21");
+        } catch (Exception e) {
+            return "1.21";
+        }
     }
 
     /** Keybindings */

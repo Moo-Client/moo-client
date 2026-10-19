@@ -170,7 +170,7 @@ const translations = {
 };
 
 let currentLang = 'pl';
-let lastKnownClientVersion = '2.1.6';
+let lastKnownClientVersion = '2.1.7';
 
 function setLanguage(lang) {
     currentLang = lang;
@@ -1051,7 +1051,23 @@ function renderInstalledModsView(filterQuery = '') {
     });
 
     if (filteredMods.length === 0) {
-        modsEmpty?.classList.remove('hidden');
+        if (modsEmpty) {
+            modsEmpty.classList.remove('hidden');
+            const ver = versionSelect?.value || '1.21.4';
+            if (ver === '1.21.11' && !query) {
+                modsEmpty.innerHTML = `
+                    <p style="font-size:14px;color:var(--text-muted);">Brak zainstalowanych modów w wersji 1.21.11.</p>
+                    <button id="btn-migrate-banner" class="btn-auto-upgrade-mods" style="margin-top:14px;height:38px;padding:0 20px;cursor:pointer;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:8px;border-radius:8px;">
+                        <span>🚀 Skopiuj i zaktualizuj mody z 1.21.4 do 1.21.11</span>
+                    </button>
+                `;
+                document.getElementById('btn-migrate-banner')?.addEventListener('click', () => {
+                    document.getElementById('btn-auto-upgrade-mods')?.click();
+                });
+            } else {
+                modsEmpty.innerHTML = `<p data-i18n="no_mods_found">${t('no_mods_found') || 'Nie znaleziono modyfikacji.'}</p>`;
+            }
+        }
         return;
     }
 
@@ -1467,6 +1483,46 @@ btnCheckUpdates?.addEventListener('click', async () => {
     }
 });
 
+// Auto-upgrade All Mods Header Button
+const btnAutoUpgradeMods = document.getElementById('btn-auto-upgrade-mods');
+btnAutoUpgradeMods?.addEventListener('click', async () => {
+    btnAutoUpgradeMods.classList.add('checking');
+    try {
+        const ver = versionSelect?.value || '1.21.11';
+        showToast(`Wyszukiwanie i aktualizowanie modów pod wersję ${ver}...`, 'info');
+
+        let res;
+        if (ver === '1.21.11' && (!installedModsCache || installedModsCache.length === 0)) {
+            res = await window.mooAPI?.migrateAndUpgradeMods('1.21.4', '1.21.11');
+        } else {
+            res = await window.mooAPI?.autoUpgradeMods(ver);
+        }
+
+        btnAutoUpgradeMods.classList.remove('checking');
+
+        if (res?.success) {
+            await refreshInstalledMods();
+            await checkAndApplyUpdatesSilently(false);
+            renderInstalledModsView(modsSearchInput?.value || '');
+
+            if (res.upgradedCount > 0) {
+                showInfoModal(
+                    'Zaktualizowano mody!',
+                    `Pomyślnie zaktualizowano ${res.upgradedCount} modów do wersji ${ver}! Nowe kompatybilne pliki .jar zostały pobrane z Modrinth.`,
+                    'success'
+                );
+            } else {
+                showToast(`Wszystkie zainstalowane mody są już zgodne z ${ver}!`, 'success');
+            }
+        } else {
+            showToast(`Błąd aktualizacji: ${res?.error || 'Nieznany błąd'}`, 'error');
+        }
+    } catch (err) {
+        btnAutoUpgradeMods.classList.remove('checking');
+        showToast(`Błąd: ${err.message}`, 'error');
+    }
+});
+
 // =============================================
 // Toast & Modal Notification System
 // =============================================
@@ -1756,6 +1812,7 @@ window.addEventListener('drop', async (e) => {
                 const res = await window.mooAPI?.saveModFile(safeName, uint8, ver);
                 if (res?.success) {
                     installedCount++;
+                    if (res.upgraded) upgradedTotal++;
                 }
             } catch (err) {
                 console.error('Error saving dropped mod buffer:', err);
@@ -1768,6 +1825,7 @@ window.addEventListener('drop', async (e) => {
         const res = await window.mooAPI?.installLocalMods(pathList, ver);
         if (res?.success && res.count > 0) {
             installedCount += res.count;
+            if (res.upgradedCount) upgradedTotal += res.upgradedCount;
         }
     } catch (err) {
         console.error('Error installing local mod paths:', err);
@@ -1776,7 +1834,11 @@ window.addEventListener('drop', async (e) => {
     if (installedCount > 0) {
         await refreshInstalledMods();
         renderInstalledModsView(modsSearchInput ? modsSearchInput.value : '');
-        showToast(`Pomyślnie dodano ${installedCount} modów!`, 'success');
+        if (upgradedTotal > 0) {
+            showToast(`Pomyślnie dodano ${installedCount} modów (automatycznie zaktualizowano ${upgradedTotal} do wersji ${ver})!`, 'success');
+        } else {
+            showToast(`Pomyślnie dodano ${installedCount} modów!`, 'success');
+        }
     } else {
         showToast('Upuszczone pliki muszą mieć rozszerzenie .jar', 'error');
     }

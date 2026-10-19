@@ -1,11 +1,11 @@
 {
-  "version": "2.1.6",
+  "version": "2.1.7",
   "min_launcher_version": "1.0.0",
-  "name": "Moo Client 2.1.6",
-  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.6/moo-client-2.1.6.jar",
+  "name": "Moo Client 2.1.7",
+  "download_url": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.7/moo-client-2.1.7.jar",
   "versions": {
-    "1.21.4": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.6/moo-client-1.21.4-2.1.6.jar",
-    "1.21.11": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.6/moo-client-1.21.11-2.1.6.jar"
+    "1.21.4": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.7/moo-client-1.21.4-2.1.7.jar",
+    "1.21.11": "https://github.com/Moo-Client/moo-client/releases/download/v2.1.7/moo-client-1.21.11-2.1.7.jar"
   },
-  "changelog": "🚀 Moo Client v2.1.6:\n- 🎮 Pełne wsparcie dla Minecraft 1.21.11 oraz 1.21.4 (Stonecutter)\n- ⚡ Aktualizacja Fabric Loader do 0.17.3+ i pełna zgodność z nowym Fabric API\n- 🛡️ Przeniesienie cache scoreboardu do ScoreboardCache (zgodność z Knot ClassLoaderem)\n- ⌨️ Obsługa nowych interfejsów wejściowych (KeyInput, MouseInput, Click) na 1.21.11"
+  "changelog": "🚀 Moo Client v2.1.7:\n- 🖥️ Dynamiczny tytuł okna gry oraz Discord RPC dopasowany do aktywnej wersji Minecrafta (np. 1.21.11 lub 1.21.4)\n- 🔄 Inteligentne wykrywanie modów 1.21.4 przy instalacji (Drag & Drop) i automatyczna aktualizacja do 1.21.11 z Modrinth\n- 🛡️ Pre-launch check: automatyczna konwersja niekompatybilnych modów 1.21.4 do 1.21.11 przed startem gry\n- 📥 Nowy przycisk 'Aktualizuj do wersji gry' i baner migracji w zakładce Modyfikacje"
 }

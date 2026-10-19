@@ -139,6 +139,28 @@ function setupIPC() {
                 modManager.ensureBundledMod(version);
             }
 
+            // Step 2.5: Auto-upgrade user mods to target Minecraft version (e.g. 1.21.4 -> 1.21.11)
+            sendToRenderer('launch-status', `Sprawdzanie kompatybilności modów z ${version}...`);
+            sendToRenderer('launch-progress', 45);
+            try {
+                const targetMods = modManager.getInstalledMods(version);
+                if (targetMods.length === 0 && version === '1.21.11') {
+                    const legacyMods = modManager.getInstalledMods('1.21.4');
+                    if (legacyMods.length > 0) {
+                        sendToRenderer('launch-status', 'Migracja i auto-aktualizacja modów z 1.21.4 do 1.21.11...');
+                        await modManager.migrateAndUpgradeMods('1.21.4', '1.21.11', (status, pct) => {
+                            sendToRenderer('launch-status', status);
+                        });
+                    }
+                } else {
+                    await modManager.autoUpgradeMods(version, null, (status, pct) => {
+                        sendToRenderer('launch-status', status);
+                    });
+                }
+            } catch (upgradeErr) {
+                console.warn('[Launch] Mod auto-upgrade check non-fatal error:', upgradeErr.message);
+            }
+
             // Step 3: Launch Minecraft with Fabric + mod
             sendToRenderer('launch-status', 'Uruchamianie Minecrafta...');
             sendToRenderer('launch-progress', 80);
@@ -290,7 +312,18 @@ function setupIPC() {
     });
 
     ipcMain.handle('save-mod-file', async (event, { filename, buffer, gameVersion = '1.21.4' }) => {
-        return modManager.saveModBuffer(filename, buffer, gameVersion);
+        return await modManager.saveModBuffer(filename, buffer, gameVersion);
+    });
+
+    ipcMain.handle('auto-upgrade-mods', async (event, data) => {
+        const gameVersion = typeof data === 'string' ? data : (data?.gameVersion || '1.21.11');
+        return await modManager.autoUpgradeMods(gameVersion);
+    });
+
+    ipcMain.handle('migrate-and-upgrade-mods', async (event, data) => {
+        const fromVersion = data?.fromVersion || '1.21.4';
+        const toVersion = data?.toVersion || '1.21.11';
+        return await modManager.migrateAndUpgradeMods(fromVersion, toVersion);
     });
 
     ipcMain.handle('get-mod-versions', async (event, data) => {
@@ -316,7 +349,7 @@ function setupIPC() {
     });
 
 function getActualLauncherVersion() {
-    let ver = '2.1.6';
+    let ver = '2.1.7';
     try {
         const pkg = require('../package.json');
         if (pkg && pkg.version) ver = pkg.version;

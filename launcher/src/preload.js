@@ -58,6 +58,8 @@ contextBridge.exposeInMainWorld('mooAPI', {
         } catch (e) {}
         return file && file.path ? file.path : '';
     },
+    autoUpgradeMods: (gameVersion = '1.21.11') => ipcRenderer.invoke('auto-upgrade-mods', { gameVersion }),
+    migrateAndUpgradeMods: (fromVersion = '1.21.4', toVersion = '1.21.11') => ipcRenderer.invoke('migrate-and-upgrade-mods', { fromVersion, toVersion }),
     openModsFolder: (gameVersion = '1.21.4') => ipcRenderer.invoke('open-mods-folder', gameVersion),
 
     // Moo Client Core Update

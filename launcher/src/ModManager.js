@@ -953,7 +953,21 @@ class ModManager {
                 console.warn('Temp directory scan error:', err);
             }
 
-            return { success: true, installed, count: installed.length };
+            let upgradedCount = 0;
+            let upgradedMods = [];
+            if (installed.length > 0) {
+                try {
+                    const upgradeRes = await this.autoUpgradeMods(gameVersion, installed);
+                    if (upgradeRes && upgradeRes.upgradedCount > 0) {
+                        upgradedCount = upgradeRes.upgradedCount;
+                        upgradedMods = upgradeRes.upgradedMods;
+                    }
+                } catch (err) {
+                    console.warn('[ModManager] Auto-upgrade check on installed mods failed:', err.message);
+                }
+            }
+
+            return { success: true, installed, count: installed.length, upgradedCount, upgradedMods };
         } catch (e) {
             console.error('Error copying local mods:', e);
             return { success: false, error: e.message };
@@ -1171,8 +1185,9 @@ class ModManager {
     /**
      * Save a raw binary buffer directly as a .jar mod into .mooclient/mods/<gameVersion>/
      * Perfect for Drag & Drop from WinRAR, 7-Zip, browsers, etc.
+     * Automatically inspects if dropped mod can be updated to target Minecraft version!
      */
-    saveModBuffer(filename, buffer, gameVersion = '1.21.4') {
+    async saveModBuffer(filename, buffer, gameVersion = '1.21.4') {
         try {
             if (!filename || !filename.toLowerCase().endsWith('.jar')) {
                 return { success: false, error: 'Plik musi mieć rozszerzenie .jar' };
@@ -1183,9 +1198,246 @@ class ModManager {
 
             const buf = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
             fs.writeFileSync(targetPath, buf);
-            return { success: true, filename: safeName };
+
+            let upgraded = false;
+            let finalName = safeName;
+            let upgradeInfo = null;
+            try {
+                const upgradeRes = await this.autoUpgradeMods(gameVersion, [safeName]);
+                if (upgradeRes && upgradeRes.upgradedCount > 0 && upgradeRes.upgradedMods?.[0]) {
+                    upgraded = true;
+                    upgradeInfo = upgradeRes.upgradedMods[0];
+                    finalName = upgradeInfo.newFilename;
+                }
+            } catch (err) {
+                console.warn('[ModManager] Auto-upgrade check on dropped mod buffer failed:', err.message);
+            }
+
+            return { success: true, filename: finalName, upgraded, upgradeInfo };
         } catch (e) {
             console.error('Error saving mod buffer:', e);
+            return { success: false, error: e.message };
+        }
+    }
+
+    /**
+     * Automatically scan and upgrade installed mods to target Minecraft version using Modrinth API
+     * Supports both bulk hash lookup and fallback project/modId lookup.
+     */
+    async autoUpgradeMods(gameVersion = '1.21.11', specificFilenames = null, onProgress = () => {}) {
+        try {
+            const targetModsDir = this.getModsDir(gameVersion);
+            if (!fs.existsSync(targetModsDir)) return { success: true, upgradedCount: 0, upgradedMods: [] };
+
+            let files = fs.readdirSync(targetModsDir).filter(f => 
+                (f.endsWith('.jar') || f.endsWith('.jar.disabled')) &&
+                !f.toLowerCase().startsWith('moo-client') &&
+                !f.toLowerCase().startsWith('fabric-api')
+            );
+
+            if (specificFilenames && Array.isArray(specificFilenames) && specificFilenames.length > 0) {
+                const specSet = new Set(specificFilenames.map(s => s.toLowerCase()));
+                files = files.filter(f => specSet.has(f.toLowerCase()));
+            }
+
+            if (files.length === 0) return { success: true, upgradedCount: 0, upgradedMods: [] };
+
+            onProgress(`Wyszukiwanie aktualizacji dla ${files.length} modów pod ${gameVersion}...`, 10);
+
+            const crypto = require('crypto');
+            const fileMap = {}; // sha1 -> { filename, cleanName, filePath, sha1, sha512 }
+
+            for (const file of files) {
+                try {
+                    const filePath = path.join(targetModsDir, file);
+                    if (!fs.existsSync(filePath)) continue;
+                    const fileBuf = fs.readFileSync(filePath);
+                    const sha1 = crypto.createHash('sha1').update(fileBuf).digest('hex');
+                    const sha512 = crypto.createHash('sha512').update(fileBuf).digest('hex');
+                    const cleanName = file.replace(/\.disabled$/, '');
+                    fileMap[sha1] = { filename: file, cleanName, filePath, sha1, sha512 };
+                } catch (e) { }
+            }
+
+            const sha1List = Object.keys(fileMap);
+            const upgradedMods = [];
+            const matchedFilenames = new Set();
+
+            // 1. Bulk Modrinth Hash Check
+            if (sha1List.length > 0) {
+                try {
+                    const updateRes = await this.postJson('https://api.modrinth.com/v2/version_files/update', {
+                        hashes: sha1List,
+                        algorithm: 'sha1',
+                        loaders: ['fabric'],
+                        game_versions: [gameVersion]
+                    });
+
+                    if (updateRes && typeof updateRes === 'object') {
+                        const totalUpdates = Object.keys(updateRes).length;
+                        let processed = 0;
+
+                        for (const [hash, newVer] of Object.entries(updateRes)) {
+                            processed++;
+                            const local = fileMap[hash];
+                            if (!local) continue;
+                            matchedFilenames.add(local.filename.toLowerCase());
+
+                            // Check if returned version is the EXACT SAME file as installed
+                            const isSameFile = newVer.files?.some(f =>
+                                f.hashes?.sha1 === local.sha1 ||
+                                f.hashes?.sha512 === local.sha512 ||
+                                f.filename === local.cleanName ||
+                                f.filename === local.filename
+                            );
+
+                            if (!isSameFile) {
+                                const primaryFile = newVer.files?.find(f => f.primary) || newVer.files?.[0];
+                                if (primaryFile && primaryFile.url) {
+                                    const newDestName = local.filename.endsWith('.disabled') ? `${primaryFile.filename}.disabled` : primaryFile.filename;
+                                    const newDestPath = path.join(targetModsDir, newDestName);
+
+                                    onProgress(`Aktualizacja ${local.cleanName} ➔ ${primaryFile.filename}...`, 10 + Math.round((processed / totalUpdates) * 80));
+
+                                    // Download new version
+                                    await this.downloadFile(primaryFile.url, newDestPath);
+
+                                    // If old file had a different name, delete old file
+                                    if (local.filePath !== newDestPath && fs.existsSync(local.filePath)) {
+                                        try { fs.unlinkSync(local.filePath); } catch (e) { }
+                                    }
+
+                                    // Clear cache for old file and set new
+                                    if (this._modMetadataCache) {
+                                        this._modMetadataCache.delete(local.filePath);
+                                    }
+
+                                    upgradedMods.push({
+                                        oldFilename: local.filename,
+                                        newFilename: newDestName,
+                                        name: newVer.name || primaryFile.filename,
+                                        version: newVer.version_number,
+                                        projectId: newVer.project_id
+                                    });
+                                }
+                            }
+                        }
+                    }
+                } catch (hashErr) {
+                    console.warn('[ModManager] Bulk hash update query failed:', hashErr.message);
+                }
+            }
+
+            // 2. Fallback by Mod ID (for files not recognized by Modrinth hash)
+            const remainingFiles = files.filter(f => !matchedFilenames.has(f.toLowerCase()));
+            if (remainingFiles.length > 0) {
+                const AdmZip = require('adm-zip');
+                for (const file of remainingFiles) {
+                    const filePath = path.join(targetModsDir, file);
+                    if (!fs.existsSync(filePath)) continue;
+
+                    let modId = null;
+                    let modName = null;
+                    try {
+                        const zip = new AdmZip(filePath);
+                        const modJsonEntry = zip.getEntry('fabric.mod.json');
+                        if (modJsonEntry) {
+                            const modJson = JSON.parse(modJsonEntry.getData().toString('utf8'));
+                            modId = modJson.id;
+                            modName = modJson.name;
+                        }
+                    } catch (e) { }
+
+                    if (!modId || modId === 'fabric' || modId === 'minecraft') continue;
+
+                    try {
+                        const url = `https://api.modrinth.com/v2/project/${encodeURIComponent(modId)}/version?game_versions=%5B%22${gameVersion}%22%5D&loaders=%5B%22fabric%22%5D`;
+                        const versions = await this.fetchJson(url);
+                        if (Array.isArray(versions) && versions.length > 0) {
+                            const latestVer = versions[0];
+                            const primaryFile = latestVer.files?.find(f => f.primary) || latestVer.files?.[0];
+                            if (primaryFile && primaryFile.url) {
+                                const newDestName = file.endsWith('.disabled') ? `${primaryFile.filename}.disabled` : primaryFile.filename;
+                                const newDestPath = path.join(targetModsDir, newDestName);
+
+                                if (filePath !== newDestPath) {
+                                    onProgress(`Aktualizacja ${file} ➔ ${primaryFile.filename}...`, 85);
+                                    await this.downloadFile(primaryFile.url, newDestPath);
+                                    if (fs.existsSync(filePath)) {
+                                        try { fs.unlinkSync(filePath); } catch (e) { }
+                                    }
+                                    upgradedMods.push({
+                                        oldFilename: file,
+                                        newFilename: newDestName,
+                                        name: modName || latestVer.name || primaryFile.filename,
+                                        version: latestVer.version_number,
+                                        projectId: latestVer.project_id || modId
+                                    });
+                                }
+                            }
+                        }
+                    } catch (idErr) { }
+                }
+            }
+
+            onProgress(`Ukończono! Zaktualizowano ${upgradedMods.length} modów.`, 100);
+            return {
+                success: true,
+                totalChecked: files.length,
+                upgradedCount: upgradedMods.length,
+                upgradedMods
+            };
+        } catch (e) {
+            console.error('Error in autoUpgradeMods:', e);
+            return { success: false, error: e.message, upgradedCount: 0, upgradedMods: [] };
+        }
+    }
+
+    /**
+     * Copy mods from one game version directory to another and auto-upgrade them to the destination version
+     */
+    async migrateAndUpgradeMods(fromVersion = '1.21.4', toVersion = '1.21.11', onProgress = () => {}) {
+        try {
+            const srcDir = this.getModsDir(fromVersion);
+            const destDir = this.getModsDir(toVersion);
+            if (!fs.existsSync(srcDir)) {
+                return { success: false, error: `Katalog modów ${fromVersion} nie istnieje` };
+            }
+
+            const srcFiles = fs.readdirSync(srcDir).filter(f =>
+                (f.endsWith('.jar') || f.endsWith('.jar.disabled')) &&
+                !f.toLowerCase().startsWith('moo-client') &&
+                !f.toLowerCase().startsWith('fabric-api')
+            );
+
+            if (srcFiles.length === 0) {
+                return { success: true, copiedCount: 0, upgradedCount: 0, message: 'Brak modów do migracji' };
+            }
+
+            onProgress(`Kopiowanie ${srcFiles.length} modów z ${fromVersion} do ${toVersion}...`, 10);
+            const copiedFiles = [];
+            for (const file of srcFiles) {
+                const srcPath = path.join(srcDir, file);
+                const destPath = path.join(destDir, file);
+                if (!fs.existsSync(destPath)) {
+                    fs.copyFileSync(srcPath, destPath);
+                    copiedFiles.push(file);
+                } else {
+                    copiedFiles.push(file);
+                }
+            }
+
+            onProgress(`Rozpoczynanie auto-aktualizacji skopiowanych modów do ${toVersion}...`, 30);
+            const upgradeRes = await this.autoUpgradeMods(toVersion, copiedFiles, onProgress);
+
+            return {
+                success: true,
+                copiedCount: copiedFiles.length,
+                upgradedCount: upgradeRes.upgradedCount || 0,
+                upgradedMods: upgradeRes.upgradedMods || []
+            };
+        } catch (e) {
+            console.error('Error in migrateAndUpgradeMods:', e);
             return { success: false, error: e.message };
         }
     }

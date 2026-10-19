@@ -14,6 +14,6 @@ public class MinecraftClientMixin {
 
     @Inject(method = "getWindowTitle", at = @At("HEAD"), cancellable = true)
     private void mooClient$getWindowTitle(CallbackInfoReturnable<String> cir) {
-        cir.setReturnValue("Minecraft 1.21.4 - Moo Client");
+        cir.setReturnValue("Minecraft " + com.mooclient.MooClient.getMinecraftVersion() + " - Moo Client");
     }
 }

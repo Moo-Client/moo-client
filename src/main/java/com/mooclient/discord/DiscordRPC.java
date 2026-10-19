@@ -31,7 +31,7 @@ public class DiscordRPC {
     private long startTimestamp = System.currentTimeMillis() / 1000L;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    private String currentDetails = "Moo Client 1.21.4";
+    private String currentDetails = "Moo Client " + com.mooclient.MooClient.getMinecraftVersion();
     private String currentState = "W menu głównym";
 
     private DiscordRPC() {
@@ -114,11 +114,12 @@ public class DiscordRPC {
             timestamps.addProperty("start", startTimestamp);
             activity.add("timestamps", timestamps);
 
+            String mcVer = com.mooclient.MooClient.getMinecraftVersion();
             JsonObject assets = new JsonObject();
             assets.addProperty("large_image", "logo");
-            assets.addProperty("large_text", "Moo Client v" + com.mooclient.MooClient.VERSION + " (Fabric 1.21.4)");
+            assets.addProperty("large_text", "Moo Client v" + com.mooclient.MooClient.VERSION + " (Fabric " + mcVer + ")");
             assets.addProperty("small_image", "minecraft");
-            assets.addProperty("small_text", "Minecraft 1.21.4");
+            assets.addProperty("small_text", "Minecraft " + mcVer);
             activity.add("assets", assets);
 
             JsonObject args = new JsonObject();
